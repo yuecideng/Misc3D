@@ -1,24 +1,12 @@
-# PrimitivesFittingLib
-An unified library for fitting multiple primitives from 3D point cloud data using segmentation and RANSAC algorithm with both C++&amp;Python API.
-
-The supported primitives type:
-- Plane
-- Sphere
-- Cylinder
-
-<p float="left">
-  <img src="data/imgs/plane.png" width="250" height=150/>
-  <img src="data/imgs/sphere.png" width="250" height=150/> 
-  <img src="data/imgs/cylinder.png" width="250" height=150/>
-</p>
+# Misc3D
+An unified library for 3D data processing and analysis with both C++&amp;Python API.
 
 ## How to build
 ### Requirements
-- `Cmake` >= 3.13
+- `Cmake` >= 3.10
 - `Python` >= 3.6
-- `Open3D` >= 12.0 
-- `pybind11`
-- `Eigen`
+- `Open3D` == 0.14.1 
+- `pybind11` >= 2.6.2
 
 ### Build
 ##### Linux (currently only supported)

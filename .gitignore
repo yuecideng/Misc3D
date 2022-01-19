@@ -33,6 +33,7 @@
 
 .vscode/
 build/
+3rdparty_downloads/
 
 __pycache__/
 *.pyc

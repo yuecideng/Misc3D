@@ -1,28 +1,33 @@
-set(SRCS Segmentation.cpp
-         PrimitivesFitting.cpp)
+# enable log printing on terminal
+if(ENABLE_LOG_PRINT)
+    add_definitions(-DENABLE_LOGGER_FILE)
+endif(ENABLE_LOG_PRINT)
 
-add_library(primitives_fitting_lib SHARED ${SRCS})
-target_include_directories(primitives_fitting_lib PUBLIC
+set(SRCS foo.cpp)
+
+add_library(misc3d SHARED ${SRCS})
+target_include_directories(misc3d PUBLIC
     $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>)
-target_link_libraries(primitives_fitting_lib PUBLIC
+target_link_libraries(misc3d PUBLIC
+    spdlog::spdlog
     Open3D::Open3D
     OpenMP::OpenMP_CXX)
 
-add_library(primitives_fitting_lib::primitives_fitting_lib ALIAS primitives_fitting_lib)
+add_library(misc3d::misc3d ALIAS misc3d)
 
 install(DIRECTORY ../include
-  DESTINATION "${CMAKE_INSTALL_PREFIX}/PrimitivesFittingLib/"
+  DESTINATION "${CMAKE_INSTALL_PREFIX}/misc3d/"
   USE_SOURCE_PERMISSIONS
   )
 
-install(TARGETS primitives_fitting_lib
-        EXPORT primitives_fitting_lib_target
-        LIBRARY DESTINATION "${CMAKE_INSTALL_PREFIX}/PrimitivesFittingLib/lib"
-        RUNTIME DESTINATION "${CMAKE_INSTALL_PREFIX}/PrimitivesFittingLib/bin"
+install(TARGETS misc3d
+        EXPORT misc3d_target
+        LIBRARY DESTINATION "${CMAKE_INSTALL_PREFIX}/misc3d/lib"
+        RUNTIME DESTINATION "${CMAKE_INSTALL_PREFIX}/misc3d/bin"
   )
 
-install(EXPORT primitives_fitting_lib_target
-    NAMESPACE primitives_fitting_lib::
-    FILE primitives_fitting_lib-config.cmake
-    DESTINATION ${CMAKE_INSTALL_PREFIX}/PrimitivesFittingLib/lib/cmake/)
+install(EXPORT misc3d_target
+    NAMESPACE misc3d::
+    FILE misc3d-config.cmake
+    DESTINATION ${CMAKE_INSTALL_PREFIX}/misc3d/lib/cmake/)

@@ -1,1 +1,3 @@
-add_subdirectory(pybind11)
+if (NOT TARGET spdlog::spdlog)
+    add_subdirectory(spdlog)
+endif()

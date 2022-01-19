@@ -1,5 +1,5 @@
-cmake_minimum_required(VERSION 3.13)
-project(PrimitivesFittingLib VERSION 1.0.0)
+cmake_minimum_required(VERSION 3.10)
+project(Pudu3D VERSION 1.0.0)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -20,7 +20,12 @@ file(MAKE_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
 file(MAKE_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 
 option(BUILD_PYTHON "Build Python bindings" ON)
+option(ENABLE_LOG_PRINT "Print log on terminal" ON)
 
+###############################################################################
+# Find 3rdparty dependencies
+
+# Find OpenMP for parallel computing
 find_package(OpenMP REQUIRED)
 if(OPENMP_FOUND)
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
@@ -28,9 +33,13 @@ if(OPENMP_FOUND)
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
 endif()
 
-# find open3d library
-set(Open3D_DIR "$ENV{HOME}/Rvbust/Install/Open3D/lib/cmake/Open3D" CACHE FILEPATH "Set to find Open3D")
-find_package(Open3D REQUIRED NO_DEFAULT_PATH)
+# Find open3d 
+find_package(Open3D REQUIRED)
+
+# Find pybind11 for Python wrappers
+if(BUILD_PYTHON)
+    find_package(pybind11 REQUIRED)
+endif()
 
 set(CMAKE_INSTALL_PREFIX $ENV{HOME} CACHE PATH "install path")
 message(STATUS "Install path: " ${CMAKE_INSTALL_PREFIX})
