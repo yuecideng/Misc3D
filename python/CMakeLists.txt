@@ -1,9 +1,9 @@
 message(STATUS "Build Python binding enable!")
-set(PYSRCS pyfoo.cpp)
+set(PYSRCS pymisc3d.cpp)
            
 pybind11_add_module(py_misc3d ${PYSRCS})
 target_include_directories(py_misc3d PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
-target_link_libraries(py_misc3d PUBLIC misc3d::misc3d Open3D::Open3D)
+target_link_libraries(py_misc3d PRIVATE misc3d::misc3d)
 
 set_target_properties(py_misc3d
   PROPERTIES

@@ -3,14 +3,15 @@ if(ENABLE_LOG_PRINT)
     add_definitions(-DENABLE_LOGGER_FILE)
 endif(ENABLE_LOG_PRINT)
 
-set(SRCS foo.cpp)
+set(SRCS utils.cpp
+         ransac.cpp)
 
 add_library(misc3d SHARED ${SRCS})
+target_include_directories(misc3d PRIVATE ${SPDLOG_INCLUDE_DIRS})
 target_include_directories(misc3d PUBLIC
     $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>)
 target_link_libraries(misc3d PUBLIC
-    spdlog::spdlog
     Open3D::Open3D
     OpenMP::OpenMP_CXX)
 
