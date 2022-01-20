@@ -58,7 +58,7 @@ static std::shared_ptr<spdlog::logger> GetOrCreateLogger(const char* logname) {
         auto fp =
             std::make_shared<spdlog::sinks::rotating_file_sink_mt>(filePath, 1024 * 1024 * 10, 0);
         sinks.push_back(fp);
-#ifdef ENABLE_LOGGER_FILE
+#ifdef ENABLE_LOGGER_PRINT
         auto stdp = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
         sinks.push_back(stdp);
 #endif

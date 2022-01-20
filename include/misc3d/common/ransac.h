@@ -552,7 +552,7 @@ public:
                   std::vector<size_t> &inlier_indices) {
         Clear();
         const size_t num_points = pc_.points_.size();
-        if (num_points < m_estimator.minimal_sample_) {
+        if (num_points < estimator_.minimal_sample_) {
             MISC3D_WARN("Can not fit model due to lack of points");
             return false;
         }
@@ -585,7 +585,7 @@ private:
         inlier_indices.clear();
         for (size_t i = 0; i < pc_.points_.size(); ++i) {
             const double d =
-                m_estimator.CalcPointToModelDistance(pc_.points_[i], model);
+                estimator_.CalcPointToModelDistance(pc_.points_[i], model);
             if (d < threshold) {
                 inlier_indices.emplace_back(i);
             }
@@ -594,7 +594,7 @@ private:
         // improve best model using general fitting
         const auto inliers_pc = pc_.SelectByIndex(inlier_indices);
 
-        return m_estimator.GeneralFit(inliers_pc, model);
+        return estimator_.GeneralFit(*inliers_pc, model);
     }
 
     /**
@@ -618,11 +618,11 @@ private:
         size_t current_iteration = max_iteration_;
         for (size_t i = 0; i < current_iteration; ++i) {
             const std::vector<size_t> sample_indices =
-                m_sampler(indices_list, m_estimator.minimal_sample_);
+                sampler_(indices_list, estimator_.minimal_sample_);
             const auto sample = pc_.SelectByIndex(sample_indices);
 
             bool ret;
-            ret = m_estimator.MinimalFit(sample, model);
+            ret = estimator_.MinimalFit(*sample, model);
 
             if (!ret) {
                 continue;
@@ -640,7 +640,7 @@ private:
                 best_model = model;
                 const size_t tmp =
                     log(1 - probability_) /
-                    log(1 - pow(fitness, m_estimator.minimal_sample_));
+                    log(1 - pow(fitness, estimator_.minimal_sample_));
                 if (tmp < 0) {
                     current_iteration = max_iteration_;
                 } else {
@@ -685,12 +685,12 @@ private:
 #pragma omp parallel for shared(indices_list)
         for (size_t i = 0; i < max_iteration_; ++i) {
             const std::vector<size_t> sample_indices =
-                m_sampler(indices_list, m_estimator.minimal_sample_);
+                sampler_(indices_list, estimator_.minimal_sample_);
             const auto sample = pc_.SelectByIndex(sample_indices);
-
+            
             Model model_trial;
             bool ret;
-            ret = m_estimator.MinimalFit(sample, model_trial);
+            ret = estimator_.MinimalFit(*sample, model_trial);
 
             if (!ret) {
                 continue;
@@ -742,7 +742,7 @@ private:
 
         for (size_t idx = 0; idx < points.size(); ++idx) {
             const double distance =
-                m_estimator.CalcPointToModelDistance(points[idx], model);
+                estimator_.CalcPointToModelDistance(points[idx], model);
 
             if (distance < threshold) {
                 error += distance;
@@ -771,8 +771,8 @@ private:
     size_t max_iteration_;
     double fitness_;
     double inlier_rmse_;
-    Sampler m_sampler;
-    ModelEstimator m_estimator;
+    Sampler sampler_;
+    ModelEstimator estimator_;
     bool enable_parallel_;
 };
 

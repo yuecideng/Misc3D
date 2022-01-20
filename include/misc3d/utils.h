@@ -100,7 +100,7 @@ inline void GetMatrixByIndex(const std::vector<Eigen::Matrix<T, 3, 1>> &src,
  * @param new_pc
  */
 template <typename T>
-inline void EigenMatrixToVector(const Eigen::Matrix<T, 3, Eigen::Dynamic> &pc,
+inline void EigenMatrixToVector(const Eigen::Matrix<T, Eigen::Dynamic, 3> &pc,
                                 std::vector<Eigen::Matrix<T, 3, 1>> &new_pc) {
     const size_t num = pc.rows();
     const size_t data_length = sizeof(T) * 3;
@@ -121,8 +121,8 @@ inline void EigenMatrixToVector(const Eigen::Matrix<T, 3, Eigen::Dynamic> &pc,
  * @param new_pc
  */
 template <typename T>
-inline void EigenMatrixToVector(const Eigen::Matrix<T, 3, Eigen::Dynamic> &pc,
-                                const Eigen::Matrix<T, 3, Eigen::Dynamic> &normal,
+inline void EigenMatrixToVector(const Eigen::Matrix<T, Eigen::Dynamic, 3> &pc,
+                                const Eigen::Matrix<T, Eigen::Dynamic, 3> &normal,
                                 std::vector<Eigen::Matrix<T, 6, 1>> &new_pc) {
     const size_t num = pc.rows();
     const size_t data_length = sizeof(T) * 3;

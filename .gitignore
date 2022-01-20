@@ -34,6 +34,7 @@
 .vscode/
 build/
 3rdparty_downloads/
+log/
 
 __pycache__/
 *.pyc

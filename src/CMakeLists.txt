@@ -1,18 +1,15 @@
-# enable log printing on terminal
-if(ENABLE_LOG_PRINT)
-    add_definitions(-DENABLE_LOGGER_FILE)
-endif(ENABLE_LOG_PRINT)
-
 set(SRCS utils.cpp
-         ransac.cpp)
+         ransac.cpp
+         normal_estimation.cpp
+         proximity_extraction.cpp)
 
 add_library(misc3d SHARED ${SRCS})
-target_include_directories(misc3d PRIVATE ${SPDLOG_INCLUDE_DIRS})
+# target_include_directories(misc3d PRIVATE ${SPDLOG_INCLUDE_DIRS})
 target_include_directories(misc3d PUBLIC
     $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>)
 target_link_libraries(misc3d PUBLIC
-    Open3D::Open3D
+    Open3D::Open3D  
     OpenMP::OpenMP_CXX)
 
 add_library(misc3d::misc3d ALIAS misc3d)

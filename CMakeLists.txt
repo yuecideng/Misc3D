@@ -44,8 +44,15 @@ endif()
 set(CMAKE_INSTALL_PREFIX $ENV{HOME} CACHE PATH "install path")
 message(STATUS "Install path: " ${CMAKE_INSTALL_PREFIX})
 
+# enable log printing on terminal
+if(ENABLE_LOG_PRINT)
+    message(STATUS "Enable log printed in terminal")
+    add_definitions(-DENABLE_LOGGER_PRINT)
+endif(ENABLE_LOG_PRINT)
+
 add_subdirectory(3rdparty)
 
+include_directories(${SPDLOG_INCLUDE_DIRS})
 add_subdirectory(src)
 
 if(BUILD_PYTHON)

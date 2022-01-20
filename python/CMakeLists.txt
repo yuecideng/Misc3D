@@ -1,5 +1,7 @@
 message(STATUS "Build Python binding enable!")
-set(PYSRCS pymisc3d.cpp)
+set(PYSRCS py_misc3d.cpp
+           py_common.cpp
+           py_segmentation.cpp)
            
 pybind11_add_module(py_misc3d ${PYSRCS})
 target_include_directories(py_misc3d PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
