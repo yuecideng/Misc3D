@@ -35,6 +35,7 @@
 build/
 3rdparty_downloads/
 log/
+output/
 
 __pycache__/
 *.pyc

@@ -4,6 +4,9 @@ project(Pudu3D VERSION 1.0.0)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+SET(CMAKE_CXX_FLAGS_DEBUG "-O0 -g2 -ggdb")
+SET(CMAKE_CXX_FLAGS_RELEASE "-O3")
+
 set(CMAKE_BUILD_TYPE "Release")
 message(STATUS "cmake build type: " ${CMAKE_BUILD_TYPE})
 
@@ -19,6 +22,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 file(MAKE_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
 file(MAKE_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 
+option(BUILD_SHARED_LIBS "Build using shared libraries" ON)
 option(BUILD_PYTHON "Build Python bindings" ON)
 option(ENABLE_LOG_PRINT "Print log on terminal" ON)
 

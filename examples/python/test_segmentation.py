@@ -21,7 +21,8 @@ print('Point size before sampling', pc)
 t0 = time.time()
 pc = pc.voxel_down_sample(0.01)
 print('Point size after sampling', pc)
-pc.estimate_normals()
+
+pc.estimate_normals(o3d.geometry.KDTreeSearchParamHybrid(0.02, 15), False)
 pc.orient_normals_towards_camera_location()
 
 normals = np.asarray(pc.normals)
@@ -38,20 +39,21 @@ print('Segmentation time: %.3f' % (time.time() - t0))
 pc_render = o3d.geometry.PointCloud()
 for index in index_list:
     c = pc.select_by_index(index)
-    c.paint_uniform_color([random(), random(), random()])
-    pc_render += c
+    m3d.vis.draw_point_cloud(vis, c, [random(), random(), random()], size=3.0)
 
-vis.add_geometry(pc_render)
-op = vis.get_render_option()
-op.point_size = 3.0
+# vis.add_geometry(pc_render)
+# op = vis.get_render_option()
+# op.point_size = 3.0
 
+m3d.vis.draw_pose(vis, size=0.1)
 
-
-try:
-    while True:
-        vis.update_geometry(pc)
-        vis.poll_events()
-        vis.update_renderer()
-except:
-    print('Force exit')
+vis.run()
+# try:
+#     while True:
+       
+#         vis.poll_events()
+#         vis.update_renderer()
+#         #vis.run()
+# except:
+#     print('Force exit')
 

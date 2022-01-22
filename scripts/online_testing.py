@@ -144,16 +144,7 @@ if __name__ == "__main__":
                 color, depth, convert_rgb_to_intensity=False)
             # create point cloud
             pcd = o3d.geometry.PointCloud.create_from_rgbd_image(
-                rgbd, pinhole_camera_intrinsic, project_valid_depth_only=False)
-
-            # estimate normals
-           
-            pcd = m3d.common.estimate_normals(pcd, 848, 480, 3)
-            pcd.remove_non_finite_points()
-
-            # ttransoform
-            pcd.transform([[1, 0, 0, 0], [0, -1, 0, 0], [0, 0, -1, 0],
-                           [0, 0, 0, 1]])
+                rgbd, pinhole_camera_intrinsic, project_valid_depth_only=True)
 
             pointcloud += pcd  
 
