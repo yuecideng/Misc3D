@@ -1,5 +1,5 @@
-#include <numeric>
 #include <iostream>
+#include <numeric>
 
 #include <misc3d/logger.h>
 #include <misc3d/registration/transform_estimation.h>
@@ -22,6 +22,12 @@ bool CheckValid(const open3d::geometry::PointCloud& src,
         return false;
     }
     return true;
+}
+
+Eigen::Matrix4d TransformationSolver::Solve(
+    const open3d::geometry::PointCloud& src,
+    const open3d::geometry::PointCloud& dst) const {
+    return Eigen::Matrix4d::Identity();
 }
 
 Eigen::Matrix4d SVDSolver::Solve(const open3d::geometry::PointCloud& src,
@@ -80,7 +86,7 @@ Eigen::Matrix4d TeaserSolver::Solve(const open3d::geometry::PointCloud& src,
     // Prepare solver parameters
     teaser::RobustRegistrationSolver::Params params;
     params.noise_bound = noise_bound_;
-    params.cbar2 = 1;
+    params.cbar2 = 1.0;
     params.estimate_scaling = false;
     params.rotation_max_iterations = 10000;
     params.rotation_gnc_factor = 1.4;
@@ -110,18 +116,21 @@ Eigen::Matrix4d TeaserSolver::Solve(const open3d::geometry::PointCloud& src,
     return res;
 }
 
-Eigen::Matrix4d RANSACSolver::Solve(const open3d::geometry::PointCloud& src,
-                                    const open3d::geometry::PointCloud& dst) const {
+Eigen::Matrix4d RANSACSolver::Solve(
+    const open3d::geometry::PointCloud& src, const open3d::geometry::PointCloud& dst,
+    const std::pair<std::vector<int>, std::vector<int>>& corres) const {
     Eigen::Matrix4d res = Eigen::Matrix4d::Identity();
 
-    if (!CheckValid(src, dst)) {
+    if (src.points_.size() < 3 || dst.points_.size() < 3) {
+        MISC3D_ERROR("The number of points pair is less than 3.");
         return res;
     }
 
-    const size_t num = src.points_.size();
-    open3d::pipelines::registration::CorrespondenceSet corres(num);
+    const size_t num = corres.first.size();
+    open3d::pipelines::registration::CorrespondenceSet corres_set(num);
+#pragma omp parallel for 
     for (int i = 0; i < num; i++) {
-        corres[i] = Eigen::Vector2i(i, i);
+        corres_set[i] = Eigen::Vector2i(corres.first[i], corres.second[i]);
     }
 
     std::vector<std::reference_wrapper<
@@ -138,12 +147,12 @@ Eigen::Matrix4d RANSACSolver::Solve(const open3d::geometry::PointCloud& src,
 
     auto result =
         open3d::pipelines::registration::RegistrationRANSACBasedOnCorrespondence(
-            src, dst, corres, threshold_,
+            src, dst, corres_set, threshold_,
             open3d::pipelines::registration::TransformationEstimationPointToPoint(
                 false),
             3, checkers,
             open3d::pipelines::registration::RANSACConvergenceCriteria(max_iter_));
-    std::cout << result.transformation_ << std::endl;
+
     return result.transformation_;
 }
 

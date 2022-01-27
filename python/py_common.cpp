@@ -77,11 +77,11 @@ void pybind_common(py::module &m) {
           py::arg("pc"), py::arg("threshold") = 0.01,
           py::arg("max_iteration") = 1000, py::arg("probability") = 0.99,
           py::arg("enable_parallel") = false);
-
     m.def(
         "estimate_normals",
         [](const open3d::geometry::PointCloud &pc, int w, int h, int k) {
-            open3d::geometry::PointCloud pc_ = pc;
+            //TODO: here we copy data which wastes some time, can be improve 
+            open3d::geometry::PointCloud pc_(pc);
             EstimateNormalsFromMap(pc_, w, h, k);
         
             return pc_;

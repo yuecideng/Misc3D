@@ -1,6 +1,7 @@
 #include <numeric>
 
-#include <misc3d/registration/corresponding_matching.h>
+#include <misc3d/logger.h>
+#include <misc3d/registration/correspondence_matching.h>
 #include <open3d/geometry/KDTreeFlann.h>
 
 namespace misc3d {

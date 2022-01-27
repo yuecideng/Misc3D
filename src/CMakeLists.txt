@@ -4,7 +4,7 @@ set(SRCS utils.cpp
          proximity_extraction.cpp
          edge_detection.cpp
          transform_estimation.cpp
-         corresponding_matching.cpp
+         correspondence_matching.cpp
          vis_utils.cpp)
 
 add_library(misc3d SHARED ${SRCS})

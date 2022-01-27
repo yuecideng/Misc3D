@@ -1,15 +1,20 @@
-#include <vector>
 #include <Eigen/Core>
 #include <Eigen/Eigenvalues>
+#include <iostream>
+#include <numeric>
+#include <unordered_map>
+#include <vector>
 
 #include <misc3d/common/normal_estimation.h>
 #include <misc3d/logger.h>
+#include <misc3d/utils.h>
 
 namespace misc3d {
 namespace common {
 
 void VectorToPointer(const std::vector<Eigen::Vector3d> &data, double *ptr) {
     const size_t num = data.size();
+#pragma omp parallel for
     for (size_t i = 0; i < num; i++) {
         ptr[3 * i] = data[i](0);
         ptr[3 * i + 1] = data[i](1);
@@ -20,6 +25,7 @@ void VectorToPointer(const std::vector<Eigen::Vector3d> &data, double *ptr) {
 void PointerToVector(const double *ptr, int num,
                      std::vector<Eigen::Vector3d> &data) {
     data.resize(num);
+#pragma omp parallel for
     for (size_t i = 0; i < num; i++) {
         Eigen::Vector3d d(ptr[i * 3], ptr[i * 3 + 1], ptr[i * 3 + 2]);
         data[i] = d;
@@ -93,7 +99,7 @@ void CalcNormalsFromPointMap(const double *xyzs, const unsigned int w,
             }
         }
     }
-    // auto rt_2 = std::chrono::high_resolution_clock::now();
+
     size_t *neighbor_nums = new size_t[expand_wh];
     double *buffer1 = (double *)malloc(expand_wh * 9 * sizeof(double));
     double *sum_x = buffer1;
@@ -105,7 +111,7 @@ void CalcNormalsFromPointMap(const double *xyzs, const unsigned int w,
     double *sum_yy = sum_xz + expand_wh;
     double *sum_yz = sum_yy + expand_wh;
     double *sum_zz = sum_yz + expand_wh;
-    // auto rt_3 = std::chrono::high_resolution_clock::now();
+
     SumDense(x, mask, (unsigned int)expand_w, (unsigned int)expand_h, k, sum_x);
     SumDense(y, mask, (unsigned int)expand_w, (unsigned int)expand_h, k, sum_y);
     SumDense(z, mask, (unsigned int)expand_w, (unsigned int)expand_h, k, sum_z);
@@ -140,7 +146,6 @@ void CalcNormalsFromPointMap(const double *xyzs, const unsigned int w,
             covariance[1][0] = covariance[0][1];
             covariance[2][0] = covariance[0][2];
             covariance[2][1] = covariance[1][2];
-            // solve it
 
             Eigen::Matrix<double, 3, 3, Eigen::RowMajor | Eigen::DontAlign>
                 covariance_matrix(covariance[0]);
@@ -180,7 +185,7 @@ void EstimateNormalsFromMap(open3d::geometry::PointCloud &pc, int w, int h, int 
     double *points_ptr = new double[num * 3];
     VectorToPointer(pc.points_, points_ptr);
     CalcNormalsFromPointMap(points_ptr, w, h, k, normals_ptr);
-    
+
     // assign normals
     std::vector<Eigen::Vector3d> normals;
     PointerToVector(normals_ptr, num, normals);

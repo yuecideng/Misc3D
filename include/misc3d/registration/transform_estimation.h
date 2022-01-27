@@ -2,8 +2,8 @@
 
 #include <vector>
 
-#include <Eigen/Dense>
 #include <open3d/geometry/PointCloud.h>
+#include <Eigen/Dense>
 
 namespace misc3d {
 
@@ -28,7 +28,7 @@ public:
      * @return Eigen::Matrix4d
      */
     virtual Eigen::Matrix4d Solve(const open3d::geometry::PointCloud &src,
-                                  const open3d::geometry::PointCloud &dst) const = 0;
+                                  const open3d::geometry::PointCloud &dst) const;
 
     enum class SolverType {
         SVD = 0,
@@ -60,7 +60,7 @@ public:
     SVDSolver() : TransformationSolver(SolverType::SVD) {}
 
     Eigen::Matrix4d Solve(const open3d::geometry::PointCloud &src,
-                          const open3d::geometry::PointCloud &dst) const override;
+                          const open3d::geometry::PointCloud &dst) const;
 };
 
 /**
@@ -79,7 +79,7 @@ public:
         : TransformationSolver(SolverType::TEASER), noise_bound_(noise_bound) {}
 
     Eigen::Matrix4d Solve(const open3d::geometry::PointCloud &src,
-                          const open3d::geometry::PointCloud &dst) const override;
+                          const open3d::geometry::PointCloud &dst) const;
 
 private:
     double noise_bound_;
@@ -92,15 +92,26 @@ public:
      *
      * @param noise_bound
      */
-    RANSACSolver(double threshold, int max_iter = 1000,
+    RANSACSolver(double threshold, int max_iter = 100000,
                  double edge_length_threshold = 0.9)
         : TransformationSolver(SolverType::RANSAC)
         , threshold_(threshold)
         , max_iter_(max_iter)
         , edge_length_threshold_(edge_length_threshold_) {}
 
-    Eigen::Matrix4d Solve(const open3d::geometry::PointCloud &src,
-                          const open3d::geometry::PointCloud &dst) const override;
+    /**
+     * @brief This function is not override from base class due to it need original
+     * point clouds for calculation.
+     *
+     * @param src
+     * @param dst
+     * @param corres
+     * @return Eigen::Matrix4d
+     */
+    Eigen::Matrix4d Solve(
+        const open3d::geometry::PointCloud &src,
+        const open3d::geometry::PointCloud &dst,
+        const std::pair<std::vector<int>, std::vector<int>> &corres) const;
 
 private:
     double threshold_;

@@ -144,7 +144,7 @@ if __name__ == "__main__":
                 color, depth, convert_rgb_to_intensity=False)
             # create point cloud
             pcd = o3d.geometry.PointCloud.create_from_rgbd_image(
-                rgbd, pinhole_camera_intrinsic, project_valid_depth_only=True)
+                rgbd, pinhole_camera_intrinsic, project_valid_depth_only=False)
 
             pointcloud += pcd  
 

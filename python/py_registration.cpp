@@ -1,6 +1,6 @@
 #include <py_misc3d.h>
 
-#include <misc3d/registration/corresponding_matching.h>
+#include <misc3d/registration/correspondence_matching.h>
 #include <misc3d/registration/transform_estimation.h>
 
 namespace misc3d {
@@ -31,17 +31,19 @@ void pybind_registration(py::module &m) {
     m.def(
         "compute_transformation_ransac",
         [](const open3d::geometry::PointCloud &src,
-           const open3d::geometry::PointCloud &dst, double threshold, int max_iter,
-           double edge_length_threshold) {
+           const open3d::geometry::PointCloud &dst,
+           const std::pair<std::vector<int>, std::vector<int>> &corres,
+           double threshold, int max_iter, double edge_length_threshold) {
             RANSACSolver solver(threshold, max_iter, edge_length_threshold);
-            return solver.Solve(src, dst);
+            return solver.Solve(src, dst, corres);
         },
         "Compute 3D rigid transformation from corresponding point clouds using "
         "RANSAC",
-        py::arg("src"), py::arg("dst"), py::arg("threshold") = 0.01,
-        py::arg("max_iter") = 1000, py::arg("edge_length_threshold") = 0.9);
+        py::arg("src"), py::arg("dst"), py::arg("corres"),
+        py::arg("threshold") = 0.01, py::arg("max_iter") = 100000,
+        py::arg("edge_length_threshold") = 0.9);
     m.def(
-        "match_corresponding",
+        "match_correspondence",
         [](const open3d::pipelines::registration::Feature &src,
            const open3d::pipelines::registration::Feature &dst, bool cross_check) {
             FLANNMatcher matcher(cross_check);
