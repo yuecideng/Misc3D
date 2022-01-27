@@ -35,10 +35,14 @@ index = m3d.features.detect_edge_points(
 edge = plane.select_by_index(index)
 edge.paint_uniform_color([1, 0, 0])
 
+bbox = plane.get_oriented_bounding_box()
+
+vis.add_geometry(bbox)
 vis.add_geometry(plane)
 vis.add_geometry(edge)
 op = vis.get_render_option()
 op.point_size = 3.0
+op.background_color = np.array([0, 0, 0])
 
 vis.run()
 # try:
