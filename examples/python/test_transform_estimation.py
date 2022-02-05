@@ -69,10 +69,10 @@ print('Matching time: %.3f' % (time.time() - t0))
 #                                                          0.999)).transformation
 
 #pose = execute_global_registration(pc_src, pc_dst, fpfh_src, fpfh_dst, 0.02).transformation
-# pose = m3d.registration.compute_transformation_ransac(pc_src, pc_dst,
-#                                                       (index1, index2), 0.03,
-#                                                       100000)
-pose = m3d.registration.compute_transformation_teaser(src_, dst_, 0.02)
+pose = m3d.registration.compute_transformation_ransac(pc_src, pc_dst,
+                                                      (index1, index2), 0.03,
+                                                      100000)
+#pose = m3d.registration.compute_transformation_teaser(src_, dst_, 0.02)
 
 pose = o3d.pipelines.registration.registration_icp(
     pc_src, pc_dst, 0.01, pose,
@@ -93,3 +93,4 @@ m3d.vis.draw_point_cloud(vis, pc_src, [1, 0, 0], pose)
 m3d.vis.draw_point_cloud(vis, pc_dst, [0, 1, 0])
 
 vis.run()
+embed()

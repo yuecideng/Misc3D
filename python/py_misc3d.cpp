@@ -24,6 +24,9 @@ PYBIND11_MODULE(py_misc3d, m) {
     py::module m_submodule_registration = m.def_submodule("registration");
     registration::pybind_registration(m_submodule_registration);
 
+    py::module m_submodule_pose_estimation = m.def_submodule("pose_estimation");
+    pose_estimation::pybind_pose_estimation(m_submodule_pose_estimation);
+
     py::module m_submodule_vis = m.def_submodule("vis");
     vis::pybind_vis(m_submodule_vis);
 }

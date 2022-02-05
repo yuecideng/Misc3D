@@ -61,8 +61,7 @@ void SumDense(const T0 *data, const bool *mask, const unsigned int w,
 
 void CalcNormalsFromPointMap(const double *xyzs, const unsigned int w,
                              const unsigned int h, const unsigned int k,
-                             double *normals) {
-    const double view_point[3] = {0, 0, 0};
+                             double *normals, const double view_point[3]) {
     size_t expand_w = w + 2 * k, expand_h = h + 2 * k,
            expand_wh = expand_w * expand_h;
     const size_t range_rows[2] = {k, expand_h - k},
@@ -174,8 +173,10 @@ void CalcNormalsFromPointMap(const double *xyzs, const unsigned int w,
     free(mask);
 }
 
-void EstimateNormalsFromMap(open3d::geometry::PointCloud &pc, int w, int h, int k) {
-    const size_t num = pc.points_.size();
+void EstimateNormalsFromMap(const PointCloudPtr &pc,
+                            int w, int h, int k,
+                            const std::array<double, 3> &view_point) {
+    const size_t num = pc->points_.size();
     if (num != w * h) {
         MISC3D_ERROR("The point cloud size is not equal to given point map size.");
         return;
@@ -183,13 +184,13 @@ void EstimateNormalsFromMap(open3d::geometry::PointCloud &pc, int w, int h, int 
 
     double *normals_ptr = new double[num * 3];
     double *points_ptr = new double[num * 3];
-    VectorToPointer(pc.points_, points_ptr);
-    CalcNormalsFromPointMap(points_ptr, w, h, k, normals_ptr);
+    VectorToPointer(pc->points_, points_ptr);
+    CalcNormalsFromPointMap(points_ptr, w, h, k, normals_ptr, view_point.data());
 
     // assign normals
     std::vector<Eigen::Vector3d> normals;
     PointerToVector(normals_ptr, num, normals);
-    pc.normals_ = normals;
+    pc->normals_ = normals;
 
     delete[] normals_ptr;
     delete[] points_ptr;

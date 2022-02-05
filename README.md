@@ -9,12 +9,12 @@ Core modules:
     2. Ransac for primitives fitting, including plane, sphere and cylinder. 
     3. ROI point clouds cropping from given bounding box of RGBD data (TODO)
 - `features`:
-    1. Edge points detection.
+    1. Edge points detection from point clouds.
 - `registration`:
     1. Corresponding matching with descriptors.
     2. 3D rigid transformation solver including SVD, RANSAC and [TEASERPP](https://github.com/MIT-SPARK/TEASER-plusplus).
 - `pose_estimation`: 
-    1. Point Pair Features (PPF) based 6d pose estimator.
+    1. Point Pair Features (PPF) based 6D pose estimator.
 - `segmentation`: 
     1. Proximity extraction in scalable implementation with different vriants, including distance, and normal angle.
 - `vis`: Helper tools for drawing 6D pose, painted point cloud and etc.

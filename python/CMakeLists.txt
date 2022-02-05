@@ -4,6 +4,7 @@ set(PYSRCS py_misc3d.cpp
            py_segmentation.cpp
            py_features.cpp
            py_registration.cpp
+           py_pose_estimation.cpp
            py_vis.cpp)
            
 pybind11_add_module(py_misc3d ${PYSRCS})

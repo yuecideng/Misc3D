@@ -65,18 +65,20 @@ void pybind_segmentation(py::module &m) {
              py::arg("max_size") = std::numeric_limits<size_t>::max())
         .def(
             "segment",
-            [](ProximityExtractor &self, const open3d::geometry::PointCloud &pc,
+            [](ProximityExtractor &self,
+               const PointCloudPtr &pc,
                const std::vector<std::vector<size_t>> &nn_indices,
                const BaseProximityEvaluator &evaluator) {
-                return self.Segment(pc, nn_indices, evaluator);
+                return self.Segment(*pc, nn_indices, evaluator);
             },
             "Segment point clouds with given nearest neighboor", py::arg("pc"),
             py::arg("nn_indices"), py::arg("evaluator"))
         .def(
             "segment",
-            [](ProximityExtractor &self, const open3d::geometry::PointCloud &pc,
+            [](ProximityExtractor &self,
+               const PointCloudPtr &pc,
                const double search_radius, const BaseProximityEvaluator &evaluator) {
-                return self.Segment(pc, search_radius, evaluator);
+                return self.Segment(*pc, search_radius, evaluator);
             },
             "Segment point clouds with radius for nearest neighboor searching",
             py::arg("pc"), py::arg("search_radius"), py::arg("evaluator"))

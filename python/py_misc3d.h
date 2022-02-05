@@ -27,6 +27,10 @@ namespace registration {
 void pybind_registration(py::module &m);
 }
 
+namespace pose_estimation {
+void pybind_pose_estimation(py::module &m);
+}
+
 namespace vis {
 void pybind_vis(py::module &m);
 }

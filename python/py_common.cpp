@@ -10,7 +10,7 @@ namespace misc3d {
 namespace common {
 
 std::tuple<Eigen::VectorXd, std::vector<size_t>> FitPlane(
-    const open3d::geometry::PointCloud &pc, double threshold, size_t max_iteration,
+    const PointCloudPtr &pc, double threshold, size_t max_iteration,
     double probability, bool enable_parallel) {
     RANSACPlane fit;
     fit.SetMaxIteration(max_iteration);
@@ -18,7 +18,7 @@ std::tuple<Eigen::VectorXd, std::vector<size_t>> FitPlane(
     fit.SetParallel(enable_parallel);
     Plane plane;
     std::vector<size_t> inliers;
-    fit.SetPointCloud(pc);
+    fit.SetPointCloud(*pc);
     const bool ret = fit.FitModel(threshold, plane, inliers);
     if (!ret) {
         plane.parameters_.setZero(4);
@@ -29,7 +29,7 @@ std::tuple<Eigen::VectorXd, std::vector<size_t>> FitPlane(
 }
 
 std::tuple<Eigen::VectorXd, std::vector<size_t>> FitSphere(
-    const open3d::geometry::PointCloud &pc, double threshold, size_t max_iteration,
+    const PointCloudPtr &pc, double threshold, size_t max_iteration,
     double probability, bool enable_parallel) {
     RANSACShpere fit;
     fit.SetMaxIteration(max_iteration);
@@ -37,7 +37,7 @@ std::tuple<Eigen::VectorXd, std::vector<size_t>> FitSphere(
     fit.SetParallel(enable_parallel);
     Sphere sphere;
     std::vector<size_t> inliers;
-    fit.SetPointCloud(pc);
+    fit.SetPointCloud(*pc);
     const bool ret = fit.FitModel(threshold, sphere, inliers);
     if (!ret) {
         sphere.parameters_.setZero(4);
@@ -48,7 +48,7 @@ std::tuple<Eigen::VectorXd, std::vector<size_t>> FitSphere(
 }
 
 std::tuple<Eigen::VectorXd, std::vector<size_t>> FitCylinder(
-    const open3d::geometry::PointCloud &pc, double threshold, size_t max_iteration,
+    const PointCloudPtr &pc, double threshold, size_t max_iteration,
     double probability, bool enable_parallel) {
     RANSACShpere fit;
     fit.SetMaxIteration(max_iteration);
@@ -56,7 +56,7 @@ std::tuple<Eigen::VectorXd, std::vector<size_t>> FitCylinder(
     fit.SetParallel(enable_parallel);
     Sphere sphere;
     std::vector<size_t> inliers;
-    fit.SetPointCloud(pc);
+    fit.SetPointCloud(*pc);
     const bool ret = fit.FitModel(threshold, sphere, inliers);
     if (!ret) {
         sphere.parameters_.setZero(4);
@@ -79,15 +79,15 @@ void pybind_common(py::module &m) {
           py::arg("enable_parallel") = false);
     m.def(
         "estimate_normals",
-        [](const open3d::geometry::PointCloud &pc, int w, int h, int k) {
-            //TODO: here we copy data which wastes some time, can be improve 
-            open3d::geometry::PointCloud pc_(pc);
-            EstimateNormalsFromMap(pc_, w, h, k);
-        
-            return pc_;
+        [](const PointCloudPtr &pc, int w, int h,
+           int k, const std::array<double, 3> &view_point) {
+            EstimateNormalsFromMap(pc, w, h, k, view_point);
+
+            return pc;
         },
         "Estimate normals from pointmap structure", py::arg("pc"), py::arg("weight"),
-        py::arg("height"), py::arg("k") = 5);
+        py::arg("height"), py::arg("k") = 5,
+        py::arg("view_point") = std::array<double, 3>{0, 0, 0});
 }
 
 }  // namespace common

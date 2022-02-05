@@ -5,6 +5,7 @@ set(SRCS utils.cpp
          edge_detection.cpp
          transform_estimation.cpp
          correspondence_matching.cpp
+         ppf_estimation.cpp
          vis_utils.cpp)
 
 add_library(misc3d SHARED ${SRCS})

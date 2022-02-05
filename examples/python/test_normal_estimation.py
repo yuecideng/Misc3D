@@ -38,7 +38,7 @@ pcd = o3d.io.read_point_cloud(
     remove_nan_points=False)
 
 t0 = time.time()
-pcd = m3d.common.estimate_normals(pcd, 848, 480, 3)
+m3d.common.estimate_normals(pcd, 848, 480, 3)
 print('time cost: {}'.format(time.time() - t0))
 pcd.remove_non_finite_points()
 pcd = pcd.voxel_down_sample(0.02)
