@@ -7,14 +7,13 @@ namespace misc3d {
 namespace preprocessing {
 
 void pybind_preprocessing(py::module &m) {
-    m.def("depth_roi_to_pointcloud", &DepthROIToPointCloud,
-          "Convert depth roi to pointcloud", py::arg("depth"), py::arg("roi"),
-          py::arg("intrinsic"), py::arg("depth_scale") = 1000.0,
-          py::arg("depth_trunc") = 3.0, py::arg("stride") = 1);
-    m.def("rgbd_roi_to_pointcloud", &RGBDROIToPointCloud,
-          "Convert RGBD roi to pointcloud", py::arg("rgbd"), py::arg("roi"),
-          py::arg("intrinsic"), py::arg("depth_scale") = 1000.0,
-          py::arg("depth_trunc") = 3.0, py::arg("stride") = 1);
+    m.def(
+        "crop_roi_pointcloud",
+        [](const PointCloudPtr &pc, const std::tuple<int, int, int, int> &roi,
+           const std::tuple<int, int> &shape) {
+            return CropROIPointCloud(*pc, roi, shape);
+        },
+        "Crop roi pointcloud", py::arg("pc"), py::arg("roi"), py::arg("shape"));
 }
 
 }  // namespace preprocessing
