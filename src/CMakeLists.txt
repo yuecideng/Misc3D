@@ -1,5 +1,6 @@
 set(SRCS utils.cpp
          ransac.cpp
+         conversion.cpp
          normal_estimation.cpp
          proximity_extraction.cpp
          edge_detection.cpp

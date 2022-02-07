@@ -8,6 +8,8 @@ Core modules:
     1. Normals estimaiton from PointMap 
     2. Ransac for primitives fitting, including plane, sphere and cylinder. 
     3. ROI point clouds cropping from given bounding box of RGBD data (TODO)
+- `preprocessing`: 
+    1. Convert ROI of Depth or RGBD data into point clouds. 
 - `features`:
     1. Edge points detection from point clouds.
 - `registration`:

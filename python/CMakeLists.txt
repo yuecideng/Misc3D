@@ -1,6 +1,7 @@
 message(STATUS "Build Python binding enable!")
 set(PYSRCS py_misc3d.cpp
            py_common.cpp
+           py_preprocessing.cpp
            py_segmentation.cpp
            py_features.cpp
            py_registration.cpp

@@ -15,6 +15,11 @@ namespace common {
 void pybind_common(py::module &m);
 }
 
+namespace preprocessing {
+void pybind_preprocessing(py::module &m);
+}
+
+
 namespace segmentation {
 void pybind_segmentation(py::module &m);
 }

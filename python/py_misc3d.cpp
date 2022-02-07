@@ -9,11 +9,17 @@ PYBIND11_MODULE(py_misc3d, m) {
     py::object o3d_pipelines =
         (py::object)py::module_::import("open3d").attr("pipelines");
 
+    py::object o3d_camera =
+        (py::object)py::module_::import("open3d").attr("camera");
+
     py::object o3d_vis =
         (py::object)py::module_::import("open3d").attr("visualization");
 
     py::module m_submodule_common = m.def_submodule("common");
     common::pybind_common(m_submodule_common);
+
+    py::module m_submodule_preprocessing = m.def_submodule("preprocessing");
+    preprocessing::pybind_preprocessing(m_submodule_preprocessing);
 
     py::module m_submodule_segmentation = m.def_submodule("segmentation");
     segmentation::pybind_segmentation(m_submodule_segmentation);
