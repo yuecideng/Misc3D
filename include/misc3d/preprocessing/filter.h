@@ -21,5 +21,13 @@ PointCloudPtr CropROIPointCloud(const open3d::geometry::PointCloud &pc,
                                 const std::tuple<int, int, int, int> &roi,
                                 const std::tuple<int, int> &shape);
 
+/**
+ * @brief Project point clouds into a plane where z is linear.
+ * 
+ * @param pc 
+ * @return PointCloudPtr 
+ */
+PointCloudPtr ProjectIntoPlane(const open3d::geometry::PointCloud &pc);
+
 }  // namespace preprocessing
 }  // namespace misc3d

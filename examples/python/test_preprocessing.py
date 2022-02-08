@@ -36,11 +36,12 @@ pcd = o3d.geometry.PointCloud.create_from_rgbd_image(
     rgbd, pinhole_camera_intrinsic, project_valid_depth_only=False)
 
 t1 = time.time()
-pcd = m3d.preprocessing.crop_roi_pointcloud(pcd, (200, 50, 600, 400), (848, 480))
+# pcd = m3d.preprocessing.crop_roi_pointcloud(pcd, (200, 50, 600, 400), (848, 480))
+pcd = m3d.preprocessing.project_into_plane(pcd)
 print('time cost: {}'.format(time.time() - t1))
 
-cv2.rectangle(color_img, (200, 50), (600, 400), (0, 255, 0), 3)
-cv2.imshow('color', color_img)
-cv2.waitKey(1000)
+# cv2.rectangle(color_img, (200, 50), (600, 400), (0, 255, 0), 3)
+# cv2.imshow('color', color_img)
+# cv2.waitKey(1000)
 m3d.vis.draw_point_cloud(vis, pcd)
 vis.run()

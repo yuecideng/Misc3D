@@ -3,7 +3,7 @@
 #include <vector>
 
 #include <misc3d/logger.h>
-#include <misc3d/preprocessing/conversion.h>
+#include <misc3d/preprocessing/filter.h>
 
 namespace misc3d {
 
@@ -32,7 +32,7 @@ PointCloudPtr CropROIPointCloud(const open3d::geometry::PointCloud &pc,
 
     const int size = (roi_w + 1) * (roi_h + 1);
     std::vector<size_t> indices(size);
-    
+
     auto pcd = std::make_shared<open3d::geometry::PointCloud>();
     pcd->points_.resize(size);
     if (has_normals) {
@@ -55,6 +55,50 @@ PointCloudPtr CropROIPointCloud(const open3d::geometry::PointCloud &pc,
         }
     }
 
+    return pcd;
+}
+
+PointCloudPtr ProjectIntoPlane(const open3d::geometry::PointCloud &pc) {
+    auto pcd = std::make_shared<open3d::geometry::PointCloud>(pc);
+    pcd->RemoveNonFinitePoints();
+    const size_t size = pcd->points_.size();
+    if (size < 3) {
+        MISC3D_ERROR("You should provide more than 3 points");
+        return pcd;
+    }
+
+    Eigen::MatrixXd X;
+    Eigen::VectorXd Y;
+    Y.resize(size);
+    X.setOnes(size, 3);
+    for (size_t i = 0; i < size; i++) {
+        const auto &p = pcd->points_[i];
+        X(i, 0) = p(0);
+        X(i, 1) = p(1);
+        Y(i) = p(2);
+    }
+
+    const Eigen::MatrixXd W = (X.transpose() * X).inverse() * X.transpose() * Y;
+    const auto Y_ = X * W;
+    X.col(2) = Y_;
+
+    // compute normal
+    const Eigen::Vector3d p0(X.row(0));
+    const Eigen::Vector3d p1(X.row(1));
+    const Eigen::Vector3d p2(X.row(2));
+
+    const auto pose = CalcCoordinateTransform<double>(p0, p1, p2);
+    Eigen::Vector3d normal = pose.block<3, 1>(0, 2);
+    if (normal.dot(p0) > 0) {
+        normal *= -1;
+    }
+
+    pcd->normals_.clear();
+    pcd->normals_.resize(size);
+    for (size_t i = 0; i < size; i++) {
+        pcd->points_[i] = X.row(i).transpose();
+        pcd->normals_[i] = normal;
+    }
     return pcd;
 }
 
