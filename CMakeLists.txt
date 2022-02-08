@@ -62,3 +62,10 @@ add_subdirectory(src)
 if(BUILD_PYTHON)
     add_subdirectory(python)
 endif(BUILD_PYTHON)
+
+# install python examples 
+install(DIRECTORY examples
+    DESTINATION "${CMAKE_INSTALL_PREFIX}/misc3d/"
+    USE_SOURCE_PERMISSIONS
+    )
+

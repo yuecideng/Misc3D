@@ -1,8 +1,8 @@
 #include <numeric>
 
 #include <misc3d/logger.h>
-#include <misc3d/utils.h>
 #include <misc3d/registration/correspondence_matching.h>
+#include <misc3d/utils.h>
 #include <open3d/geometry/KDTreeFlann.h>
 
 namespace misc3d {
@@ -16,8 +16,9 @@ namespace registration {
  * @param dst
  * @return std::vector<int>
  */
-std::vector<int> NearestSearch(const open3d::pipelines::registration::Feature& src,
-                               const open3d::pipelines::registration::Feature& dst) {
+std::vector<int> NearestSearch(
+    const open3d::pipelines::registration::Feature& src,
+    const open3d::pipelines::registration::Feature& dst) {
     // init kdtree from dst
     open3d::geometry::KDTreeFlann kdtree(dst);
 
@@ -28,7 +29,8 @@ std::vector<int> NearestSearch(const open3d::pipelines::registration::Feature& s
         std::vector<int> ret_indices;
         std::vector<double> out_dists_sqr;
         const Eigen::VectorXd& temp_pt = src.data_.col(i);
-        const int knn = kdtree.SearchKNN(temp_pt, 1, ret_indices, out_dists_sqr);
+        const int knn =
+            kdtree.SearchKNN(temp_pt, 1, ret_indices, out_dists_sqr);
         nn_inds[i] = ret_indices[0];
     }
 

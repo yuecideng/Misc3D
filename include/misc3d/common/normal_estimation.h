@@ -14,12 +14,12 @@ namespace common {
  * points with width and height.
  *
  * @param pc
- * @param w width of RGBD data
- * @param h height of RGBD data
+ * @param shape shape (W, H) of RGBD data
  * @param k pixel radius for neareast points, eg: if k = 5, t
  * @param view_point the normal will be oriented towards view point
  */
-void EstimateNormalsFromMap(const PointCloudPtr &pc, int w, int h, int k,
+void EstimateNormalsFromMap(const PointCloudPtr &pc,
+                            const std::tuple<int, int> shape, int k,
                             const std::array<double, 3> &view_point = {0, 0,
                                                                        0});
 

@@ -174,9 +174,12 @@ void CalcNormalsFromPointMap(const double *xyzs, const unsigned int w,
 }
 
 void EstimateNormalsFromMap(const PointCloudPtr &pc,
-                            int w, int h, int k,
+                            const std::tuple<int, int> shape, int k,
                             const std::array<double, 3> &view_point) {
     const size_t num = pc->points_.size();
+    const int w = std::get<0>(shape);
+    const int h = std::get<1>(shape);
+
     if (num != w * h) {
         MISC3D_ERROR("The point cloud size is not equal to given point map size.");
         return;

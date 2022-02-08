@@ -3,7 +3,6 @@
 #include <misc3d/common/normal_estimation.h>
 #include <misc3d/common/ransac.h>
 
-
 namespace misc3d {
 
 namespace common {
@@ -80,14 +79,14 @@ void pybind_common(py::module &m) {
           py::arg("enable_parallel") = false);
     m.def(
         "estimate_normals",
-        [](const PointCloudPtr &pc, int w, int h, int k,
-           const std::array<double, 3> &view_point) {
-            EstimateNormalsFromMap(pc, w, h, k, view_point);
+        [](const PointCloudPtr &pc, const std::tuple<int, int> shape,
+           int k, const std::array<double, 3> &view_point) {
+            EstimateNormalsFromMap(pc, shape, k, view_point);
 
             return pc;
         },
         "Estimate normals from pointmap structure", py::arg("pc"),
-        py::arg("weight"), py::arg("height"), py::arg("k") = 5,
+        py::arg("shape"), py::arg("k") = 5,
         py::arg("view_point") = std::array<double, 3>{0, 0, 0});
 }
 

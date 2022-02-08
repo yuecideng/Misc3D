@@ -20,6 +20,7 @@ void DrawPointCloud(const std::shared_ptr<open3d::visualization::Visualizer> &vi
                     const std::array<float, 3> &color, const Eigen::Matrix4d &pose,
                     float size) {
     auto pc_vis = std::make_shared<open3d::geometry::PointCloud>(pc);
+    pc_vis->RemoveNonFinitePoints();
     pc_vis->Transform(pose);
     if (color[0] == 0 && color[1] == 0 && color[2] == 0) {
         if (!pc_vis->HasColors()) {

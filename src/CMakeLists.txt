@@ -35,3 +35,4 @@ install(EXPORT misc3d_target
     NAMESPACE misc3d::
     FILE misc3d-config.cmake
     DESTINATION ${CMAKE_INSTALL_PREFIX}/misc3d/lib/cmake/)
+

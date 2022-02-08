@@ -13,7 +13,7 @@ namespace preprocessing {
  * has the same number with height * width
  *
  * @param pc
- * @param roi
+ * @param roi (xmin, ymin, xmax, ymax)
  * @param shape
  * @return PointCloudPtr
  */

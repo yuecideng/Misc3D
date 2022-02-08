@@ -6,10 +6,8 @@ import time
 import copy
 from random import random
 import open3d as o3d
-import argparse
-
+import cv2
 import misc3d as m3d
-from utils import np2o3d
 from IPython import embed
 
 
@@ -34,10 +32,46 @@ def preprocess_point_cloud(pcd, voxel_size):
 
 vis = o3d.visualization.Visualizer()
 vis.create_window("Segmentation", 1920, 1200)
-pc = o3d.io.read_point_cloud(
-    '/home/yuecideng/WorkSpace/Install/calib/scripts/output/pcd/pcd0.ply')
-pc_ = o3d.io.read_point_cloud(
-    '/home/yuecideng/WorkSpace/Install/calib/scripts/output/pcd/pcd1.ply')
+
+color_img = cv2.imread(
+    '/home/yuecideng/WorkSpace/Sources/Misc3D/examples/data/indoor/color/color_0.png'
+)
+color_img = cv2.cvtColor(color_img, cv2.COLOR_BGR2RGB)
+
+depth_img = cv2.imread(
+    '/home/yuecideng/WorkSpace/Sources/Misc3D/examples/data/indoor/depth/depth_0.png',
+    cv2.IMREAD_ANYDEPTH)
+
+depth = o3d.geometry.Image(depth_img)
+color = o3d.geometry.Image(color_img)
+
+rgbd = o3d.geometry.RGBDImage.create_from_color_and_depth(
+    color, depth, convert_rgb_to_intensity=False)
+
+pinhole_camera_intrinsic = o3d.camera.PinholeCameraIntrinsic(
+    848, 480, 598.7568, 598.7568, 430.3443, 250.244)
+pc = o3d.geometry.PointCloud.create_from_rgbd_image(
+    rgbd, pinhole_camera_intrinsic, project_valid_depth_only=True)
+
+color_img = cv2.imread(
+    '/home/yuecideng/WorkSpace/Sources/Misc3D/examples/data/indoor/color/color_1.png'
+)
+color_img = cv2.cvtColor(color_img, cv2.COLOR_BGR2RGB)
+
+depth_img = cv2.imread(
+    '/home/yuecideng/WorkSpace/Sources/Misc3D/examples/data/indoor/depth/depth_1.png',
+    cv2.IMREAD_ANYDEPTH)
+
+depth = o3d.geometry.Image(depth_img)
+color = o3d.geometry.Image(color_img)
+
+rgbd = o3d.geometry.RGBDImage.create_from_color_and_depth(
+    color, depth, convert_rgb_to_intensity=False)
+
+pinhole_camera_intrinsic = o3d.camera.PinholeCameraIntrinsic(
+    848, 480, 598.7568, 598.7568, 430.3443, 250.244)
+pc_ = o3d.geometry.PointCloud.create_from_rgbd_image(
+    rgbd, pinhole_camera_intrinsic, project_valid_depth_only=True)
 
 print('Point size before sampling', pc)
 t0 = time.time()
@@ -51,28 +85,13 @@ src_ = pc_src.select_by_index(index1)
 dst_ = pc_dst.select_by_index(index2)
 
 print("corres num: {}".format(len(index1)))
-# corres = o3d.utility.Vector2iVector(np.c_[np.array(index1).T,
-#                                           np.array(index2).T])
 
-# embed()
 print('Matching time: %.3f' % (time.time() - t0))
-# print("coress num: {} {}".format(src_, dst_))
-# pose = o3d.pipelines.registration.registration_ransac_based_on_correspondence(
-#     src_, dst_, corres, 0.03,
-#     o3d.pipelines.registration.TransformationEstimationPointToPoint(False), 3,
-#     [
-#         o3d.pipelines.registration.CorrespondenceCheckerBasedOnEdgeLength(0.9),
-#         o3d.pipelines.registration.CorrespondenceCheckerBasedOnDistance(
-#             0.03)
-#     ],
-#     o3d.pipelines.registration.RANSACConvergenceCriteria(100000,
-#                                                          0.999)).transformation
 
-#pose = execute_global_registration(pc_src, pc_dst, fpfh_src, fpfh_dst, 0.02).transformation
+t1 = time.time()
 pose = m3d.registration.compute_transformation_ransac(pc_src, pc_dst,
                                                       (index1, index2), 0.03,
                                                       100000)
-#pose = m3d.registration.compute_transformation_teaser(src_, dst_, 0.02)
 
 pose = o3d.pipelines.registration.registration_icp(
     pc_src, pc_dst, 0.01, pose,
@@ -80,17 +99,9 @@ pose = o3d.pipelines.registration.registration_icp(
     o3d.pipelines.registration.ICPConvergenceCriteria(
         max_iteration=30)).transformation
 
-print(pose)
-# index = pc.cluster_dbscan(0.01, 100)
-print('Transformation estimation time: %.3f' % (time.time() - t0))
-
-# reg_p2l = o3d.pipelines.registration.registration_icp(
-#     pc_src, pc_dst, 0.02, pose,
-#     o3d.pipelines.registration.TransformationEstimationPointToPlane())
-# pose = reg_p2l.transformation
+print('Transformation estimation time: %.3f' % (time.time() - t1))
 
 m3d.vis.draw_point_cloud(vis, pc_src, [1, 0, 0], pose)
 m3d.vis.draw_point_cloud(vis, pc_dst, [0, 1, 0])
 
 vis.run()
-embed()
