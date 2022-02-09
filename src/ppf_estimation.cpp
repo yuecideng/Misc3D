@@ -281,6 +281,7 @@ void PPFEstimator::Impl::PreprocessEstimate(
 
     const bool has_normals = pc->HasNormals();
     const double normal_radius = calc_normal_relative_ * diameter_;
+    pc->RemoveNonFinitePoints();
     if (!has_normals) {
         pc->EstimateNormals(open3d::geometry::KDTreeSearchParamHybrid(
             normal_radius, NORMAL_CALC_NN));
