@@ -9,7 +9,4 @@ if (NOT TARGET Eigen3::Eigen)
   message(ERROR "Can not find eigen3!")
 endif()
 
-if(RVX_BUILD_TESTS)
-  add_subdirectory(Tests)
-endif(RVX_BUILD_TESTS)
 
