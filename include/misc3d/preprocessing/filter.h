@@ -13,7 +13,7 @@ namespace preprocessing {
  * 
  * @param pc 
  * @param num_points 
- * @return PointCloudPtr 
+ * @return std::vector<size_t>
  */
 std::vector<size_t> FarthestPointSampling(const open3d::geometry::PointCloud &pc,
                                     int num_points);

@@ -22,19 +22,12 @@ std::vector<size_t> FarthestPointSampling(
     indices.resize(num_points);
     std::vector<double> distance(N, 1e10);
     size_t farthest_index = 0;
-
-    Eigen::Matrix3Xd points;
-    VectorToEigenMatrix(pc.points_, points);
-
     for (size_t i = 0; i < num_points; i++) {
         indices[i] = farthest_index;
         auto &selected = pc.points_[farthest_index];
-        const Eigen::VectorXd dists =
-            (points.colwise() - selected).colwise().norm().transpose();
         for (size_t j = 0; j < N; j++) {
-            if (dists(j) < distance[j]) {
-                distance[j] = dists(j);
-            }
+            double dist = (pc.points_[j] - selected).norm(); 
+            distance[j] = std::min(distance[j], dist);
         }
         farthest_index =
             std::distance(distance.begin(),
