@@ -21,8 +21,7 @@ config.refine_param.method = m3d.pose_estimation.PPFEstimatorConfig.PointToPlane
 ppf = m3d.pose_estimation.PPFEstimator(config)
 
 model_o3d = o3d.io.read_point_cloud(
-    '/home/yuecideng/WorkSpace/Sources/Misc3D/examples/data/pose_estimation/model/triangle.ply'
-)
+    '../data/pose_estimation/model/triangle.ply')
 
 # train ppf detector
 ret = ppf.train(model_o3d)
@@ -31,9 +30,7 @@ if ret is False:
     print('train fail')
     exit()
 
-scene = o3d.io.read_point_cloud(
-    '/home/yuecideng/WorkSpace/Sources/Misc3D/examples/data/pose_estimation/scene/triangles.ply'
-)
+scene = o3d.io.read_point_cloud('../data/pose_estimation/scene/triangles.ply')
 
 # mathch scene points
 ret, results = ppf.match(scene)

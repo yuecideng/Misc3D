@@ -9,8 +9,9 @@ Core modules:
     2. Ransac for primitives fitting, including plane, sphere and cylinder. 
     3. ROI point clouds cropping from given bounding box of RGBD data (TODO)
 - `preprocessing`: 
-    1. Crop ROI of point clouds.
-    2. Project point clouds into a plane. 
+    1. Farthest point sampling
+    2. Crop ROI of point clouds.
+    3. Project point clouds into a plane. 
 - `features`:
     1. Edge points detection from point clouds.
 - `registration`:

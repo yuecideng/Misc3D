@@ -9,6 +9,16 @@ namespace misc3d {
 namespace preprocessing {
 
 /**
+ * @brief Smapling point clouds using farthest point smapling algorithm.
+ * 
+ * @param pc 
+ * @param num_points 
+ * @return PointCloudPtr 
+ */
+std::vector<size_t> FarthestPointSampling(const open3d::geometry::PointCloud &pc,
+                                    int num_points);
+
+/**
  * @brief Crop point clouds within ROI, This method requires point cloud size
  * has the same number with height * width
  *
@@ -23,9 +33,9 @@ PointCloudPtr CropROIPointCloud(const open3d::geometry::PointCloud &pc,
 
 /**
  * @brief Project point clouds into a plane where z is linear.
- * 
- * @param pc 
- * @return PointCloudPtr 
+ *
+ * @param pc
+ * @return PointCloudPtr
  */
 PointCloudPtr ProjectIntoPlane(const open3d::geometry::PointCloud &pc);
 

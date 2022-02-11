@@ -4,10 +4,45 @@
 
 #include <misc3d/logger.h>
 #include <misc3d/preprocessing/filter.h>
+#include <misc3d/utils.h>
 
 namespace misc3d {
 
 namespace preprocessing {
+
+std::vector<size_t> FarthestPointSampling(
+    const open3d::geometry::PointCloud &pc, int num_points) {
+    std::vector<size_t> indices;
+    if (num_points <= 0) {
+        MISC3D_ERROR("num_points must be greater than 0");
+        return indices;
+    }
+
+    const int N = pc.points_.size();
+    indices.resize(num_points);
+    std::vector<double> distance(N, 1e10);
+    size_t farthest_index = 0;
+
+    Eigen::Matrix3Xd points;
+    VectorToEigenMatrix(pc.points_, points);
+
+    for (size_t i = 0; i < num_points; i++) {
+        indices[i] = farthest_index;
+        auto &selected = pc.points_[farthest_index];
+        const Eigen::VectorXd dists =
+            (points.colwise() - selected).colwise().norm().transpose();
+        for (size_t j = 0; j < N; j++) {
+            if (dists(j) < distance[j]) {
+                distance[j] = dists(j);
+            }
+        }
+        farthest_index =
+            std::distance(distance.begin(),
+                          std::max_element(distance.begin(), distance.end()));
+    }
+
+    return indices;
+}
 
 PointCloudPtr CropROIPointCloud(const open3d::geometry::PointCloud &pc,
                                 const std::tuple<int, int, int, int> &roi,

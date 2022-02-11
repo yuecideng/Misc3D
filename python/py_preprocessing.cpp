@@ -8,6 +8,12 @@ namespace preprocessing {
 
 void pybind_preprocessing(py::module &m) {
     m.def(
+        "farthest_point_sampling",
+        [](const PointCloudPtr &pc, int num_points) {
+            return FarthestPointSampling(*pc, num_points);
+        },
+        "Down sample ponit cloud by farthest point sampling.");
+    m.def(
         "crop_roi_pointcloud",
         [](const PointCloudPtr &pc, const std::tuple<int, int, int, int> &roi,
            const std::tuple<int, int> &shape) {

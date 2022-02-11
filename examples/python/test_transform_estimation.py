@@ -33,14 +33,10 @@ def preprocess_point_cloud(pcd, voxel_size):
 vis = o3d.visualization.Visualizer()
 vis.create_window("Segmentation", 1920, 1200)
 
-color_img = cv2.imread(
-    '/home/yuecideng/WorkSpace/Sources/Misc3D/examples/data/indoor/color/color_0.png'
-)
+color_img = cv2.imread('../data/indoor/color/color_0.png')
 color_img = cv2.cvtColor(color_img, cv2.COLOR_BGR2RGB)
 
-depth_img = cv2.imread(
-    '/home/yuecideng/WorkSpace/Sources/Misc3D/examples/data/indoor/depth/depth_0.png',
-    cv2.IMREAD_ANYDEPTH)
+depth_img = cv2.imread('../data/indoor/depth/depth_0.png', cv2.IMREAD_ANYDEPTH)
 
 depth = o3d.geometry.Image(depth_img)
 color = o3d.geometry.Image(color_img)
