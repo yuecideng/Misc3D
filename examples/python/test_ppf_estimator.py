@@ -3,6 +3,7 @@
 
 import numpy as np
 import open3d as o3d
+import cv2
 import time
 
 import misc3d as m3d
@@ -11,20 +12,21 @@ from IPython import embed
 # init ppf config
 config = m3d.pose_estimation.PPFEstimatorConfig()
 # init training param
-config.training_param.rel_sample_dist = 0.06
-# use half of rel_sample_dist is usually a good choice
-# config.training_param.calc_normal_relative = args.rel_sample_dist
-config.score_thresh = 0.2
+config.training_param.rel_sample_dist = 0.04
+config.score_thresh = 0.05
 config.refine_param.method = m3d.pose_estimation.PPFEstimatorConfig.PointToPlane
 
 # init ppf detector
 ppf = m3d.pose_estimation.PPFEstimator(config)
 
-model_o3d = o3d.io.read_point_cloud(
-    '../data/pose_estimation/model/triangle.ply')
+model = o3d.io.read_point_cloud(
+    '../data/pose_estimation/model/obj.ply')
+
+# convert mm to m
+model = model.scale(0.001, np.array([0, 0, 0]))
 
 # train ppf detector
-ret = ppf.train(model_o3d)
+ret = ppf.train(model)
 
 if ret is False:
     print('train fail')
@@ -32,29 +34,47 @@ if ret is False:
 
 scene = o3d.io.read_point_cloud('../data/pose_estimation/scene/triangles.ply')
 
+color = cv2.imread('../data/pose_estimation/scene/rgb.png')
+color = cv2.cvtColor(color, cv2.COLOR_BGR2RGB)
+depth = cv2.imread('../data/pose_estimation/scene/depth.png', cv2.IMREAD_ANYDEPTH)
+
+depth = o3d.geometry.Image(depth)
+color = o3d.geometry.Image(color)
+
+rgbd = o3d.geometry.RGBDImage.create_from_color_and_depth(
+    color, depth, convert_rgb_to_intensity=False)
+
+pinhole_camera_intrinsic = o3d.camera.PinholeCameraIntrinsic(
+    640, 480, 572.4114, 573.57043, 325.2611, 242.04899)
+scene = o3d.geometry.PointCloud.create_from_rgbd_image(
+    rgbd, pinhole_camera_intrinsic, project_valid_depth_only=False)
+
+# crop roi from point clouds using given bbox of image
+scene_crop = m3d.preprocessing.crop_roi_pointcloud(
+    scene, (222, 296, 41 + 222, 44 + 296), (640, 480))
+
 # mathch scene points
-ret, results = ppf.match(scene)
+ret, results = ppf.match(scene_crop)
 
-sampled_scene = ppf.get_sampled_scene()
-
-pose_list = [p.pose for p in results]
-# icp refine
-t0 = time.time()
-for i, pose in enumerate(pose_list):
+if ret is False:
+    print('No match')
+else:
+    pose = results[0].pose
+    sampled_model = ppf.get_sampled_model()
     reg_result = o3d.pipelines.registration.registration_icp(
-        model_o3d, sampled_scene, 0.01, pose,
-        o3d.pipelines.registration.TransformationEstimationPointToPlane())
-    pose_list[i] = reg_result.transformation
-print('time cost for icp refine: {}'.format(time.time() - t0))
+        sampled_model, scene_crop, 0.01, pose,
+        o3d.pipelines.registration.TransformationEstimationPointToPoint())
+    pose = reg_result.transformation
 
 vis = o3d.visualization.Visualizer()
 vis.create_window("Pose estimation", 1920, 1200)
 
 m3d.vis.draw_point_cloud(vis, scene)
-
-# # draw mathced pose
-for i, p in enumerate(pose_list):
-    m3d.vis.draw_point_cloud(vis, model_o3d, [0, 1, 0], p, 5)
-    m3d.vis.draw_pose(vis, p, size=0.05)
-
+if ret:
+    m3d.vis.draw_point_cloud(vis,
+                                model,
+                                color=(1, 0, 0),
+                                pose=pose,
+                                size=5.0)
+m3d.vis.draw_pose(vis, size=0.1)
 vis.run()
