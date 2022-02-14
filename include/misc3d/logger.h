@@ -53,15 +53,15 @@ static std::shared_ptr<spdlog::logger> GetOrCreateLogger(const char* logname) {
     auto lp = spdlog::get(logname);
     if (!lp) {
         std::vector<spdlog::sink_ptr> sinks;
+#ifdef ENABLE_LOG_FILE
         char filePath[256];
         GetLoggerFilePath(filePath);
         auto fp =
             std::make_shared<spdlog::sinks::rotating_file_sink_mt>(filePath, 1024 * 1024 * 10, 0);
         sinks.push_back(fp);
-#ifdef ENABLE_LOGGER_PRINT
+#endif
         auto stdp = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
         sinks.push_back(stdp);
-#endif
         lp = std::make_shared<spdlog::logger>(logname, begin(sinks), end(sinks));
         lp->flush_on(spdlog::level::debug);
         spdlog::register_logger(lp);
