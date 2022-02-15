@@ -16,6 +16,9 @@ std::vector<size_t> FarthestPointSampling(
     if (num_points <= 0) {
         MISC3D_ERROR("num_points must be greater than 0");
         return indices;
+    } else if (num_points > pc.points_.size()) {
+        MISC3D_WARN("num_points is greater than the number of points.");
+        return indices;
     }
 
     const int N = pc.points_.size();
@@ -26,7 +29,7 @@ std::vector<size_t> FarthestPointSampling(
         indices[i] = farthest_index;
         auto &selected = pc.points_[farthest_index];
         for (size_t j = 0; j < N; j++) {
-            double dist = (pc.points_[j] - selected).norm(); 
+            double dist = (pc.points_[j] - selected).norm();
             distance[j] = std::min(distance[j], dist);
         }
         farthest_index =

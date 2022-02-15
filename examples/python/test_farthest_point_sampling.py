@@ -27,12 +27,10 @@ def farthest_point_sampling_numpy(xyz, npoint):
     return indices
 
 
-pcd = o3d.io.read_point_cloud('../data/pose_estimation/model/triangle.ply')
+pcd = o3d.io.read_point_cloud('../data/pose_estimation/model/obj.ply')
 print('before smapling: {}'.format(pcd))
 
 points = np.asarray(pcd.points)
-
-
 
 t0 = time.time()
 indices = m3d.preprocessing.farthest_point_sampling(pcd, 1000)
@@ -47,5 +45,5 @@ sample_numpy = pcd.select_by_index(indices)
 vis = o3d.visualization.Visualizer()
 vis.create_window("Farest point sampling", 1920, 1200)
 m3d.vis.draw_point_cloud(vis, pcd)
-m3d.vis.draw_point_cloud(vis, sample, color=(1, 0, 0), size=10)
+m3d.vis.draw_point_cloud(vis, sample, color=(0, 1, 0), size=10)
 vis.run()
