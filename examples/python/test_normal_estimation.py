@@ -14,6 +14,7 @@ vis.create_window("Estimate normals", 1920, 1200)
 color_img = cv2.imread('../data/indoor/color/color_0.png')
 color_img = cv2.cvtColor(color_img, cv2.COLOR_BGR2RGB)
 
+# add comment
 depth_img = cv2.imread('../data/indoor/depth/depth_0.png', cv2.IMREAD_ANYDEPTH)
 
 depth = o3d.geometry.Image(depth_img)
