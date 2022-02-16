@@ -13,6 +13,7 @@ from IPython import embed
 config = m3d.pose_estimation.PPFEstimatorConfig()
 # init training param
 config.training_param.rel_sample_dist = 0.04
+config.voting_param.faster_mode = True
 config.score_thresh = 0.05
 config.refine_param.method = m3d.pose_estimation.PPFEstimatorConfig.PointToPlane
 
@@ -31,8 +32,6 @@ ret = ppf.train(model)
 if ret is False:
     print('train fail')
     exit()
-
-scene = o3d.io.read_point_cloud('../data/pose_estimation/scene/triangles.ply')
 
 color = cv2.imread('../data/pose_estimation/scene/rgb.png')
 color = cv2.cvtColor(color, cv2.COLOR_BGR2RGB)

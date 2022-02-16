@@ -68,6 +68,8 @@ public:
 
     struct VotingParam {
         VotingMode method;
+        // if in faster mode, the spread of ppf hash table will be reduced
+        bool faster_mode;
         // ppf quantization resulotion
         double angle_step;
         // minimum distance and angle threshold for point pair filtering

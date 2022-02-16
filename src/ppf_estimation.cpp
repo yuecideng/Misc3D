@@ -113,7 +113,9 @@ private:
     // use_flag: 1: use translation, 2: dsadse rotation, 3: both
     bool MatchPose(const Pose6D &src, const Pose6D &dst, const int use_flag);
 
-    void SpreadPPF(const size_t ppf[4], size_t idx[24], int &n);
+    void SpreadPPFFasterMode(const size_t ppf[4], size_t idx[24], int &n);
+
+    void SpreadPPF(const size_t ppf[4], size_t idx[81], int &n);
 
     void ClusterPoses(std::vector<Pose6D> &pose_list,
                       std::vector<std::vector<Pose6D>> &clustered_pose);
@@ -452,7 +454,7 @@ void PPFEstimator::Impl::VotingAndGetPose(
 #pragma omp parallel for
     for (size_t si = 0; si < reference_num; si++) {
         double ppf[4];
-        size_t quantized_ppf[4], spread_idx[24];
+        size_t quantized_ppf[4], spread_idx[81];
         int n_ppfs;
 
         double alpha_scene_rad;
@@ -502,6 +504,7 @@ void PPFEstimator::Impl::VotingAndGetPose(
                 CalcPPF(p0_p, p0_n, p1_p, p1_n, ppf);
                 QuantizePPF(ppf, quantized_ppf);
                 SpreadPPF(quantized_ppf, spread_idx, n_ppfs);
+
                 for (int ni = 0; ni < n_ppfs; ni++) {
                     idx = spread_idx[ni];
                     t = flags_b[idx] | alpha_scene_bit;
@@ -740,8 +743,8 @@ double PPFEstimator::Impl::CalcAlpha(const PointXYZ &pt,
     return atan2(-tran_pt(2), tran_pt(1));
 }
 
-void PPFEstimator::Impl::SpreadPPF(const size_t ppf[4], size_t idx[24],
-                                   int &n) {
+void PPFEstimator::Impl::SpreadPPFFasterMode(const size_t ppf[4],
+                                             size_t idx[24], int &n) {
     int d, a0, a1, a2;
     n = 0;
     // TODO: Improve Here
@@ -760,6 +763,45 @@ void PPFEstimator::Impl::SpreadPPF(const size_t ppf[4], size_t idx[24],
                     continue;
                 a1 += a0;
                 for (int s3 = 0; s3 < 2; s3++) {
+                    a2 = alpha_shift_lut_[ppf[2]][s3] * angle_num_2_;
+                    if (a2 < 0)
+                        continue;
+                    idx[n] = a2 + a1;
+                    n++;
+                }
+            }
+        }
+    }
+}
+
+void PPFEstimator::Impl::SpreadPPF(const size_t ppf[4], size_t idx[81],
+                                   int &n) {
+    int d, a0, a1, a2;
+    n = 0;
+
+    int k;
+
+    if (config_.voting_param_.faster_mode) {
+        k = 2;
+    } else {
+        k = 3;
+    }
+
+    for (int s0 = 0; s0 < 3; s0++) {
+        d = dist_shift_lut_[ppf[3]][s0] * angle_num_3_;
+        if (d < 0)
+            continue;
+        for (int s1 = 0; s1 < k; s1++) {
+            a0 = alpha_shift_lut_[ppf[0]][s1];
+            if (a0 < 0)
+                continue;
+            a0 += d;
+            for (int s2 = 0; s2 < k; s2++) {
+                a1 = alpha_shift_lut_[ppf[1]][s2] * angle_num_;
+                if (a1 < 0)
+                    continue;
+                a1 += a0;
+                for (int s3 = 0; s3 < k; s3++) {
                     a2 = alpha_shift_lut_[ppf[2]][s3] * angle_num_2_;
                     if (a2 < 0)
                         continue;
@@ -1486,8 +1528,8 @@ open3d::geometry::PointCloud PPFEstimator::GetSceneEdges() {
 PPFEstimatorConfig::PPFEstimatorConfig() {
     training_param_ = {false, 0.05, 0.025, 0.01};
     ref_param_ = {ReferencePointSelection::Random, 0.6};
-    voting_param_ = {VotingMode::SampledPoints, Deg2Rad<double>(12), 1.0 / 3,
-                     Deg2Rad<double>(30)};
+    voting_param_ = {VotingMode::SampledPoints, true, Deg2Rad<double>(12),
+                     1.0 / 3, Deg2Rad<double>(30)};
     edge_param_ = {20};
     refine_param_ = {RefineMethod::PointToPlane, 5};
 

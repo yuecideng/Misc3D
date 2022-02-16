@@ -78,6 +78,7 @@ void pybind_pose_estimation(py::module &m) {
     py::class_<PPFEstimatorConfig::VotingParam>(config, "VotingParam")
         .def(py::init<>())
         .def_readwrite("method", &PPFEstimatorConfig::VotingParam::method)
+        .def_readwrite("faster_mode", &PPFEstimatorConfig::VotingParam::faster_mode)
         .def_readwrite("angle_step",
                        &PPFEstimatorConfig::VotingParam::angle_step)
         .def_readwrite("min_dist_thresh",
