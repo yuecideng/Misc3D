@@ -20,8 +20,7 @@ config.refine_param.method = m3d.pose_estimation.PPFEstimatorConfig.PointToPlane
 # init ppf detector
 ppf = m3d.pose_estimation.PPFEstimator(config)
 
-model = o3d.io.read_point_cloud(
-    '../data/pose_estimation/model/obj.ply')
+model = o3d.io.read_point_cloud('../data/pose_estimation/model/obj.ply')
 
 # convert mm to m
 model = model.scale(0.001, np.array([0, 0, 0]))
@@ -35,7 +34,8 @@ if ret is False:
 
 color = cv2.imread('../data/pose_estimation/scene/rgb.png')
 color = cv2.cvtColor(color, cv2.COLOR_BGR2RGB)
-depth = cv2.imread('../data/pose_estimation/scene/depth.png', cv2.IMREAD_ANYDEPTH)
+depth = cv2.imread('../data/pose_estimation/scene/depth.png',
+                   cv2.IMREAD_ANYDEPTH)
 
 depth = o3d.geometry.Image(depth)
 color = o3d.geometry.Image(color)
@@ -68,12 +68,10 @@ else:
 vis = o3d.visualization.Visualizer()
 vis.create_window("Pose estimation", 1920, 1200)
 
+mesh = o3d.io.read_triangle_mesh('../data/pose_estimation/model/obj.ply')
+mesh = mesh.scale(0.001, np.array([0, 0, 0]))
 m3d.vis.draw_point_cloud(vis, scene)
 if ret:
-    m3d.vis.draw_point_cloud(vis,
-                                model,
-                                color=(1, 0, 0),
-                                pose=pose,
-                                size=5.0)
+    m3d.vis.draw_triangle_mesh(vis, mesh, pose=pose)
 m3d.vis.draw_pose(vis, size=0.1)
 vis.run()

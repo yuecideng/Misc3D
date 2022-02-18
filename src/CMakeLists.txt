@@ -1,4 +1,5 @@
 set(SRCS utils.cpp
+         knn.cpp
          ransac.cpp
          filter.cpp
          normal_estimation.cpp
@@ -16,6 +17,7 @@ target_include_directories(misc3d PUBLIC
 target_link_libraries(misc3d PUBLIC 
     Open3D::Open3D  
     OpenMP::OpenMP_CXX
+    Threads::Threads
     $<BUILD_INTERFACE:teaser_registration>)
 
 add_library(misc3d::misc3d ALIAS misc3d)

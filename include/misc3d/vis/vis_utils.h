@@ -3,6 +3,7 @@
 #include <array>
 
 #include <open3d/geometry/PointCloud.h>
+#include <open3d/geometry/TriangleMesh.h>
 #include <open3d/visualization/visualizer/Visualizer.h>
 #include <Eigen/Core>
 
@@ -36,6 +37,11 @@ void DrawPointCloud(const std::shared_ptr<open3d::visualization::Visualizer> &vi
                     const std::array<float, 3> &color = {0, 0, 0},
                     const Eigen::Matrix4d &pose = Eigen::Matrix4d::Identity(),
                     float size = 3.0);
+
+void DrawTriangleMesh(const std::shared_ptr<open3d::visualization::Visualizer> &vis,
+                    const open3d::geometry::TriangleMesh &mesh,
+                    const std::array<float, 3> &color = {0, 0, 0},
+                    const Eigen::Matrix4d &pose = Eigen::Matrix4d::Identity());
 
 }  // namespace vis
 

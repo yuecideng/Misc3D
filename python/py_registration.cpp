@@ -34,7 +34,7 @@ void pybind_registration(py::module &m) {
         "compute_transformation_ransac",
         [](const PointCloudPtr &src,
            const PointCloudPtr &dst,
-           const std::pair<std::vector<int>, std::vector<int>> &corres,
+           const std::pair<std::vector<size_t>, std::vector<size_t>> &corres,
            double threshold, int max_iter, double edge_length_threshold) {
             RANSACSolver solver(threshold, max_iter, edge_length_threshold);
             return solver.Solve(*src, *dst, corres);

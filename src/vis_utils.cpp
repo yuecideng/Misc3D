@@ -15,10 +15,10 @@ void DrawPose(const std::shared_ptr<open3d::visualization::Visualizer> &vis,
     vis->AddGeometry(axis);
 }
 
-void DrawPointCloud(const std::shared_ptr<open3d::visualization::Visualizer> &vis,
-                    const open3d::geometry::PointCloud &pc,
-                    const std::array<float, 3> &color, const Eigen::Matrix4d &pose,
-                    float size) {
+void DrawPointCloud(
+    const std::shared_ptr<open3d::visualization::Visualizer> &vis,
+    const open3d::geometry::PointCloud &pc, const std::array<float, 3> &color,
+    const Eigen::Matrix4d &pose, float size) {
     auto pc_vis = std::make_shared<open3d::geometry::PointCloud>(pc);
     pc_vis->RemoveNonFinitePoints();
     pc_vis->Transform(pose);
@@ -27,12 +27,30 @@ void DrawPointCloud(const std::shared_ptr<open3d::visualization::Visualizer> &vi
             pc_vis->PaintUniformColor(Eigen::Vector3d(0.5, 0.5, 0.5));
         }
     } else {
-        pc_vis->PaintUniformColor(Eigen::Vector3d(color[0], color[1], color[2]));
+        pc_vis->PaintUniformColor(
+            Eigen::Vector3d(color[0], color[1], color[2]));
     }
     vis->AddGeometry(pc_vis);
 
     auto &option = vis->GetRenderOption();
     option.point_size_ = (double)size;
+}
+
+void DrawTriangleMesh(
+    const std::shared_ptr<open3d::visualization::Visualizer> &vis,
+    const open3d::geometry::TriangleMesh &mesh,
+    const std::array<float, 3> &color, const Eigen::Matrix4d &pose) {
+    auto mesh_vis = std::make_shared<open3d::geometry::TriangleMesh>(mesh);
+    mesh_vis->Transform(pose);
+    if (color[0] == 0 && color[1] == 0 && color[2] == 0) {
+        if (!mesh_vis->HasVertexColors() || mesh_vis->HasTextures()) {
+            mesh_vis->PaintUniformColor(Eigen::Vector3d(0.5, 0.5, 0.5));
+        }
+    } else {
+        mesh_vis->PaintUniformColor(
+            Eigen::Vector3d(color[0], color[1], color[2]));
+    }
+    vis->AddGeometry(mesh_vis);
 }
 
 }  // namespace vis

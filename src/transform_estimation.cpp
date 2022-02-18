@@ -118,7 +118,7 @@ Eigen::Matrix4d TeaserSolver::Solve(const open3d::geometry::PointCloud& src,
 
 Eigen::Matrix4d RANSACSolver::Solve(
     const open3d::geometry::PointCloud& src, const open3d::geometry::PointCloud& dst,
-    const std::pair<std::vector<int>, std::vector<int>>& corres) const {
+    const std::pair<std::vector<size_t>, std::vector<size_t>>& corres) const {
     Eigen::Matrix4d res = Eigen::Matrix4d::Identity();
 
     if (src.points_.size() < 3 || dst.points_.size() < 3) {

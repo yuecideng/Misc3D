@@ -111,7 +111,7 @@ public:
     Eigen::Matrix4d Solve(
         const open3d::geometry::PointCloud &src,
         const open3d::geometry::PointCloud &dst,
-        const std::pair<std::vector<int>, std::vector<int>> &corres) const;
+        const std::pair<std::vector<size_t>, std::vector<size_t>> &corres) const;
 
 private:
     double threshold_;

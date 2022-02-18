@@ -29,6 +29,8 @@ option(ENABLE_LOG_FILE "Save log file into log/misc3d.txt" OFF)
 ###############################################################################
 # Find 3rdparty dependencies
 
+find_package(Threads REQUIRED)
+
 # Find OpenMP for parallel computing
 find_package(OpenMP REQUIRED)
 if(OPENMP_FOUND)

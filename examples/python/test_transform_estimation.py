@@ -74,15 +74,15 @@ t0 = time.time()
 pc_src, fpfh_src = preprocess_point_cloud(pc, 0.02)
 pc_dst, fpfh_dst = preprocess_point_cloud(pc_, 0.02)
 
+ts = time.time()
 index1, index2 = m3d.registration.match_correspondence(fpfh_src, fpfh_dst,
                                                        True)
+print('Matching time: %f' % (time.time() - ts))
 
 src_ = pc_src.select_by_index(index1)
 dst_ = pc_dst.select_by_index(index2)
 
 print("corres num: {}".format(len(index1)))
-
-print('Matching time: %.3f' % (time.time() - t0))
 
 t1 = time.time()
 pose = m3d.registration.compute_transformation_ransac(pc_src, pc_dst,

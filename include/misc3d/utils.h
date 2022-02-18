@@ -9,13 +9,16 @@
 #include <random>
 #include <vector>
 
+#include <open3d/geometry/Geometry.h>
 #include <open3d/geometry/PointCloud.h>
 #include <open3d/pipelines/registration/Feature.h>
 #include <Eigen/Dense>
 
 namespace misc3d {
 
+typedef std::shared_ptr<open3d::geometry::Geometry> GeometryPtr;
 typedef std::shared_ptr<open3d::geometry::PointCloud> PointCloudPtr;
+typedef std::shared_ptr<open3d::geometry::TriangleMesh> TriangleMeshPtr;
 typedef std::shared_ptr<open3d::pipelines::registration::Feature> FeaturePtr;
 
 /**

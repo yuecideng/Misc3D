@@ -27,7 +27,7 @@ public:
      * @param dst
      * @return common::CorrespondenceIndices
      */
-    virtual std::pair<std::vector<int>, std::vector<int>> Match(
+    virtual std::pair<std::vector<size_t>, std::vector<size_t>> Match(
         const open3d::pipelines::registration::Feature& src,
         const open3d::pipelines::registration::Feature& dst) const = 0;
 
@@ -60,7 +60,7 @@ public:
     FLANNMatcher(bool cross_check = true)
         : CorrespondenceMatcher(MatchMethod::FLANN), cross_check_(cross_check) {}
 
-    std::pair<std::vector<int>, std::vector<int>> Match(
+    std::pair<std::vector<size_t>, std::vector<size_t>> Match(
         const open3d::pipelines::registration::Feature& src,
         const open3d::pipelines::registration::Feature& dst) const override;
 
