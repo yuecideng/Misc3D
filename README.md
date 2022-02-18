@@ -7,6 +7,7 @@ Core modules:
 - `common`: 
     1. Normals estimaiton from PointMap 
     2. Ransac for primitives fitting, including plane, sphere and cylinder, and support parallel computing.
+    3. K nearest neighbors search based on [annoy](https://github.com/spotify/annoy). It has the similar API as `open3d.geometry.KDTreeFlann` class (the radius search is not supported).
 - `preprocessing`: 
     1. Farthest point sampling
     2. Crop ROI of point clouds.
@@ -20,7 +21,7 @@ Core modules:
     1. Point Pair Features (PPF) based 6D pose estimator.
 - `segmentation`: 
     1. Proximity extraction in scalable implementation with different vriants, including distance, and normal angle.
-- `vis`: Helper tools for drawing 6D pose, painted point cloud and etc.
+- `vis`: Helper tools for drawing 6D pose, painted point cloud, triangle mesh and etc.
 
 ## How to build 
 ### Requirements
