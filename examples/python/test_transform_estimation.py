@@ -75,8 +75,7 @@ pc_src, fpfh_src = preprocess_point_cloud(pc, 0.02)
 pc_dst, fpfh_dst = preprocess_point_cloud(pc_, 0.02)
 
 ts = time.time()
-index1, index2 = m3d.registration.match_correspondence(fpfh_src, fpfh_dst,
-                                                       True)
+index1, index2 = m3d.registration.match_correspondence(fpfh_src, fpfh_dst)
 print('Matching time: %f' % (time.time() - ts))
 
 src_ = pc_src.select_by_index(index1)

@@ -8,8 +8,12 @@ namespace misc3d {
 
 namespace registration {
 
+// the choise of matching algorithm depends on the feature dimension and size
+// if features have large dimension and large size, the annoy method is better
+// otherwise, the flann method is better
 enum class MatchMethod {
     FLANN = 0,
+    ANNOY = 1,
 };
 
 /**
@@ -36,36 +40,39 @@ public:
      *
      * @return MatcherType
      */
-    MatchMethod GetMatcherType() const { return match_metod_; }
+    MatchMethod GetMatcherType() const { return match_method_; }
 
 protected:
-    CorrespondenceMatcher(MatchMethod type) : match_metod_(type) {}
+    CorrespondenceMatcher(MatchMethod type) : match_method_(type) {}
 
-private:
-    MatchMethod match_metod_;
+protected:
+    MatchMethod match_method_;
 };
 
 /**
- * @brief FLANN based correspondences matching using KDTreeFlann with Open3D/OpenCV
- * backend.
+ * @brief ANN based correspondences matching using Flann or Annoy as backend
  *
  */
-class FLANNMatcher : public CorrespondenceMatcher {
+class ANNMatcher : public CorrespondenceMatcher {
 public:
     /**
-     * @brief Construct a KNNMatcher object
+     * @brief Construct a ANNMatcher object
      *
-     * @param cross_check if set to true, the cross-check is performed.
      */
-    FLANNMatcher(bool cross_check = true)
-        : CorrespondenceMatcher(MatchMethod::FLANN), cross_check_(cross_check) {}
+    ANNMatcher() : CorrespondenceMatcher(MatchMethod::FLANN), n_tress_(0) {}
+
+    ANNMatcher(const MatchMethod& method)
+        : CorrespondenceMatcher(method), n_tress_(4) {}
+
+    ANNMatcher(const MatchMethod& method, int n_trees)
+        : CorrespondenceMatcher(method), n_tress_(n_trees) {}
 
     std::pair<std::vector<size_t>, std::vector<size_t>> Match(
         const open3d::pipelines::registration::Feature& src,
         const open3d::pipelines::registration::Feature& dst) const override;
 
 private:
-    bool cross_check_;
+    int n_tress_;
 };
 
 }  // namespace registration

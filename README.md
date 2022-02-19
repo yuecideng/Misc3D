@@ -82,9 +82,10 @@ index = m3d.features.detect_edge_points(
     pcd, o3d.geometry.KDTreeSearchParamHybrid(0.02, 30))
 edges = pcd.select_by_index(index)
 
-# feature matching using FLANN
+# feature matching using FLANN or ANNOY
 # `fpfh_src` is open3d.pipeline.registration.Feature instance which is computed using FPFH 3d descriptor.
-index1, index2 = m3d.registration.match_correspondence(fpfh_src, fpfh_dst, True)
+index1, index2 = m3d.registration.match_correspondence(fpfh_src, fpfh_dst, m3d.registration.MatchMethod.FLANN)
+index1, index2 = m3d.registration.match_correspondence(fpfh_src, fpfh_dst, m3d.registration.MatchMethod.ANNOY)
 
 # solve 3d rigid transformation
 # ransac solver
