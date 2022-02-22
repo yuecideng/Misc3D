@@ -9,7 +9,6 @@ import cv2
 import copy
 
 import misc3d as m3d
-from utils import np2o3d
 from IPython import embed
 
 vis = o3d.visualization.Visualizer()

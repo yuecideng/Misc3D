@@ -8,7 +8,6 @@ import open3d as o3d
 import cv2
 
 import misc3d as m3d
-from utils import np2o3d
 from IPython import embed
 
 vis = o3d.visualization.Visualizer()

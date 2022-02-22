@@ -77,10 +77,6 @@ pc_dst, fpfh_dst = preprocess_point_cloud(pc_, 0.02)
 ts = time.time()
 index1, index2 = m3d.registration.match_correspondence(fpfh_src, fpfh_dst)
 print('Matching time: %f' % (time.time() - ts))
-
-src_ = pc_src.select_by_index(index1)
-dst_ = pc_dst.select_by_index(index2)
-
 print("corres num: {}".format(len(index1)))
 
 t1 = time.time()
@@ -90,7 +86,7 @@ pose = m3d.registration.compute_transformation_ransac(pc_src, pc_dst,
 
 pose = o3d.pipelines.registration.registration_icp(
     pc_src, pc_dst, 0.01, pose,
-    o3d.pipelines.registration.TransformationEstimationPointToPoint(),
+    o3d.pipelines.registration.TransformationEstimationPointToPlane(),
     o3d.pipelines.registration.ICPConvergenceCriteria(
         max_iteration=30)).transformation
 
