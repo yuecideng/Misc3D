@@ -36,7 +36,7 @@ Core modules:
 1. Build `open3d` as external library. You can follow the instruction from here [guide](https://github.com/intel-isl/open3d-cmake-find-package). Build `pybind11` in your system as well.
 
 2. Git clone the repo and run:
-    ```
+    ```bash
     mkdir build && cd build
     cmake .. -DCMAKE_INSTALL_PREFIX=</path/to/installation>
     make install -j
@@ -44,7 +44,7 @@ Core modules:
     If you don't want to build python binding, just add `-DBUILD_PYTHON=OFF`.
 
 3. After installation, add these two lines to `~/.bashrc` file:
-    ```
+    ```bash
     export PYTHONPATH="$PYTHONPATH:</path/to/installation>/misc3d/lib/python"
     export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:</path/to/installation>/misc3d/lib"
     ```
@@ -53,13 +53,13 @@ Core modules:
 The example python scripts can be found in `examples/python`. You can run it after you install the library successfully.
 
 You can import `misc3d` same as `open3d`:
-```
+```python
 import open3d as o3d
 import misc3d as m3d
 ```
 
 #### Python API examples
-```
+```python
 # estimate normals
 m3d.common.estimate_normals(pcd, (848, 480), 3)
 
