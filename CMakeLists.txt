@@ -40,7 +40,8 @@ if(OPENMP_FOUND)
 endif()
 
 # Find open3d 
-find_package(Open3D REQUIRED)
+set(Open3D_DIR "/usr/local/lib/cmake/Open3D" CACHE FILEPATH "Set to find Open3D")
+find_package(Open3D REQUIRED NO_DEFAULT_PATH)
 
 # Find pybind11 for Python wrappers
 if(BUILD_PYTHON)

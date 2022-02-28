@@ -28,7 +28,7 @@ Core modules:
 - `cmake` >= 3.10
 - `python` >= 3.6
 - `eigen` >= 3.3
-- `open3d` == 0.14.1 
+- `open3d` >= 0.14.1 
 - `pybind11` >= 2.6.2
 
 ### Build
