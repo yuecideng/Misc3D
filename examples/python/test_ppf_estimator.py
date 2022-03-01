@@ -3,17 +3,14 @@
 
 import numpy as np
 import open3d as o3d
-import cv2
 import time
-
 import misc3d as m3d
-from IPython import embed
+
 
 # init ppf config
 config = m3d.pose_estimation.PPFEstimatorConfig()
 # init training param
 config.training_param.rel_sample_dist = 0.04
-config.voting_param.faster_mode = True
 config.score_thresh = 0.05
 config.refine_param.method = m3d.pose_estimation.PPFEstimatorConfig.PointToPlane
 
@@ -32,13 +29,8 @@ if ret is False:
     print('train fail')
     exit()
 
-color = cv2.imread('../data/pose_estimation/scene/rgb.png')
-color = cv2.cvtColor(color, cv2.COLOR_BGR2RGB)
-depth = cv2.imread('../data/pose_estimation/scene/depth.png',
-                   cv2.IMREAD_ANYDEPTH)
-
-depth = o3d.geometry.Image(depth)
-color = o3d.geometry.Image(color)
+depth = o3d.io.read_image('../data/pose_estimation/scene/depth.png')
+color = o3d.io.read_image('../data/pose_estimation/scene/rgb.png')
 
 rgbd = o3d.geometry.RGBDImage.create_from_color_and_depth(
     color, depth, convert_rgb_to_intensity=False)
@@ -53,10 +45,10 @@ scene_crop = m3d.preprocessing.crop_roi_pointcloud(
     scene, (222, 296, 41 + 222, 44 + 296), (640, 480))
 
 # mathch scene points
-ret, results = ppf.match(scene_crop)
+ret, results = ppf.estimate(scene_crop)
 
 if ret is False:
-    print('No match')
+    print('No matched')
 else:
     pose = results[0].pose
     sampled_model = ppf.get_sampled_model()

@@ -7,8 +7,8 @@
 #include <vector>
 
 #include <misc3d/utils.h>
-#include <misc3d/logger.h>
 #include <open3d/geometry/PointCloud.h>
+#include <open3d/utility/Logging.h>
 #include <Eigen/Core>
 
 #define EPS 1.0e-8
@@ -49,8 +49,8 @@ public:
 };
 
 /**
- * @brief the sphere is describe as [x, y, z, r], where the first three are center
- * and the last is radius
+ * @brief the sphere is describe as [x, y, z, r], where the first three are
+ * center and the last is radius
  *
  */
 class Sphere : public Model {
@@ -64,9 +64,9 @@ public:
 };
 
 /**
- * @brief the cylinder is describe as [x, y, z, nx, ny, nz, r], where the first three
- * is a point on the cylinder axis and the second three are normal vector or called
- * direction vector, the last one is radius
+ * @brief the cylinder is describe as [x, y, z, nx, ny, nz, r], where the first
+ * three is a point on the cylinder axis and the second three are normal vector
+ * or called direction vector, the last one is radius
  *
  */
 class Cylinder : public Model {
@@ -283,7 +283,8 @@ public:
 
         const Eigen::Vector3d center(0.5 * (M12 / M11), -0.5 * (M13 / M11),
                                      0.5 * (M14 / M11));
-        const double radius = std::sqrt(center.transpose() * center - (M15 / M11));
+        const double radius =
+            std::sqrt(center.transpose() * center - (M15 / M11));
         model.parameters_(0) = center(0);
         model.parameters_(1) = center(1);
         model.parameters_(2) = center(2);
@@ -314,11 +315,12 @@ public:
              points.row(2).array().pow(2))
                 .matrix();
 
-        // TODO: dangerous when b is very large, which need large memory to compute
-        // v. should be improved.
+        // TODO: dangerous when b is very large, which need large memory to
+        // compute v. should be improved.
         const Eigen::Vector4d w =
             A.bdcSvd(Eigen::ComputeFullU | Eigen::ComputeFullV).solve(b);
-        const double radius = sqrt(w(0) * w(0) + w(1) * w(1) + w(2) * w(2) + w(3));
+        const double radius =
+            sqrt(w(0) * w(0) + w(1) * w(1) + w(2) * w(2) + w(3));
         model.parameters_(0) = w(0);
         model.parameters_(1) = w(1);
         model.parameters_(2) = w(2);
@@ -352,7 +354,7 @@ public:
     bool MinimalFit(const open3d::geometry::PointCloud &pc,
                     Model &model) const override {
         if (!pc.HasNormals()) {
-            MISC3D_ERROR("Cylinder estimation requires normals.");
+            open3d::utility::LogError("Cylinder estimation requires normals.");
             return false;
         }
 
@@ -374,8 +376,10 @@ public:
         const Eigen::Vector4d p1(points[0](0), points[0](1), points[0](2), 0);
         const Eigen::Vector4d p2(points[1](0), points[1](1), points[1](2), 0);
 
-        const Eigen::Vector4d n1(normals[0](0), normals[0](1), normals[0](2), 0);
-        const Eigen::Vector4d n2(normals[1](0), normals[1](1), normals[1](2), 0);
+        const Eigen::Vector4d n1(normals[0](0), normals[0](1), normals[0](2),
+                                 0);
+        const Eigen::Vector4d n2(normals[1](0), normals[1](1), normals[1](2),
+                                 0);
         const Eigen::Vector4d w = n1 + p1 - p2;
 
         const double a = n1.dot(n1);
@@ -420,7 +424,8 @@ public:
      * @return true
      * @return false
      */
-    bool GeneralFit(const open3d::geometry::PointCloud &pc, Model &model) const {
+    bool GeneralFit(const open3d::geometry::PointCloud &pc,
+                    Model &model) const {
         // if (!MinimalCheck(points.cols())) {
         //     return false;
         // }
@@ -478,7 +483,8 @@ public:
     void SetProbability(double probability) { probability_ = probability; }
 
     /**
-     * @brief set maximum iteration, usually used if using parallel ransac fitting
+     * @brief set maximum iteration, usually used if using parallel ransac
+     * fitting
      *
      * @param num
      */
@@ -505,7 +511,8 @@ public:
         Clear();
         const size_t num_points = pc_.points_.size();
         if (num_points < estimator_.minimal_sample_) {
-            MISC3D_WARN("Can not fit model due to lack of points");
+            open3d::utility::LogError(
+                "Can not fit model due to lack of points");
             return false;
         }
 
@@ -550,8 +557,8 @@ private:
     }
 
     /**
-     * @brief vanilla ransac fitting method, the iteration number is varying with
-     * inlier number in each iteration
+     * @brief vanilla ransac fitting method, the iteration number is varying
+     * with inlier number in each iteration
      *
      * @param threshold
      * @param model
@@ -606,10 +613,10 @@ private:
             }
             count++;
         }
-        MISC3D_INFO(
-            "[vanilla ransac] find best model with {}% inliers and run {} "
-            "iterations",
-            100 * fitness_, count);
+        printf(
+            "[vanilla ransac] find best model with %.2f inliers and run %zu "
+            "iterations\n",
+            fitness_, count);
 
         const bool ret = RefineModel(threshold, best_model, inlier_indices);
         model = best_model;
@@ -617,8 +624,8 @@ private:
     }
 
     /**
-     * @brief parallel ransac fitting method, the iteration number is fixed and use
-     * OpenMP to speed up. Usually used if you want more accurate result.
+     * @brief parallel ransac fitting method, the iteration number is fixed and
+     * use OpenMP to speed up. Usually used if you want more accurate result.
      *
      * @param threshold
      * @param model
@@ -639,7 +646,7 @@ private:
             const std::vector<size_t> sample_indices =
                 sampler_(indices_list, estimator_.minimal_sample_);
             const auto sample = pc_.SelectByIndex(sample_indices);
-            
+
             Model model_trial;
             bool ret;
             ret = estimator_.MinimalFit(*sample, model_trial);
@@ -648,7 +655,8 @@ private:
                 continue;
             }
 
-            const auto result = EvaluateModel(pc_.points_, threshold, model_trial);
+            const auto result =
+                EvaluateModel(pc_.points_, threshold, model_trial);
             double fitness = std::get<0>(result);
             double inlier_rmse = std::get<1>(result);
 #pragma omp critical
@@ -675,10 +683,10 @@ private:
         Model best_model;
         best_model = std::get<2>(best_result);
 
-        MISC3D_INFO(
-            "[parallel ransac] find best model with {}% inliers and run "
-            "{} iterations",
-            100 * std::get<0>(best_result), max_iteration_);
+        printf(
+            "[parallel ransac] find best model with %.2f inliers and run "
+            "%zu iterations\n",
+            std::get<0>(best_result), max_iteration_);
 
         const bool ret = RefineModel(threshold, best_model, inlier_indices);
         model = best_model;

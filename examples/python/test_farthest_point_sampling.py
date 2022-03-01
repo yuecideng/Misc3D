@@ -4,11 +4,7 @@
 import numpy as np
 import time
 import open3d as o3d
-import cv2
-import torch
-
 import misc3d as m3d
-from IPython import embed
 
 
 """ numpy implementation of farthest point sampling """
