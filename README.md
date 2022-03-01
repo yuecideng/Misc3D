@@ -120,10 +120,10 @@ You can run c++ examples after finish build the library. The source code of exam
 Some results are as follow:
 <p float="left">
   <img src="images/farthest.png" width="250" height=200/>
-  <img src="images/ransac_and_edges.png" width="250" height=150/>
-  <img src="images/registration.png" width="250" height=150/>
-  <img src="images/segmentation.png" width="250" height=150/>
-  <img src="images/ppf.png" width="400" height=250/> 
+  <img src="images/ransac_and_edges.png" width="250" height=200/>
+  <img src="images/segmentation.png" width="250" height=200/>
+  <img src="images/registration.png" width="350" height=250/>
+  <img src="images/ppf.png" width="350" height=250/> 
 </p>
 
 
