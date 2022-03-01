@@ -29,7 +29,7 @@ std::vector<size_t> FarthestPointSampling(
         indices[i] = farthest_index;
         auto &selected = pc.points_[farthest_index];
         for (size_t j = 0; j < N; j++) {
-            double dist = (pc.points_[j] - selected).norm();
+            double dist = (pc.points_[j] - selected).array().square().sum();
             distance[j] = std::min(distance[j], dist);
         }
         farthest_index =
