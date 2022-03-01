@@ -10,6 +10,11 @@ SET(CMAKE_CXX_FLAGS_RELEASE "-O3")
 set(CMAKE_BUILD_TYPE "Release")
 message(STATUS "cmake build type: " ${CMAKE_BUILD_TYPE})
 
+message(STATUS "CPU architecture: " ${CMAKE_SYSTEM_PROCESSOR})
+if(NOT ${CMAKE_SYSTEM_PROCESSOR} STREQUAL "x86_64")
+    add_definitions(-DARM_CPU)
+endif()
+
 if(UNIX)
     set(CMAKE_INSTALL_RPATH ${CMAKE_INSTALL_PREFIX}/${PROJECT_NAME}/lib)
     set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
@@ -24,6 +29,7 @@ file(MAKE_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 
 option(BUILD_SHARED_LIBS "Build using shared libraries" ON)
 option(BUILD_PYTHON "Build Python bindings" ON)
+option(BUILD_EXAMPLES "Build cpp examples" ON)
 option(ENABLE_LOG_FILE "Save log file into log/misc3d.txt" OFF)
 
 ###############################################################################
@@ -61,6 +67,10 @@ add_subdirectory(3rdparty)
 
 include_directories(${SPDLOG_INCLUDE_DIRS})
 add_subdirectory(src)
+
+if(BUILD_EXAMPLES)
+    add_subdirectory(examples/cpp)
+endif()
 
 if(BUILD_PYTHON)
     add_subdirectory(python)

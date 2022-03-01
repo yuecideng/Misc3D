@@ -6,9 +6,7 @@ import time
 import copy
 from random import random
 import open3d as o3d
-import cv2
 import misc3d as m3d
-from IPython import embed
 
 
 def preprocess_point_cloud(pcd, voxel_size):
@@ -33,13 +31,8 @@ def preprocess_point_cloud(pcd, voxel_size):
 vis = o3d.visualization.Visualizer()
 vis.create_window("Segmentation", 1920, 1200)
 
-color_img = cv2.imread('../data/indoor/color/color_0.png')
-color_img = cv2.cvtColor(color_img, cv2.COLOR_BGR2RGB)
-
-depth_img = cv2.imread('../data/indoor/depth/depth_0.png', cv2.IMREAD_ANYDEPTH)
-
-depth = o3d.geometry.Image(depth_img)
-color = o3d.geometry.Image(color_img)
+depth = o3d.io.read_image('../data/indoor/depth/depth_0.png')
+color = o3d.io.read_image('../data/indoor/color/color_0.png')
 
 rgbd = o3d.geometry.RGBDImage.create_from_color_and_depth(
     color, depth, convert_rgb_to_intensity=False)
@@ -49,23 +42,12 @@ pinhole_camera_intrinsic = o3d.camera.PinholeCameraIntrinsic(
 pc = o3d.geometry.PointCloud.create_from_rgbd_image(
     rgbd, pinhole_camera_intrinsic, project_valid_depth_only=True)
 
-color_img = cv2.imread(
-    '/home/yuecideng/WorkSpace/Sources/Misc3D/examples/data/indoor/color/color_1.png'
-)
-color_img = cv2.cvtColor(color_img, cv2.COLOR_BGR2RGB)
-
-depth_img = cv2.imread(
-    '/home/yuecideng/WorkSpace/Sources/Misc3D/examples/data/indoor/depth/depth_1.png',
-    cv2.IMREAD_ANYDEPTH)
-
-depth = o3d.geometry.Image(depth_img)
-color = o3d.geometry.Image(color_img)
+depth = o3d.io.read_image('../data/indoor/depth/depth_1.png')
+color = o3d.io.read_image('../data/indoor/color/color_1.png')
 
 rgbd = o3d.geometry.RGBDImage.create_from_color_and_depth(
     color, depth, convert_rgb_to_intensity=False)
 
-pinhole_camera_intrinsic = o3d.camera.PinholeCameraIntrinsic(
-    848, 480, 598.7568, 598.7568, 430.3443, 250.244)
 pc_ = o3d.geometry.PointCloud.create_from_rgbd_image(
     rgbd, pinhole_camera_intrinsic, project_valid_depth_only=True)
 
@@ -85,7 +67,7 @@ pose = m3d.registration.compute_transformation_ransac(pc_src, pc_dst,
                                                       100000)
 
 pose = o3d.pipelines.registration.registration_icp(
-    pc_src, pc_dst, 0.01, pose,
+    pc_src, pc_dst, 0.02, pose,
     o3d.pipelines.registration.TransformationEstimationPointToPlane(),
     o3d.pipelines.registration.ICPConvergenceCriteria(
         max_iteration=30)).transformation

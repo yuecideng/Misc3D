@@ -59,7 +59,7 @@ std::vector<std::vector<size_t>> ProximityExtractor::Segment(
     const std::vector<std::vector<size_t>> &nn_indices,
     const BaseProximityEvaluator &evaluator) {
     if (pc.points_.size() != nn_indices.size()) {
-        MISC3D_ERROR("The number of input data size are not equal!");
+        open3d::utility::LogError("The number of input data size are not equal!");
         std::vector<std::vector<size_t>> result;
         return result;
     }
@@ -183,8 +183,6 @@ std::vector<std::vector<size_t>> ProximityExtractor::Segment(
     clustered_indices_map_.assign(clustered_indices_map.begin(),
                                    clustered_indices_map.end());
     cluster_num_ = cluster_num;
-
-    MISC3D_INFO("Find {} clusters after segmentation.", cluster_num);
 
     return clustered_indices_map;
 }

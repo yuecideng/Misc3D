@@ -13,7 +13,7 @@ void pybind_pose_estimation(py::module &m) {
         .def(py::init<const PPFEstimatorConfig &>())
         .def("set_config", &PPFEstimator::SetConfig)
         .def("train", &PPFEstimator::Train)
-        .def("match",
+        .def("estimate",
              [](PPFEstimator &self, const PointCloudPtr &pc) {
                  std::vector<Pose6D> results;
                  bool ret = self.Estimate(pc, results);

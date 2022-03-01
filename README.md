@@ -50,16 +50,14 @@ Core modules:
     ```
     Run `sources ~/.bashrc` to save changes.
 ### How to use
+#### Python
 The example python scripts can be found in `examples/python`. You can run it after you install the library successfully.
 
 You can import `misc3d` same as `open3d`:
 ```python
 import open3d as o3d
 import misc3d as m3d
-```
 
-#### Python API examples
-```python
 # estimate normals
 m3d.common.estimate_normals(pcd, (848, 480), 3)
 
@@ -116,4 +114,16 @@ m3d.vis.draw_pose(vis, size=0.1)
 # draw point clouds painted with red
 m3d.vis.draw_point_cloud(vis, pcd, (1, 0, 0), size=3.0)
 ```
+
+#### C++
+You can run c++ examples after finish build the library. The source code of examples are in `examples/cpp`.
+Some results are as follow:
+<p float="left">
+  <img src="images/farthest.png" width="250" height=200/>
+  <img src="images/ransac_and_edges.png" width="250" height=150/>
+  <img src="images/registration.png" width="250" height=150/>
+  <img src="images/segmentation.png" width="250" height=150/>
+  <img src="images/ppf.png" width="400" height=250/> 
+</p>
+
 

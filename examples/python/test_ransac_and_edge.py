@@ -5,21 +5,14 @@ import numpy as np
 import time
 from random import random
 import open3d as o3d
-import cv2
-
 import misc3d as m3d
-from IPython import embed
+
 
 vis = o3d.visualization.Visualizer()
 vis.create_window("Segmentation", 1920, 1200)
 
-color_img = cv2.imread('../data/indoor/color/color_0.png')
-color_img = cv2.cvtColor(color_img, cv2.COLOR_BGR2RGB)
-
-depth_img = cv2.imread('../data/indoor/depth/depth_0.png', cv2.IMREAD_ANYDEPTH)
-
-depth = o3d.geometry.Image(depth_img)
-color = o3d.geometry.Image(color_img)
+depth = o3d.io.read_image('../data/indoor/depth/depth_0.png')
+color = o3d.io.read_image('../data/indoor/color/color_0.png')
 
 rgbd = o3d.geometry.RGBDImage.create_from_color_and_depth(
     color, depth, convert_rgb_to_intensity=False)
@@ -34,7 +27,7 @@ pcd = pcd.voxel_down_sample(0.005)
 print('Point size after sampling', pcd)
 
 t0 = time.time()
-w, index = m3d.common.fit_plane(pcd, 0.01, 100, enable_parallel=True)
+w, index = m3d.common.fit_plane(pcd, 0.01, 400, enable_parallel=True)
 print('Plan fitting time: %.3f' % (time.time() - t0))
 
 plane = pcd.select_by_index(index)
