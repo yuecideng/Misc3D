@@ -299,11 +299,11 @@ void PPFEstimator::Impl::PreprocessEstimate(
                 pc_sample.points_.size(), num);
 
     if (enable_edge_support_) {
-        const auto o3d_pc_dense = pc->VoxelDownSample(dist_step_dense_);
+        dense_scene_sample_ = *pc->VoxelDownSample(dist_step_dense_);
 
         scene_edge_ind_.clear();
         const double radius = diameter_ * calc_normal_relative_;
-        ExtractEdges(*o3d_pc_dense, radius, scene_edge_ind_);
+        ExtractEdges(dense_scene_sample_, radius, scene_edge_ind_);
     }
 
     MISC3D_INFO("Preprocess time cost for estimate stage: {}", timer.Stop());
@@ -354,7 +354,7 @@ bool PPFEstimator::Impl::Estimate(const PointCloudPtr &pc,
         PPFEstimatorConfig::VotingMode::EdgePoints) {
         const auto scene_boundary_points =
             dense_scene_sample_.SelectByIndex(scene_edge_ind_);
-
+            
         // we use sampled key points and edge points for point pair computation
         VotingAndGetPose(*key_points, *scene_boundary_points,
                          hashtable_boundary_, tmg_ptr_boundary_, pose_list,
