@@ -6,8 +6,8 @@
 #include <vector>
 
 #include <misc3d/common/normal_estimation.h>
-#include <misc3d/logger.h>
 #include <misc3d/utils.h>
+#include <open3d/utility/Logging.h>
 
 namespace misc3d {
 namespace common {
@@ -114,12 +114,18 @@ void CalcNormalsFromPointMap(const double *xyzs, const unsigned int w,
     SumDense(x, mask, (unsigned int)expand_w, (unsigned int)expand_h, k, sum_x);
     SumDense(y, mask, (unsigned int)expand_w, (unsigned int)expand_h, k, sum_y);
     SumDense(z, mask, (unsigned int)expand_w, (unsigned int)expand_h, k, sum_z);
-    SumDense(xx, mask, (unsigned int)expand_w, (unsigned int)expand_h, k, sum_xx);
-    SumDense(xy, mask, (unsigned int)expand_w, (unsigned int)expand_h, k, sum_xy);
-    SumDense(xz, mask, (unsigned int)expand_w, (unsigned int)expand_h, k, sum_xz);
-    SumDense(yy, mask, (unsigned int)expand_w, (unsigned int)expand_h, k, sum_yy);
-    SumDense(yz, mask, (unsigned int)expand_w, (unsigned int)expand_h, k, sum_yz);
-    SumDense(zz, mask, (unsigned int)expand_w, (unsigned int)expand_h, k, sum_zz);
+    SumDense(xx, mask, (unsigned int)expand_w, (unsigned int)expand_h, k,
+             sum_xx);
+    SumDense(xy, mask, (unsigned int)expand_w, (unsigned int)expand_h, k,
+             sum_xy);
+    SumDense(xz, mask, (unsigned int)expand_w, (unsigned int)expand_h, k,
+             sum_xz);
+    SumDense(yy, mask, (unsigned int)expand_w, (unsigned int)expand_h, k,
+             sum_yy);
+    SumDense(yz, mask, (unsigned int)expand_w, (unsigned int)expand_h, k,
+             sum_yz);
+    SumDense(zz, mask, (unsigned int)expand_w, (unsigned int)expand_h, k,
+             sum_zz);
     SumDense(mask, mask, (unsigned int)expand_w, (unsigned int)expand_h, k,
              neighbor_nums);
 
@@ -181,14 +187,16 @@ void EstimateNormalsFromMap(const PointCloudPtr &pc,
     const int h = std::get<1>(shape);
 
     if (num != w * h) {
-        MISC3D_ERROR("The point cloud size is not equal to given point map size.");
+        open3d::utility::LogError(
+            "The point cloud size is not equal to given point map size.");
         return;
     }
 
     double *normals_ptr = new double[num * 3];
     double *points_ptr = new double[num * 3];
     VectorToPointer(pc->points_, points_ptr);
-    CalcNormalsFromPointMap(points_ptr, w, h, k, normals_ptr, view_point.data());
+    CalcNormalsFromPointMap(points_ptr, w, h, k, normals_ptr,
+                            view_point.data());
 
     // assign normals
     std::vector<Eigen::Vector3d> normals;

@@ -613,12 +613,12 @@ private:
             }
             count++;
         }
-        printf(
-            "[vanilla ransac] find best model with %.2f inliers and run %zu "
-            "iterations\n",
-            fitness_, count);
 
-        const bool ret = RefineModel(threshold, best_model, inlier_indices);
+        open3d::utility::LogInfo(
+            "[vanilla ransac] find best model with {}% inliers and run {} "
+            "iterations", fitness_ * 100, count);
+
+            const bool ret = RefineModel(threshold, best_model, inlier_indices);
         model = best_model;
         return ret;
     }
@@ -683,10 +683,9 @@ private:
         Model best_model;
         best_model = std::get<2>(best_result);
 
-        printf(
-            "[parallel ransac] find best model with %.2f inliers and run "
-            "%zu iterations\n",
-            std::get<0>(best_result), max_iteration_);
+        open3d::utility::LogInfo(
+            "[parallel ransac] find best model with {}% inliers and run {} "
+            "iterations", std::get<0>(best_result) * 100, max_iteration_);
 
         const bool ret = RefineModel(threshold, best_model, inlier_indices);
         model = best_model;

@@ -1,5 +1,5 @@
 #include <misc3d/features/edge_detection.h>
-#include <misc3d/logger.h>
+#include <open3d/utility/Logging.h>
 
 namespace misc3d {
 
@@ -11,17 +11,17 @@ Eigen::Vector4d ToEigenVector4(const Eigen::Vector3d& in) {
     return out;
 }
 
-void GetCoordinateSystemOnPlane(const Eigen::Vector3d& query, Eigen::Vector4d& u,
-                                Eigen::Vector4d& v) {
+void GetCoordinateSystemOnPlane(const Eigen::Vector3d& query,
+                                Eigen::Vector4d& u, Eigen::Vector4d& v) {
     const Eigen::Vector4d vector = ToEigenVector4(query);
     v = vector.unitOrthogonal();
     u = vector.cross3(v);
 }
 
 bool IsBoundaryPoint(const open3d::geometry::PointCloud& pc,
-                     const Eigen::Vector3d& query, const std::vector<int> indices,
-                     const Eigen::Vector4d& u, const Eigen::Vector4d& v,
-                     double angle_threshold) {
+                     const Eigen::Vector3d& query,
+                     const std::vector<int> indices, const Eigen::Vector4d& u,
+                     const Eigen::Vector4d& v, double angle_threshold) {
     std::vector<double> angles;
     for (size_t i = 0; i < indices.size(); i++) {
         const Eigen::Vector4d delta =
@@ -64,13 +64,12 @@ std::vector<size_t> DetectEdgePoints(
     const open3d::geometry::KDTreeSearchParam& param, double angle_threshold) {
     std::vector<size_t> edge_indices;
     if (!pc.HasPoints()) {
-        MISC3D_ERROR("No PointCloud data.");
+        open3d::utility::LogError("No PointCloud data.");
         return edge_indices;
     }
 
     open3d::geometry::PointCloud pc_(pc);
     if (!pc.HasNormals()) {
-        MISC3D_INFO("Computing normals.");
         pc_.EstimateNormals(param);
         pc_.OrientNormalsTowardsCameraLocation();
     }
@@ -81,10 +80,12 @@ std::vector<size_t> DetectEdgePoints(
     for (size_t idx = 0; idx < num; idx++) {
         std::vector<int> ret_indices;
         std::vector<double> out_dists_sqr;
-        if (kdtree.Search(pc_.points_[idx], param, ret_indices, out_dists_sqr) < 3) {
+        if (kdtree.Search(pc_.points_[idx], param, ret_indices, out_dists_sqr) <
+            3) {
             continue;
         }
-        Eigen::Vector4d u = Eigen::Vector4d::Zero(), v = Eigen::Vector4d::Zero();
+        Eigen::Vector4d u = Eigen::Vector4d::Zero(),
+                        v = Eigen::Vector4d::Zero();
         // Obtain a coordinate system on the plane
         GetCoordinateSystemOnPlane(pc_.normals_[idx], u, v);
 
@@ -95,8 +96,9 @@ std::vector<size_t> DetectEdgePoints(
             { edge_indices.push_back(idx); }
         }
     }
-    MISC3D_INFO("Found {} edge points from {} input points.", edge_indices.size(),
-                num);
+
+    open3d::utility::LogInfo("Found {} edge points from {} input points.",
+                             edge_indices.size(), num);
 
     return edge_indices;
 }

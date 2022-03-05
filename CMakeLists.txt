@@ -30,7 +30,6 @@ file(MAKE_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 option(BUILD_SHARED_LIBS "Build using shared libraries" ON)
 option(BUILD_PYTHON "Build Python bindings" ON)
 option(BUILD_EXAMPLES "Build cpp examples" ON)
-option(ENABLE_LOG_FILE "Save log file into log/misc3d.txt" OFF)
 
 ###############################################################################
 # Find 3rdparty dependencies
@@ -56,12 +55,6 @@ endif()
 
 set(CMAKE_INSTALL_PREFIX $ENV{HOME} CACHE PATH "install path")
 message(STATUS "Install path: " ${CMAKE_INSTALL_PREFIX})
-
-# enable log printing on terminal
-if(ENABLE_LOG_FILE)
-    message(STATUS "Enable log file saving")
-    add_definitions(-DENABLE_LOG_FILE)
-endif(ENABLE_LOG_FILE)
 
 add_subdirectory(3rdparty)
 

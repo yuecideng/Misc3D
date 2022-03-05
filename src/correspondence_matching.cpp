@@ -2,7 +2,6 @@
 #include <thread>
 
 #include <misc3d/common/knn.h>
-#include <misc3d/logger.h>
 #include <misc3d/registration/correspondence_matching.h>
 #include <misc3d/utils.h>
 #include <open3d/geometry/KDTreeFlann.h>
