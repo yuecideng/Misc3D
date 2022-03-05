@@ -18,7 +18,8 @@ Core modules:
     1. Corresponding matching with descriptors.
     2. 3D rigid transformation solver including SVD, RANSAC and [TEASERPP](https://github.com/MIT-SPARK/TEASER-plusplus).
 - `pose_estimation`: 
-    1. Point Pair Features (PPF) based 6D pose estimator.
+    1. Point Pair Features (PPF) based 6D pose estimator. (This implementation is evaluated on Linemod, Linemod-Occluded and YCB-Video dataset, the performance can be found in [BOP Leaderboards/PPF-3D-ICP](https://bop.felk.cvut.cz/leaderboards/))
+    
 - `segmentation`: 
     1. Proximity extraction in scalable implementation with different vriants, including distance, and normal angle.
 - `vis`: Helper tools for drawing 6D pose, painted point cloud, triangle mesh and etc.
