@@ -7,7 +7,7 @@
 
 #include <misc3d/utils.h>
 #include <open3d/geometry/KDTreeFlann.h>
-#include <open3d/utility/Logging.h>
+#include <misc3d/logging.h>
 #include <Eigen/Core>
 
 namespace misc3d {
@@ -66,7 +66,7 @@ public:
 
     inline bool operator()(size_t i, size_t j, double dist) const {
         if (i > normals_.size() || j > normals_.size()) {
-            open3d::utility::LogError("Index exceed size of data!");
+            misc3d::LogError("Index exceed size of data!");
             return false;
         }
         const double angle = std::acos(normals_[i].dot(normals_[j]));
@@ -99,7 +99,7 @@ public:
 
     inline bool operator()(size_t i, size_t j, double dist) const {
         if (i > normals_.size() || j > normals_.size()) {
-            open3d::utility::LogError("Index exceed size of data!");
+            misc3d::LogError("Index exceed size of data!");
             return false;
         }
         if (dist >= max_distance_)

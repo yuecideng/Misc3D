@@ -19,7 +19,7 @@
 #include <open3d/geometry/KDTreeSearchParam.h>
 #include <open3d/pipelines/registration/GeneralizedICP.h>
 #include <open3d/pipelines/registration/Registration.h>
-#include <open3d/utility/Logging.h>
+#include <misc3d/logging.h>
 #include <Eigen/Core>
 #include <Eigen/Eigenvalues>
 
@@ -258,7 +258,7 @@ void PPFEstimator::Impl::PreprocessTrain(
     dist_threshold_ *= diameter;
     const double normal_r = diameter * calc_normal_relative_;
 
-    open3d::utility::LogInfo(
+    misc3d::LogInfo(
         "Model training params: normal search radius: {}, sample "
         "distance: {}, dense sample distance: {}",
         normal_r, dist_step_, dist_step_dense_);
@@ -267,7 +267,7 @@ void PPFEstimator::Impl::PreprocessTrain(
     CalcModelNormalAndSampling(pc, kdtree, normal_r, dist_step_, view_pt,
                                pc_sample);
 
-    open3d::utility::LogInfo(
+    misc3d::LogInfo(
         "Model sample point number is {} | {} after preprocessing",
         pc_sample.points_.size(), pc->points_.size());
 }
@@ -278,7 +278,7 @@ void PPFEstimator::Impl::PreprocessEstimate(
     timer.Start();
 
     if (!pc->HasPoints()) {
-        open3d::utility::LogError("There is no scene point clouds.");
+        misc3d::LogError("There is no scene point clouds.");
         return;
     }
 
@@ -296,7 +296,7 @@ void PPFEstimator::Impl::PreprocessEstimate(
     const size_t num = pc->points_.size();
     pc_sample = *pc->VoxelDownSample(dist_step_);
 
-    open3d::utility::LogInfo(
+    misc3d::LogInfo(
         "Scene point number is {} | {} after preprocessing.",
         pc_sample.points_.size(), num);
 
@@ -308,7 +308,7 @@ void PPFEstimator::Impl::PreprocessEstimate(
         ExtractEdges(dense_scene_sample_, radius, scene_edge_ind_);
     }
 
-    open3d::utility::LogInfo("Preprocess time cost for estimate stage: {}",
+    misc3d::LogInfo("Preprocess time cost for estimate stage: {}",
                              timer.Stop());
 }
 
@@ -321,7 +321,7 @@ bool PPFEstimator::Impl::Estimate(const PointCloudPtr &pc,
     timer.Start();
 
     if (!trained_) {
-        open3d::utility::LogError("Need training before estimating!");
+        misc3d::LogError("Need training before estimating!");
         return false;
     }
 
@@ -367,7 +367,7 @@ bool PPFEstimator::Impl::Estimate(const PointCloudPtr &pc,
     if (pose_list.empty()) {
         return false;
     } else {
-        open3d::utility::LogInfo("Find {} raw poses after voting.",
+        misc3d::LogInfo("Find {} raw poses after voting.",
                                  pose_list.size());
     }
 
@@ -406,7 +406,7 @@ bool PPFEstimator::Impl::Estimate(const PointCloudPtr &pc,
         const double score =
             std::min(1.0, (double)results[i].num_votes_ / expected_votes_num);
         results[i].score_ = score;
-        open3d::utility::LogInfo("Pose {} with score {}", i, score);
+        misc3d::LogInfo("Pose {} with score {}", i, score);
     }
 
     // remove pose which votes is less than threshold
@@ -417,7 +417,7 @@ bool PPFEstimator::Impl::Estimate(const PointCloudPtr &pc,
         }
     }
     results.erase(results.begin() + valid_num, results.end());
-    open3d::utility::LogInfo("Find {} pose satisfy score threshold", valid_num);
+    misc3d::LogInfo("Find {} pose satisfy score threshold", valid_num);
 
     if (results.empty()) {
         return false;
@@ -429,7 +429,7 @@ bool PPFEstimator::Impl::Estimate(const PointCloudPtr &pc,
     }
     pose_list_.assign(results.begin(), results.end());
 
-    open3d::utility::LogInfo("Estimating time cost: {}", timer.Stop());
+    misc3d::LogInfo("Estimating time cost: {}", timer.Stop());
     return true;
 }
 
@@ -442,7 +442,7 @@ void PPFEstimator::Impl::VotingAndGetPose(
     pose_list.clear();
     const size_t reference_num = reference_pts.points_.size();
     const size_t refered_num = refered_pts.points_.size();
-    open3d::utility::LogInfo("Reference num: {}, Refered num: {}",
+    misc3d::LogInfo("Reference num: {}, Refered num: {}",
                              reference_num, refered_num);
 
     const size_t votes_threshold = refered_model_num * VOTING_THRESHOLD_FACTOR;
@@ -571,7 +571,7 @@ bool PPFEstimator::Impl::Train(const PointCloudPtr &pc) {
     Timer timer;
     timer.Start();
     if (!pc->HasPoints()) {
-        open3d::utility::LogError("There is no input points");
+        misc3d::LogError("There is no input points");
         return false;
     }
 
@@ -587,7 +587,7 @@ bool PPFEstimator::Impl::Train(const PointCloudPtr &pc) {
     pc_num_ = model_sample_.points_.size();
 
     if (pc_num_ == 0) {
-        open3d::utility::LogError(
+        misc3d::LogError(
             "There is no input points after preprocessing");
         return false;
     }
@@ -619,7 +619,7 @@ bool PPFEstimator::Impl::Train(const PointCloudPtr &pc) {
             dense_model_sample_;
 
         if (model_edge_ind_.empty()) {
-            open3d::utility::LogError("Fail to extract edge points!");
+            misc3d::LogError("Fail to extract edge points!");
             return false;
         }
 
@@ -641,7 +641,7 @@ bool PPFEstimator::Impl::Train(const PointCloudPtr &pc) {
     GenerateLUT();
     trained_ = true;
 
-    open3d::utility::LogInfo("Training time cost: {}", timer.Stop());
+    misc3d::LogInfo("Training time cost: {}", timer.Stop());
     return true;
 }
 
@@ -1215,7 +1215,7 @@ void PPFEstimator::Impl::CalcModelNormalAndSampling(
                            dense_model_sample_);
         model_edge_ind_.clear();
         ExtractEdges(dense_model_sample_, normal_r, model_edge_ind_);
-        open3d::utility::LogInfo(
+        misc3d::LogInfo(
             "Extract {} edge points form model point clouds.",
             model_edge_ind_.size());
     }
@@ -1446,7 +1446,7 @@ bool PPFEstimator::Train(const PointCloudPtr &pc) {
     if (impl_ptr_ != nullptr) {
         return impl_ptr_->Train(pc);
     } else {
-        open3d::utility::LogError(
+        misc3d::LogError(
             "PPF Estimator not is initialized successfully");
         return false;
     }
@@ -1457,7 +1457,7 @@ bool PPFEstimator::Estimate(const PointCloudPtr &pc,
     if (impl_ptr_ != nullptr) {
         return impl_ptr_->Estimate(pc, results);
     } else {
-        open3d::utility::LogError(
+        misc3d::LogError(
             "PPF Estimator not is initialized successfully");
         return false;
     }
@@ -1508,7 +1508,7 @@ open3d::geometry::PointCloud PPFEstimator::GetModelEdges() {
         out = *impl_ptr_->dense_model_sample_.SelectByIndex(
             impl_ptr_->model_edge_ind_);
     } else {
-        open3d::utility::LogWarning(
+        misc3d::LogWarning(
             "Can not get model edge points due to edge support is not "
             "enabled.");
     }
@@ -1522,7 +1522,7 @@ open3d::geometry::PointCloud PPFEstimator::GetSceneEdges() {
         out = *impl_ptr_->dense_scene_sample_.SelectByIndex(
             impl_ptr_->scene_edge_ind_);
     } else {
-        open3d::utility::LogWarning(
+        misc3d::LogWarning(
             "Can not get scene edge points due to edge support is not "
             "enabled.");
     }
@@ -1551,7 +1551,7 @@ PPFEstimatorConfig::~PPFEstimatorConfig() = default;
 bool PPFEstimator::CheckConfig(const PPFEstimatorConfig &config) {
     if (config.training_param_.rel_dense_sample_dist >=
         config.training_param_.rel_sample_dist) {
-        open3d::utility::LogError("Dense_sample_dist should be smaller than sample_dist.");
+        misc3d::LogError("Dense_sample_dist should be smaller than sample_dist.");
         return false;
     }
 

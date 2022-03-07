@@ -7,7 +7,7 @@
 
 #include <misc3d/common/normal_estimation.h>
 #include <misc3d/utils.h>
-#include <open3d/utility/Logging.h>
+#include <misc3d/logging.h>
 
 namespace misc3d {
 namespace common {
@@ -187,7 +187,7 @@ void EstimateNormalsFromMap(const PointCloudPtr &pc,
     const int h = std::get<1>(shape);
 
     if (num != w * h) {
-        open3d::utility::LogError(
+        misc3d::LogError(
             "The point cloud size is not equal to given point map size.");
         return;
     }

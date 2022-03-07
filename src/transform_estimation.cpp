@@ -5,7 +5,7 @@
 #include <misc3d/utils.h>
 #include <open3d/pipelines/registration/Registration.h>
 #include <open3d/pipelines/registration/TransformationEstimation.h>
-#include <open3d/utility/Logging.h>
+#include <misc3d/logging.h>
 #include <teaser/registration.h>
 
 namespace misc3d {
@@ -15,10 +15,10 @@ namespace registration {
 bool CheckValid(const open3d::geometry::PointCloud& src,
                 const open3d::geometry::PointCloud& dst) {
     if (src.points_.size() < 3 || dst.points_.size() < 3) {
-        open3d::utility::LogError("The number of points pair is less than 3.");
+        misc3d::LogError("The number of points pair is less than 3.");
         return false;
     } else if (src.points_.size() != dst.points_.size()) {
-        open3d::utility::LogError("The number of points pair is not equal.");
+        misc3d::LogError("The number of points pair is not equal.");
         return false;
     }
     return true;
@@ -99,7 +99,7 @@ Eigen::Matrix4d TeaserSolver::Solve(
     // Solve with TEASER++
     teaser::RobustRegistrationSolver solver(params);
     if (src_mat.cols() > max_num) {
-        open3d::utility::LogWarning(
+        misc3d::LogWarning(
             "The number of correspondences is too large, use only first "
             "{} correspondences instead.",
             max_num);
@@ -124,7 +124,7 @@ Eigen::Matrix4d RANSACSolver::Solve(
     Eigen::Matrix4d res = Eigen::Matrix4d::Identity();
 
     if (src.points_.size() < 3 || dst.points_.size() < 3) {
-        open3d::utility::LogError("The number of points pair is less than 3.");
+        misc3d::LogError("The number of points pair is less than 3.");
         return res;
     }
 

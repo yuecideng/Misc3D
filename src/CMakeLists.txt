@@ -1,4 +1,5 @@
 set(SRCS utils.cpp
+         logging.cpp
          knn.cpp
          ransac.cpp
          filter.cpp

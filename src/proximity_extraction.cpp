@@ -59,7 +59,7 @@ std::vector<std::vector<size_t>> ProximityExtractor::Segment(
     const std::vector<std::vector<size_t>> &nn_indices,
     const BaseProximityEvaluator &evaluator) {
     if (pc.points_.size() != nn_indices.size()) {
-        open3d::utility::LogError("The number of input data size are not equal!");
+        misc3d::LogError("The number of input data size are not equal!");
         std::vector<std::vector<size_t>> result;
         return result;
     }

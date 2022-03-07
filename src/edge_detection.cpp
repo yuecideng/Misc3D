@@ -1,5 +1,5 @@
 #include <misc3d/features/edge_detection.h>
-#include <open3d/utility/Logging.h>
+#include <misc3d/logging.h>
 
 namespace misc3d {
 
@@ -64,7 +64,8 @@ std::vector<size_t> DetectEdgePoints(
     const open3d::geometry::KDTreeSearchParam& param, double angle_threshold) {
     std::vector<size_t> edge_indices;
     if (!pc.HasPoints()) {
-        open3d::utility::LogError("No PointCloud data.");
+        misc3d::LogError("No PointCloud data.");
+        
         return edge_indices;
     }
 
@@ -97,7 +98,7 @@ std::vector<size_t> DetectEdgePoints(
         }
     }
 
-    open3d::utility::LogInfo("Found {} edge points from {} input points.",
+    misc3d::LogInfo("Found {} edge points from {} input points.",
                              edge_indices.size(), num);
 
     return edge_indices;

@@ -4,7 +4,7 @@
 
 #include <misc3d/preprocessing/filter.h>
 #include <misc3d/utils.h>
-#include <open3d/utility/Logging.h>
+#include <misc3d/logging.h>
 
 namespace misc3d {
 
@@ -14,11 +14,11 @@ std::vector<size_t> FarthestPointSampling(
     const open3d::geometry::PointCloud &pc, int num_points) {
     std::vector<size_t> indices;
     if (num_points <= 0) {
-        open3d::utility::LogError("num_points must be greater than 0");
+        misc3d::LogError("num_points must be greater than 0");
         
         return indices;
     } else if (num_points > pc.points_.size()) {
-        open3d::utility::LogError("num_points is greater than the number of points.");
+        misc3d::LogError("num_points is greater than the number of points.");
         return indices;
     }
 
@@ -48,7 +48,7 @@ PointCloudPtr CropROIPointCloud(const open3d::geometry::PointCloud &pc,
     const auto width = std::get<0>(shape);
     const auto height = std::get<1>(shape);
     if (num != width * height) {
-        open3d::utility::LogError("The size of point cloud is wrong.");
+        misc3d::LogError("The size of point cloud is wrong.");
         return std::make_shared<open3d::geometry::PointCloud>();
     }
 
@@ -95,7 +95,7 @@ PointCloudPtr ProjectIntoPlane(const open3d::geometry::PointCloud &pc) {
     pcd->RemoveNonFinitePoints();
     const size_t size = pcd->points_.size();
     if (size < 3) {
-        open3d::utility::LogError("You should provide more than 3 points");
+        misc3d::LogError("You should provide more than 3 points");
         return pcd;
     }
 

@@ -8,7 +8,7 @@
 
 #include <misc3d/utils.h>
 #include <open3d/geometry/PointCloud.h>
-#include <open3d/utility/Logging.h>
+#include <misc3d/logging.h>
 #include <Eigen/Core>
 
 #define EPS 1.0e-8
@@ -354,7 +354,7 @@ public:
     bool MinimalFit(const open3d::geometry::PointCloud &pc,
                     Model &model) const override {
         if (!pc.HasNormals()) {
-            open3d::utility::LogError("Cylinder estimation requires normals.");
+            misc3d::LogError("Cylinder estimation requires normals.");
             return false;
         }
 
@@ -511,7 +511,7 @@ public:
         Clear();
         const size_t num_points = pc_.points_.size();
         if (num_points < estimator_.minimal_sample_) {
-            open3d::utility::LogError(
+            misc3d::LogError(
                 "Can not fit model due to lack of points");
             return false;
         }
@@ -614,7 +614,7 @@ private:
             count++;
         }
 
-        open3d::utility::LogInfo(
+        misc3d::LogInfo(
             "[vanilla ransac] find best model with {}% inliers and run {} "
             "iterations", fitness_ * 100, count);
 
@@ -683,7 +683,7 @@ private:
         Model best_model;
         best_model = std::get<2>(best_result);
 
-        open3d::utility::LogInfo(
+        misc3d::LogInfo(
             "[parallel ransac] find best model with {}% inliers and run {} "
             "iterations", std::get<0>(best_result) * 100, max_iteration_);
 
