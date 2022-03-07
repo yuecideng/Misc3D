@@ -1,4 +1,5 @@
 #include "py_misc3d.h"
+#include <misc3d/logging.h>
 
 namespace misc3d {
 
@@ -14,6 +15,9 @@ PYBIND11_MODULE(py_misc3d, m) {
 
     py::object o3d_vis =
         (py::object)py::module_::import("open3d").attr("visualization");
+
+    py::object o3d_utility =
+        (py::object)py::module_::import("open3d").attr("utility");
 
     py::module m_submodule_common = m.def_submodule("common");
     common::pybind_common(m_submodule_common);
@@ -35,5 +39,19 @@ PYBIND11_MODULE(py_misc3d, m) {
 
     py::module m_submodule_vis = m.def_submodule("vis");
     vis::pybind_vis(m_submodule_vis);
+
+    // logging level setting
+    py::enum_<misc3d::VerbosityLevel> vl(m, "VerbosityLevel", py::arithmetic(),
+                                 "VerbosityLevel");
+    vl.value("Error", misc3d::VerbosityLevel::Error)
+            .value("Warning", misc3d::VerbosityLevel::Warning)
+            .value("Info", misc3d::VerbosityLevel::Info)
+            .value("Debug", misc3d::VerbosityLevel::Debug)
+            .export_values();
+    m.def("set_verbosity_level", &misc3d::SetVerbosityLevel,
+          "Set global verbosity level of Misc3D", py::arg("verbosity_level"));
+    m.def("get_verbosity_level", &misc3d::GetVerbosityLevel,
+          "Get global verbosity level of Misc3D");
+
 }
 }  // namespace misc3d

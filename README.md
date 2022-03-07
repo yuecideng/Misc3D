@@ -114,6 +114,11 @@ index_list = pe.segment(pc, 0.02, ev)
 m3d.vis.draw_pose(vis, size=0.1)
 # draw point clouds painted with red
 m3d.vis.draw_point_cloud(vis, pcd, (1, 0, 0), size=3.0)
+
+# logging
+# the logging api is similar to open3d
+# the VerbosityLevel is Info, Error, Debug and Warning
+m3d.set_verbosity_level(m3d.VerbosityLevel.Error)
 ```
 
 #### C++
