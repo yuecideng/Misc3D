@@ -2,43 +2,50 @@
 #include <numeric>
 #include <vector>
 
+#include <misc3d/logging.h>
 #include <misc3d/preprocessing/filter.h>
 #include <misc3d/utils.h>
-#include <misc3d/logging.h>
 
 namespace misc3d {
 
 namespace preprocessing {
 
 std::vector<size_t> FarthestPointSampling(
-    const open3d::geometry::PointCloud &pc, int num_points) {
+    const open3d::geometry::PointCloud &pc, int num_samples) {
     std::vector<size_t> indices;
-    if (num_points <= 0) {
-        misc3d::LogError("num_points must be greater than 0");
-        
+    if (num_samples == 0) {
         return indices;
-    } else if (num_points > pc.points_.size()) {
-        misc3d::LogError("num_points is greater than the number of points.");
+    } else if (num_samples == pc.points_.size()) {
+        indices.resize(pc.points_.size());
+        std::iota(indices.begin(), indices.end(), 0);
         return indices;
-    }
+    } else if (num_samples > pc.points_.size()) {
+        misc3d::LogError(
+            "Illegal number of samples: {}, must <= point size: {}",
+            num_samples, pc.points_.size());
+    } else {
+        indices.resize(num_samples);
 
-    const int N = pc.points_.size();
-    indices.resize(num_points);
-    std::vector<double> distance(N, 1e10);
-    size_t farthest_index = 0;
-    for (size_t i = 0; i < num_points; i++) {
-        indices[i] = farthest_index;
-        auto &selected = pc.points_[farthest_index];
-        for (size_t j = 0; j < N; j++) {
-            double dist = (pc.points_[j] - selected).array().square().sum();
-            distance[j] = std::min(distance[j], dist);
+        const size_t num_points = pc.points_.size();
+        std::vector<double> distances(num_points,
+                                      std::numeric_limits<double>::infinity());
+        size_t farthest_index = 0;
+        for (size_t i = 0; i < num_samples; i++) {
+            indices[i] = farthest_index;
+            const Eigen::Vector3d &selected = pc.points_[farthest_index];
+            double max_dist = 0;
+            for (size_t j = 0; j < num_points; j++) {
+                double dist = (pc.points_[j] - selected).squaredNorm();
+                distances[j] = std::min(distances[j], dist);
+                if (distances[j] > max_dist) {
+                    max_dist = distances[j];
+                    farthest_index = j;
+                }
+            }
         }
-        farthest_index =
-            std::distance(distance.begin(),
-                          std::max_element(distance.begin(), distance.end()));
-    }
 
-    return indices;
+        return indices;
+    }
 }
 
 PointCloudPtr CropROIPointCloud(const open3d::geometry::PointCloud &pc,

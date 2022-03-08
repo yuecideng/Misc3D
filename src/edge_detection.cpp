@@ -72,8 +72,8 @@ std::vector<size_t> DetectEdgePoints(
     open3d::geometry::PointCloud pc_(pc);
     if (!pc.HasNormals()) {
         pc_.EstimateNormals(param);
-        pc_.OrientNormalsTowardsCameraLocation();
     }
+    pc_.OrientNormalsTowardsCameraLocation();
 
     const size_t num = pc_.points_.size();
     open3d::geometry::KDTreeFlann kdtree(pc_);

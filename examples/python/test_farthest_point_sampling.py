@@ -6,7 +6,6 @@ import time
 import open3d as o3d
 import misc3d as m3d
 
-
 """ numpy implementation of farthest point sampling """
 def farthest_point_sampling_numpy(xyz, npoint):
     N = xyz.shape[0]
@@ -32,6 +31,7 @@ t0 = time.time()
 indices = m3d.preprocessing.farthest_point_sampling(pcd, 1000)
 print('time cost for misc3d: {}'.format(time.time() - t0))
 sample = pcd.select_by_index(indices)
+
 
 t0 = time.time()
 indices = farthest_point_sampling_numpy(points, 1000)

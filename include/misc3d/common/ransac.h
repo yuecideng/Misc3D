@@ -667,16 +667,14 @@ private:
         }
 
         // selection best result from stored patch
-        double max_fitness = 0;
-        double min_inlier_rmse = 1.0e+10;
         auto best_result = *std::max_element(
             result_list.begin(), result_list.end(),
             [](const std::tuple<double, double, Model> &result1,
                const std::tuple<double, double, Model> &result2) {
-                const double fitness1 = std::get<0>(result1);
-                const double fitness2 = std::get<0>(result2);
-                const double inlier_rmse1 = std::get<1>(result1);
-                const double inlier_rmse2 = std::get<1>(result2);
+                const double &fitness1 = std::get<0>(result1);
+                const double &fitness2 = std::get<0>(result2);
+                const double &inlier_rmse1 = std::get<1>(result1);
+                const double &inlier_rmse2 = std::get<1>(result2);
                 return (fitness2 > fitness1 ||
                         (fitness1 == fitness2 && inlier_rmse2 < inlier_rmse1));
             });
