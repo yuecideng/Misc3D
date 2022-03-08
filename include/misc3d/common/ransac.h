@@ -6,9 +6,9 @@
 #include <tuple>
 #include <vector>
 
+#include <misc3d/logging.h>
 #include <misc3d/utils.h>
 #include <open3d/geometry/PointCloud.h>
-#include <misc3d/logging.h>
 #include <Eigen/Core>
 
 #define EPS 1.0e-8
@@ -511,8 +511,7 @@ public:
         Clear();
         const size_t num_points = pc_.points_.size();
         if (num_points < estimator_.minimal_sample_) {
-            misc3d::LogError(
-                "Can not fit model due to lack of points");
+            misc3d::LogError("Can not fit model due to lack of points");
             return false;
         }
 
@@ -616,9 +615,10 @@ private:
 
         misc3d::LogInfo(
             "[vanilla ransac] find best model with {}% inliers and run {} "
-            "iterations", fitness_ * 100, count);
+            "iterations",
+            fitness_ * 100, count);
 
-            const bool ret = RefineModel(threshold, best_model, inlier_indices);
+        const bool ret = RefineModel(threshold, best_model, inlier_indices);
         model = best_model;
         return ret;
     }
@@ -635,12 +635,13 @@ private:
      */
     bool FitModelParallel(double threshold, Model &model,
                           std::vector<size_t> &inlier_indices) {
-        const size_t num_points = pc_.points_.size();
+        std::tuple<double, double> result;
+        Model best_model;
 
+        const size_t num_points = pc_.points_.size();
         std::vector<size_t> indices_list(num_points);
         std::iota(std::begin(indices_list), std::end(indices_list), 0);
 
-        std::vector<std::tuple<double, double, Model>> result_list;
 #pragma omp parallel for shared(indices_list)
         for (size_t i = 0; i < max_iteration_; ++i) {
             const std::vector<size_t> sample_indices =
@@ -655,35 +656,26 @@ private:
                 continue;
             }
 
-            const auto result =
+            const auto result_current =
                 EvaluateModel(pc_.points_, threshold, model_trial);
-            double fitness = std::get<0>(result);
-            double inlier_rmse = std::get<1>(result);
+            const double &fitness = std::get<0>(result_current);
+            const double &inlier_rmse = std::get<1>(result_current);
 #pragma omp critical
             {
-                result_list.emplace_back(
-                    std::make_tuple(fitness, inlier_rmse, model_trial));
+                const double &fitness_tmp = std::get<0>(result);
+                const double &inlier_rmse_tmp = std::get<1>(result);
+                if (fitness > fitness_tmp ||
+                    (fitness == fitness_tmp && inlier_rmse < inlier_rmse_tmp)) {
+                    result = result_current;
+                    best_model = model_trial;
+                }
             }
         }
 
-        // selection best result from stored patch
-        auto best_result = *std::max_element(
-            result_list.begin(), result_list.end(),
-            [](const std::tuple<double, double, Model> &result1,
-               const std::tuple<double, double, Model> &result2) {
-                const double &fitness1 = std::get<0>(result1);
-                const double &fitness2 = std::get<0>(result2);
-                const double &inlier_rmse1 = std::get<1>(result1);
-                const double &inlier_rmse2 = std::get<1>(result2);
-                return (fitness2 > fitness1 ||
-                        (fitness1 == fitness2 && inlier_rmse2 < inlier_rmse1));
-            });
-        Model best_model;
-        best_model = std::get<2>(best_result);
-
         misc3d::LogInfo(
             "[parallel ransac] find best model with {}% inliers and run {} "
-            "iterations", std::get<0>(best_result) * 100, max_iteration_);
+            "iterations",
+            std::get<0>(result) * 100, max_iteration_);
 
         const bool ret = RefineModel(threshold, best_model, inlier_indices);
         model = best_model;
