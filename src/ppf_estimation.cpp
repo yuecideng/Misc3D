@@ -51,7 +51,6 @@ public:
                                    ? true
                                    : false;
         invert_normal_ = config.training_param_.invert_model_normal;
-        // PrintConfig();
     }
 
     ~Impl() {
@@ -184,8 +183,6 @@ private:
                           size_t reference_num_in_model,
                           size_t refered_model_num,
                           std::vector<std::vector<int>> &neighbor_table);
-
-    void PrintConfig();
 
 public:
     std::vector<Pose6D> pose_list_;
@@ -1394,41 +1391,6 @@ void PPFEstimator::Impl::CalcMeanAndCovarianceMatrix(
     centoid[0] = Sx;
     centoid[1] = Sy;
     centoid[2] = Sz;
-}
-
-void PPFEstimator::Impl::PrintConfig() {
-    printf("init ppf detector parameters as follow:\n");
-    printf("----------------\n");
-    printf(
-        "train param:\ninvert_normal: %s\nrel_sample_dist: "
-        "%4f\ncalc_normal_relative: "
-        "%4f\ndense_sample_dist: %4f\n"
-        "----------------\n"
-        "refence param:\nref_mode: %d\nref_ratio: %4f\n"
-        "----------------\n"
-        "voting param:\nvoting_method: %d\nangle_step: %4f\nmin_dist_thresh: "
-        "%4f\nmin_angle_thresh: %4f\n"
-        "----------------\n"
-        "edge param:\nedge_pts_num: %zu\n"
-        "----------------\n"
-        "refine param:\nrefine_method: %d\nrel_refine_sparse_dist: %4f\n"
-        "----------------\n"
-        "general param:\nrel_dist_thresh: %4f\nrel_angle_thresh: "
-        "%4f\nscore_thresh: "
-        "%4f\nnum_res: "
-        "%zu\nobject_id: %zu\n",
-        invert_normal_ ? "true" : "false",
-        config_.training_param_.rel_sample_dist, calc_normal_relative_,
-        config_.training_param_.rel_dense_sample_dist,
-        (int)config_.ref_param_.method, config_.ref_param_.ratio,
-        (int)config_.voting_param_.method,
-        Rad2Deg<double>(config_.voting_param_.angle_step),
-        config_.voting_param_.min_dist_thresh,
-        config_.voting_param_.min_angle_thresh, config_.edge_param_.pts_num,
-        (int)config_.refine_param_.method,
-        config_.refine_param_.rel_dist_sparse_thresh, config_.rel_dist_thresh_,
-        config_.rel_angle_thresh_, config_.score_thresh_, config_.num_result_,
-        config_.object_id_);
 }
 
 PPFEstimator::PPFEstimator() {

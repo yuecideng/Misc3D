@@ -24,14 +24,14 @@ std::vector<size_t> FarthestPointSampling(
             "Illegal number of samples: {}, must <= point size: {}",
             num_samples, pc.points_.size());
     } else {
-        indices.resize(num_samples);
+        indices.reserve(num_samples);
 
         const size_t num_points = pc.points_.size();
         std::vector<double> distances(num_points,
                                       std::numeric_limits<double>::infinity());
         size_t farthest_index = 0;
         for (size_t i = 0; i < num_samples; i++) {
-            indices[i] = farthest_index;
+            indices.push_back(farthest_index);
             const Eigen::Vector3d &selected = pc.points_[farthest_index];
             double max_dist = 0;
             for (size_t j = 0; j < num_points; j++) {

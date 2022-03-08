@@ -78,9 +78,10 @@ public:
             std::swap(indices_[i], indices_[rng() % num]);
         }
 
-        std::vector<T> sample(sample_size);
+        std::vector<T> sample;
+        sample.reserve(sample_size);
         for (int idx = 0; idx < sample_size; ++idx) {
-            sample[idx] = indices_[idx];
+            sample.push_back(indices_[idx]);
         }
 
         return sample;
@@ -335,18 +336,6 @@ inline void VectorToO3dPointCloud(const std::vector<Eigen::Vector6d> &pc,
  * @param dst_T
  */
 inline void CalcMatrixInverse(const double src_T[4][4], double dst_T[4][4]) {
-    // for (int r = 0; r < 3; r++) {
-    //     for (int c = 0; c < 3; c++) {
-    //         dst_T[r][c] = src_T[c][r];
-    //     }
-    // }
-    // for (int r = 0; r < 3; r++) {
-    //     dst_T[r][3] = -dst_T[r][0] * src_T[0][3] - dst_T[r][1] * src_T[1][3]
-    //     -
-    //                   dst_T[r][2] * src_T[2][3];
-    // }
-    // dst_T[3][3] = 1;
-    // memset(dst_T[3], 0, sizeof(double) * 3);
     const Eigen::Matrix<double, 4, 4, Eigen::RowMajor> temp =
         Eigen::Matrix<double, 4, 4, Eigen::RowMajor>(src_T[0]).inverse();
     memcpy(dst_T, temp.data(), sizeof(double) * 16);
