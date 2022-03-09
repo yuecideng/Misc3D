@@ -6,7 +6,7 @@ This library aims at providing some useful 3d processing algorithms which Open3D
 Core modules:
 - `common`: 
     1. Normals estimaiton from PointMap 
-    2. Ransac for primitives fitting, including plane, sphere and cylinder, and support parallel computing.
+    2. Ransac for primitives fitting, including plane, sphere and cylinder, with parallel computing supported.
     3. K nearest neighbors search based on [annoy](https://github.com/spotify/annoy). It has the similar API as `open3d.geometry.KDTreeFlann` class (the radius search is not supported).
 - `preprocessing`: 
     1. Farthest point sampling
@@ -63,9 +63,9 @@ import misc3d as m3d
 m3d.common.estimate_normals(pcd, (848, 480), 3)
 
 # ransac for primitives fitting
-w, index = m3d.common.fit_plane(pcd, 0.01, 100, enable_parallel=False)
-w, index = m3d.common.fit_sphere(pcd, 0.01, 100, enable_parallel=False)
-w, index = m3d.common.fit_cylinder(pcd, 0.01, 100, enable_parallel=False)
+w, index = m3d.common.fit_plane(pcd, 0.01, 100)
+w, index = m3d.common.fit_sphere(pcd, 0.01, 100)
+w, index = m3d.common.fit_cylinder(pcd, 0.01, 100)
 
 # farthest point sampling
 indices = m3d.preprocessing.farthest_point_sampling(pcd, 1000)
