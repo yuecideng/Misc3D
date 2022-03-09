@@ -12,6 +12,9 @@ namespace preprocessing {
 
 std::vector<size_t> FarthestPointSampling(
     const open3d::geometry::PointCloud &pc, int num_samples) {
+    misc3d::LogInfo(
+        "This method has been added to Open3D official branch and hence it "
+        "will be deprecated in the future.");
     std::vector<size_t> indices;
     if (num_samples == 0) {
         return indices;
