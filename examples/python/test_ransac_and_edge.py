@@ -27,7 +27,7 @@ pcd = pcd.voxel_down_sample(0.005)
 print('Point size after sampling', pcd)
 
 t0 = time.time()
-w, index = m3d.common.fit_plane(pcd, 0.01, 400, enable_parallel=True)
+w, index = m3d.common.fit_plane(pcd, 0.01, 1000)
 print('Plan fitting time: %.3f' % (time.time() - t0))
 
 plane = pcd.select_by_index(index)
