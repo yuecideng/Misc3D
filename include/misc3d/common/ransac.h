@@ -459,8 +459,7 @@ public:
         : fitness_(0)
         , inlier_rmse_(0)
         , max_iteration_(1000)
-        , probability_(0.99)
-        , enable_parallel_(false) {}
+        , probability_(0.9999) {}
 
     /**
      * @brief Set Point Cloud to be used for RANSAC
@@ -491,13 +490,6 @@ public:
     void SetMaxIteration(size_t num) { max_iteration_ = num; }
 
     /**
-     * @brief enable parallel ransac fitting
-     *
-     * @param flag
-     */
-    void SetParallel(bool flag) { enable_parallel_ = flag; }
-
-    /**
      * @brief fit model with given parameters
      *
      * @param threshold
@@ -515,11 +507,7 @@ public:
             return false;
         }
 
-        if (enable_parallel_) {
-            return FitModelParallel(threshold, model, inlier_indices);
-        } else {
-            return FitModelVanilla(threshold, model, inlier_indices);
-        }
+        return FitModelParallel(threshold, model, inlier_indices);
     }
 
 private:
@@ -556,76 +544,8 @@ private:
     }
 
     /**
-     * @brief vanilla ransac fitting method, the iteration number is varying
-     * with inlier number in each iteration
-     *
-     * @param threshold
-     * @param model
-     * @param inlier_indices
-     * @return true
-     * @return false
-     */
-    bool FitModelVanilla(double threshold, Model &model,
-                         std::vector<size_t> &inlier_indices) {
-        const size_t num_points = pc_.points_.size();
-        std::vector<size_t> indices_list(num_points);
-        std::iota(std::begin(indices_list), std::end(indices_list), 0);
-
-        Model best_model;
-        size_t count = 0;
-        size_t current_iteration = max_iteration_;
-        for (size_t i = 0; i < current_iteration; ++i) {
-            const std::vector<size_t> sample_indices =
-                sampler_(indices_list, estimator_.minimal_sample_);
-            const auto sample = pc_.SelectByIndex(sample_indices);
-
-            bool ret;
-            ret = estimator_.MinimalFit(*sample, model);
-
-            if (!ret) {
-                continue;
-            }
-
-            const auto result = EvaluateModel(pc_.points_, threshold, model);
-            double fitness = std::get<0>(result);
-            double inlier_rmse = std::get<1>(result);
-
-            // update model if satisfy both fitness and rmse check
-            if (fitness > fitness_ ||
-                (fitness == fitness_ && inlier_rmse < inlier_rmse_)) {
-                fitness_ = fitness;
-                inlier_rmse_ = inlier_rmse;
-                best_model = model;
-                const size_t tmp =
-                    log(1 - probability_) /
-                    log(1 - pow(fitness, estimator_.minimal_sample_));
-                if (tmp < 0) {
-                    current_iteration = max_iteration_;
-                } else {
-                    current_iteration = std::min(tmp, max_iteration_);
-                }
-            }
-
-            // break the loop if count larger than max iteration
-            if (current_iteration > max_iteration_) {
-                break;
-            }
-            count++;
-        }
-
-        misc3d::LogInfo(
-            "[vanilla ransac] find best model with {}% inliers and run {} "
-            "iterations",
-            fitness_ * 100, count);
-
-        const bool ret = RefineModel(threshold, best_model, inlier_indices);
-        model = best_model;
-        return ret;
-    }
-
-    /**
-     * @brief parallel ransac fitting method, the iteration number is fixed and
-     * use OpenMP to speed up. Usually used if you want more accurate result.
+     * @brief Ransac fitting method, the iteration number is varying
+     * with inlier number in each iteration using multithreading.
      *
      * @param threshold
      * @param model
@@ -635,15 +555,18 @@ private:
      */
     bool FitModelParallel(double threshold, Model &model,
                           std::vector<size_t> &inlier_indices) {
-        std::tuple<double, double> result;
-        Model best_model;
-
         const size_t num_points = pc_.points_.size();
         std::vector<size_t> indices_list(num_points);
         std::iota(std::begin(indices_list), std::end(indices_list), 0);
 
-#pragma omp parallel for shared(indices_list)
+        Model best_model;
+        size_t count = 0;
+        size_t current_iteration = std::numeric_limits<size_t>::max();
+#pragma omp parallel for schedule(static)
         for (size_t i = 0; i < max_iteration_; ++i) {
+            if (count > current_iteration) {
+                continue;
+            }
             const std::vector<size_t> sample_indices =
                 sampler_(indices_list, estimator_.minimal_sample_);
             const auto sample = pc_.SelectByIndex(sample_indices);
@@ -656,30 +579,34 @@ private:
                 continue;
             }
 
-            const auto result_current =
-                EvaluateModel(pc_.points_, threshold, model_trial);
-            const double &fitness = std::get<0>(result_current);
-            const double &inlier_rmse = std::get<1>(result_current);
+            const auto result = EvaluateModel(pc_.points_, threshold, model_trial);
+            double fitness = std::get<0>(result);
+            double inlier_rmse = std::get<1>(result);
 #pragma omp critical
             {
-                const double &fitness_tmp = std::get<0>(result);
-                const double &inlier_rmse_tmp = std::get<1>(result);
-                if (fitness > fitness_tmp ||
-                    (fitness == fitness_tmp && inlier_rmse < inlier_rmse_tmp)) {
-                    result = result_current;
+                // update model if satisfy both fitness and rmse check
+                if (fitness > fitness_ ||
+                    (fitness == fitness_ && inlier_rmse < inlier_rmse_)) {
+                    fitness_ = fitness;
+                    inlier_rmse_ = inlier_rmse;
                     best_model = model_trial;
+
+                    const size_t tmp =
+                        log(1 - probability_) /
+                        log(1 - pow(fitness, estimator_.minimal_sample_));
+                    current_iteration = std::min(tmp, max_iteration_);
                 }
+                count++;
             }
         }
 
         misc3d::LogInfo(
-            "[parallel ransac] find best model with {}% inliers and run {} "
+            "Find best model with {}% inliers and run {} "
             "iterations",
-            std::get<0>(result) * 100, max_iteration_);
+            fitness_ * 100, count);
 
         const bool ret = RefineModel(threshold, best_model, inlier_indices);
         model = best_model;
-
         return ret;
     }
 
@@ -722,7 +649,6 @@ private:
     double inlier_rmse_;
     Sampler sampler_;
     ModelEstimator estimator_;
-    bool enable_parallel_;
 };
 
 using RandomIndexSampler = RandomSampler<size_t>;

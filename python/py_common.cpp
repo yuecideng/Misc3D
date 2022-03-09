@@ -10,11 +10,10 @@ namespace common {
 
 std::tuple<Eigen::VectorXd, std::vector<size_t>> FitPlane(
     const PointCloudPtr &pc, double threshold, size_t max_iteration,
-    double probability, bool enable_parallel) {
+    double probability) {
     RANSACPlane fit;
     fit.SetMaxIteration(max_iteration);
     fit.SetProbability(probability);
-    fit.SetParallel(enable_parallel);
     Plane plane;
     std::vector<size_t> inliers;
     fit.SetPointCloud(*pc);
@@ -29,11 +28,10 @@ std::tuple<Eigen::VectorXd, std::vector<size_t>> FitPlane(
 
 std::tuple<Eigen::VectorXd, std::vector<size_t>> FitSphere(
     const PointCloudPtr &pc, double threshold, size_t max_iteration,
-    double probability, bool enable_parallel) {
+    double probability) {
     RANSACShpere fit;
     fit.SetMaxIteration(max_iteration);
     fit.SetProbability(probability);
-    fit.SetParallel(enable_parallel);
     Sphere sphere;
     std::vector<size_t> inliers;
     fit.SetPointCloud(*pc);
@@ -48,11 +46,10 @@ std::tuple<Eigen::VectorXd, std::vector<size_t>> FitSphere(
 
 std::tuple<Eigen::VectorXd, std::vector<size_t>> FitCylinder(
     const PointCloudPtr &pc, double threshold, size_t max_iteration,
-    double probability, bool enable_parallel) {
+    double probability) {
     RANSACShpere fit;
     fit.SetMaxIteration(max_iteration);
     fit.SetProbability(probability);
-    fit.SetParallel(enable_parallel);
     Sphere sphere;
     std::vector<size_t> inliers;
     fit.SetPointCloud(*pc);
@@ -68,16 +65,13 @@ std::tuple<Eigen::VectorXd, std::vector<size_t>> FitCylinder(
 void pybind_common(py::module &m) {
     m.def("fit_plane", &FitPlane, "Fit a plane from point clouds",
           py::arg("pc"), py::arg("threshold") = 0.01,
-          py::arg("max_iteration") = 1000, py::arg("probability") = 0.99,
-          py::arg("enable_parallel") = false);
+          py::arg("max_iteration") = 1000, py::arg("probability") = 0.9999);
     m.def("fit_sphere", &FitSphere, "Fit a sphere from point clouds",
           py::arg("pc"), py::arg("threshold") = 0.01,
-          py::arg("max_iteration") = 1000, py::arg("probability") = 0.99,
-          py::arg("enable_parallel") = false);
+          py::arg("max_iteration") = 1000, py::arg("probability") = 0.9999);
     m.def("fit_cylinder", &FitCylinder, "Fit a cylinder from point clouds",
           py::arg("pc"), py::arg("threshold") = 0.01,
-          py::arg("max_iteration") = 1000, py::arg("probability") = 0.99,
-          py::arg("enable_parallel") = false);
+          py::arg("max_iteration") = 1000, py::arg("probability") = 0.9999);
     m.def(
         "estimate_normals",
         [](const PointCloudPtr &pc, const std::tuple<int, int> shape, int k,

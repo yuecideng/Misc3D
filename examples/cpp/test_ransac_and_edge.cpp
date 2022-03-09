@@ -34,9 +34,7 @@ int main(int argc, char *argv[]) {
     misc3d::Timer timer;
     timer.Start();
     misc3d::common::RANSACPlane fit;
-    fit.SetMaxIteration(400);
-    fit.SetProbability(0.99);
-    fit.SetParallel(true);
+    fit.SetMaxIteration(1000);
     misc3d::common::Plane plane;
     std::vector<size_t> inliers;
     fit.SetPointCloud(*pcd_down);
