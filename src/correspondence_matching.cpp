@@ -10,19 +10,18 @@ namespace misc3d {
 
 namespace registration {
 
-void NearestSearch(const open3d::pipelines::registration::Feature& src,
-                   const open3d::pipelines::registration::Feature& dst,
+void NearestSearch(const Eigen::MatrixXd& src, const Eigen::MatrixXd& dst,
                    std::vector<size_t>& nn_inds,
                    const MatchMethod& match_method, int n_tress) {
     if (match_method == MatchMethod::ANNOY) {
         common::KNearestSearch kdtree(dst, n_tress);
-        const int num = src.Num();
+        const int num = src.cols();
         nn_inds.resize(num);
 #pragma omp parallel for schedule(static)
         for (size_t i = 0; i < num; i++) {
             std::vector<size_t> ret_indices;
             std::vector<double> out_dists_sqr;
-            const Eigen::VectorXd& temp_pt = src.data_.col(i);
+            const Eigen::VectorXd& temp_pt = src.col(i);
             const int knn =
                 kdtree.SearchKNN(temp_pt, 1, ret_indices, out_dists_sqr);
             nn_inds[i] = ret_indices[0];
@@ -30,22 +29,28 @@ void NearestSearch(const open3d::pipelines::registration::Feature& src,
 
     } else if (match_method == MatchMethod::FLANN) {
         open3d::geometry::KDTreeFlann kdtree(dst);
-        const int num = src.Num();
+        const int num = src.cols();
         nn_inds.resize(num);
 #pragma omp parallel for schedule(static)
         for (size_t i = 0; i < num; i++) {
             std::vector<int> ret_indices;
             std::vector<double> out_dists_sqr;
-            const Eigen::VectorXd& temp_pt = src.data_.col(i);
+            const Eigen::VectorXd& temp_pt = src.col(i);
             const int knn =
                 kdtree.SearchKNN(temp_pt, 1, ret_indices, out_dists_sqr);
             nn_inds[i] = ret_indices[0];
         }
     }
 }
+
 std::pair<std::vector<size_t>, std::vector<size_t>> ANNMatcher::Match(
     const open3d::pipelines::registration::Feature& src,
     const open3d::pipelines::registration::Feature& dst) const {
+    return Match(src.data_, dst.data_);
+}
+
+std::pair<std::vector<size_t>, std::vector<size_t>> ANNMatcher::Match(
+    const Eigen::MatrixXd& src, const Eigen::MatrixXd& dst) const {
     std::pair<std::vector<size_t>, std::vector<size_t>> res;
 
     std::vector<size_t> corres01_idx1, corres10_idx0;

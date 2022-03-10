@@ -41,7 +41,7 @@ void pybind_registration(py::module &m) {
         py::arg("src"), py::arg("dst"), py::arg("corres"),
         py::arg("threshold") = 0.01, py::arg("max_iter") = 100000,
         py::arg("edge_length_threshold") = 0.9);
-    
+
     py::enum_<MatchMethod>(m, "MatchMethod")
         .value("FLANN", MatchMethod::FLANN)
         .value("ANNOY", MatchMethod::ANNOY)
@@ -59,6 +59,23 @@ void pybind_registration(py::module &m) {
             }
 
             return matcher->Match(*src, *dst);
+        },
+        "Match corresponding point clouds using kdtree", py::arg("src"),
+        py::arg("dst"), py::arg("method") = MatchMethod::ANNOY,
+        py::arg("n_trees") = 4);
+    m.def(
+        "match_correspondence",
+        [](const Eigen::Ref<Eigen::MatrixXd> &src,
+           const Eigen::Ref<Eigen::MatrixXd> &dst, const MatchMethod &method,
+           int n_trees) {
+            std::unique_ptr<ANNMatcher> matcher;
+            if (method == MatchMethod::FLANN) {
+                matcher = std::make_unique<ANNMatcher>(method);
+            } else if (method == MatchMethod::ANNOY) {
+                matcher = std::make_unique<ANNMatcher>(method, n_trees);
+            }
+
+            return matcher->Match(src, dst);
         },
         "Match corresponding point clouds using kdtree", py::arg("src"),
         py::arg("dst"), py::arg("method") = MatchMethod::ANNOY,

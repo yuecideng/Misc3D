@@ -29,11 +29,22 @@ public:
      *
      * @param src
      * @param dst
-     * @return common::CorrespondenceIndices
+     * @return Match two corresponding points with there feature matrix
      */
     virtual std::pair<std::vector<size_t>, std::vector<size_t>> Match(
         const open3d::pipelines::registration::Feature& src,
         const open3d::pipelines::registration::Feature& dst) const = 0;
+
+    /**
+     * @brief Match two corresponding points with there feature matrix, where
+     * rows is feature dimension and cols is feature size.
+     *
+     * @param src
+     * @param dst
+     * @return std::pair<std::vector<size_t>, std::vector<size_t>>
+     */
+    virtual std::pair<std::vector<size_t>, std::vector<size_t>> Match(
+        const Eigen::MatrixXd& src, const Eigen::MatrixXd& dst) const = 0;
 
     /**
      * @brief Get the Matcher Type
@@ -70,6 +81,10 @@ public:
     std::pair<std::vector<size_t>, std::vector<size_t>> Match(
         const open3d::pipelines::registration::Feature& src,
         const open3d::pipelines::registration::Feature& dst) const override;
+
+    std::pair<std::vector<size_t>, std::vector<size_t>> Match(
+        const Eigen::MatrixXd& src,
+        const Eigen::MatrixXd& dst) const override;
 
 private:
     int n_tress_;
