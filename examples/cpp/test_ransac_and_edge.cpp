@@ -51,9 +51,12 @@ int main(int argc, char *argv[]) {
 
     auto vis = std::make_shared<open3d::visualization::Visualizer>();
     vis->CreateVisualizerWindow("Ransac and edge detection", 1920, 1200);
-    misc3d::vis::DrawPointCloud(vis, *pcd_down, {0.5, 0.5, 0.5});
-    misc3d::vis::DrawPointCloud(vis, *pcd_plane);
-    misc3d::vis::DrawPointCloud(vis, *pcd_edges, {1, 0, 0});
+    misc3d::vis::DrawGeometry3D(vis, pcd_down, {0.5, 0.5, 0.5});
+    misc3d::vis::DrawGeometry3D(vis, pcd_plane);
+    auto bbox = std::make_shared<open3d::geometry::OrientedBoundingBox>(
+        pcd_plane->GetOrientedBoundingBox());
+    misc3d::vis::DrawGeometry3D(vis, bbox, {0, 1, 0});
+    misc3d::vis::DrawGeometry3D(vis, pcd_edges, {1, 0, 0});
     vis->Run();
 
     return 0;

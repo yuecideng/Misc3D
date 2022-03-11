@@ -25,8 +25,5 @@ m3d.common.estimate_normals(pcd, (848, 480), 3)
 print('time cost: {}'.format(time.time() - t0))
 
 m3d.vis.draw_pose(vis, size=0.1)
-
-m3d.vis.draw_point_cloud(vis, pcd)
-
-# m3d.vis.draw_pose(vis, size=0.1)
+m3d.vis.draw_geometry3d(vis, pcd)
 vis.run()

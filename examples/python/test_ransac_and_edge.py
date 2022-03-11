@@ -40,8 +40,10 @@ print('Edges detection time: %.3f' % (time.time() - t1))
 edges = plane.select_by_index(index)
 
 # scene points painted with gray
-m3d.vis.draw_point_cloud(vis, pcd, color=(0.5, 0.5, 0.5))
-m3d.vis.draw_point_cloud(vis, plane)
-m3d.vis.draw_point_cloud(vis, edges, color=(1, 0, 0), size=5)
+bbox = plane.get_oriented_bounding_box()
+m3d.vis.draw_geometry3d(vis, pcd, color=(0.5, 0.5, 0.5))
+m3d.vis.draw_geometry3d(vis, bbox, color=(0, 1, 0))
+m3d.vis.draw_geometry3d(vis, plane)
+m3d.vis.draw_geometry3d(vis, edges, color=(1, 0, 0), size=5)
 
 vis.run()

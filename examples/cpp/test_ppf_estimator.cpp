@@ -71,8 +71,14 @@ int main(int argc, char *argv[]) {
         "../examples/data/pose_estimation/model/obj.ply", mesh);
     mesh.Scale(0.001, Eigen::Vector3d::Zero());
     misc3d::vis::DrawPose(vis, Eigen::Matrix4d::Identity(), 0.1);
-    misc3d::vis::DrawPointCloud(vis, *scene);
-    misc3d::vis::DrawTriangleMesh(vis, mesh, {0, 0, 0}, pose);
+    misc3d::vis::DrawGeometry3D(vis, scene);
+    if (ret) {
+        auto bbox = std::make_shared<open3d::geometry::OrientedBoundingBox>(
+            mesh.GetOrientedBoundingBox());
+        auto mesh_vis = std::make_shared<open3d::geometry::TriangleMesh>(mesh);
+        misc3d::vis::DrawGeometry3D(vis, mesh_vis, {0, 0, 0}, pose);
+        misc3d::vis::DrawGeometry3D(vis, bbox, {0, 1, 0}, pose);
+    }
     vis->Run();
 
     return 0;

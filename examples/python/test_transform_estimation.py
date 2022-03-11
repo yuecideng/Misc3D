@@ -74,7 +74,7 @@ pose = o3d.pipelines.registration.registration_icp(
 
 print('Transformation estimation time: %.3f' % (time.time() - t1))
 
-m3d.vis.draw_point_cloud(vis, pc_src, [1, 0, 0], pose)
-m3d.vis.draw_point_cloud(vis, pc_dst, [0, 1, 0])
+m3d.vis.draw_geometry3d(vis, pc, pose=pose)
+m3d.vis.draw_geometry3d(vis, pc_)
 
 vis.run()

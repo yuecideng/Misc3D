@@ -48,7 +48,7 @@ int main(int argc, char *argv[]) {
         const float r = (float)rand() / RAND_MAX;
         const float g = (float)rand() / RAND_MAX;
         const float b = (float)rand() / RAND_MAX;
-        misc3d::vis::DrawPointCloud(vis, *cluster, {r, g, b});
+        misc3d::vis::DrawGeometry3D(vis, cluster, {r, g, b});
     }
     vis->Run();
 

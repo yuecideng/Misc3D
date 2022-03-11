@@ -29,7 +29,7 @@ public:
      *
      * @param src
      * @param dst
-     * @return Match two corresponding points with there feature matrix
+     * @return std::pair<std::vector<size_t>, std::vector<size_t>>
      */
     virtual std::pair<std::vector<size_t>, std::vector<size_t>> Match(
         const open3d::pipelines::registration::Feature& src,

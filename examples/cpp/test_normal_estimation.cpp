@@ -35,7 +35,7 @@ int main(int argc, char *argv[]) {
     auto vis = std::make_shared<open3d::visualization::Visualizer>();
     vis->CreateVisualizerWindow("Estimate normals form map", 1920, 1200);
     misc3d::vis::DrawPose(vis, Eigen::Matrix4d::Identity(), 0.1);
-    misc3d::vis::DrawPointCloud(vis, *pcd);
+    misc3d::vis::DrawGeometry3D(vis, pcd);
     vis->Run();
 
     return 0;

@@ -36,13 +36,13 @@ int main(int argc, char *argv[]) {
 
     auto vis = std::make_shared<open3d::visualization::Visualizer>();
     vis->CreateVisualizerWindow("Crop ROI", 1920, 1200);
-    misc3d::vis::DrawPointCloud(vis, *pcd);
-    misc3d::vis::DrawPointCloud(vis, *pcd_roi, {1, 0, 0});
+    misc3d::vis::DrawGeometry3D(vis, pcd);
+    misc3d::vis::DrawGeometry3D(vis, pcd_roi, {1, 0, 0});
     vis->Run();
 
     vis = std::make_shared<open3d::visualization::Visualizer>();
     vis->CreateVisualizerWindow("Project into plane", 1920, 1200);
-    misc3d::vis::DrawPointCloud(vis, *pcd_plane);
+    misc3d::vis::DrawGeometry3D(vis, pcd_plane);
     vis->Run();
 
     return 0;

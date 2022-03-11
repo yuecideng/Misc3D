@@ -62,8 +62,10 @@ vis.create_window("Pose estimation", 1920, 1200)
 
 mesh = o3d.io.read_triangle_mesh('../data/pose_estimation/model/obj.ply')
 mesh = mesh.scale(0.001, np.array([0, 0, 0]))
-m3d.vis.draw_point_cloud(vis, scene)
+m3d.vis.draw_geometry3d(vis, scene)
 if ret:
-    m3d.vis.draw_triangle_mesh(vis, mesh, pose=pose)
+    bbox = mesh.get_oriented_bounding_box()
+    m3d.vis.draw_geometry3d(vis, bbox, color=(0, 1, 0), pose=pose)
+    m3d.vis.draw_geometry3d(vis, mesh, pose=pose)
 m3d.vis.draw_pose(vis, size=0.1)
 vis.run()

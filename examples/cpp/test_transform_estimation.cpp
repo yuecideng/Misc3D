@@ -8,11 +8,11 @@
 #include <open3d/camera/PinholeCameraIntrinsic.h>
 #include <open3d/geometry/Image.h>
 #include <open3d/geometry/KDTreeSearchParam.h>
-#include <open3d/pipelines/registration/Registration.h>
 #include <open3d/geometry/PointCloud.h>
 #include <open3d/geometry/RGBDImage.h>
 #include <open3d/io/ImageIO.h>
 #include <open3d/pipelines/registration/Feature.h>
+#include <open3d/pipelines/registration/Registration.h>
 
 std::tuple<open3d::geometry::PointCloud,
            open3d::pipelines::registration::Feature>
@@ -65,6 +65,8 @@ int main(int argc, char *argv[]) {
         misc3d::registration::MatchMethod::ANNOY, 4);
     timer.Start();
     auto matched_list = matcher.Match(std::get<1>(res1), std::get<1>(res2));
+    std::cout << "Corres num: " << std::get<0>(matched_list).size()
+              << std::endl;
     std::cout << "Time cost for matching: " << timer.Stop() << std::endl;
 
     auto src_down = std::get<0>(res1);
@@ -82,10 +84,11 @@ int main(int argc, char *argv[]) {
     std::cout << "Time cost for solving: " << timer.Stop() << std::endl;
 
     auto vis = std::make_shared<open3d::visualization::Visualizer>();
-    vis->CreateVisualizerWindow("Transformation estimation using RANSAC", 1920, 1200);
-    misc3d::vis::DrawPointCloud(vis, *pcd, {0, 0, 0}, pose);
-    misc3d::vis::DrawPointCloud(vis, *pcd_);
+    vis->CreateVisualizerWindow("Transformation estimation using RANSAC", 1920,
+                                1200);
+    misc3d::vis::DrawGeometry3D(vis, pcd, {0, 0, 0}, pose);
+    misc3d::vis::DrawGeometry3D(vis, pcd_);
     vis->Run();
-    
+
     return 0;
 }

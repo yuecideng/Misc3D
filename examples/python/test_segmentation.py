@@ -41,7 +41,7 @@ print('Segmentation time: %.3f' % (time.time() - t0))
 
 for index in index_list:
     c = pc.select_by_index(index)
-    m3d.vis.draw_point_cloud(vis, c, [random(), random(), random()], size=3.0)
+    m3d.vis.draw_geometry3d(vis, c, [random(), random(), random()], size=3.0)
 
 m3d.vis.draw_pose(vis, size=0.1)
 

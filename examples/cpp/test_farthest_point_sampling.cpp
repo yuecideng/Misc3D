@@ -25,8 +25,9 @@ int main(int argc, char *argv[]) {
 
     auto vis = std::make_shared<open3d::visualization::Visualizer>();
     vis->CreateVisualizerWindow("Farthest point sampling", 1920, 1200);
-    misc3d::vis::DrawPointCloud(vis, pcd);
-    misc3d::vis::DrawPointCloud(vis, *sample, {0, 1, 0},
+    auto pcd_vis = std::make_shared<open3d::geometry::PointCloud>(pcd);
+    misc3d::vis::DrawGeometry3D(vis, pcd_vis);
+    misc3d::vis::DrawGeometry3D(vis, sample, {0, 1, 0},
                                 Eigen::Matrix4d::Identity(), 5);
     vis->Run();
 

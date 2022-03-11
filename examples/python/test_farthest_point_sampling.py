@@ -40,6 +40,6 @@ sample_numpy = pcd.select_by_index(indices)
 
 vis = o3d.visualization.Visualizer()
 vis.create_window("Farest point sampling", 1920, 1200)
-m3d.vis.draw_point_cloud(vis, pcd)
-m3d.vis.draw_point_cloud(vis, sample, color=(0, 1, 0), size=5)
+m3d.vis.draw_geometry3d(vis, pcd)
+m3d.vis.draw_geometry3d(vis, sample, color=(0, 1, 0), size=5)
 vis.run()
