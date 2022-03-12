@@ -29,7 +29,7 @@ file(MAKE_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 
 option(BUILD_SHARED_LIBS "Build using shared libraries" ON)
 option(BUILD_PYTHON "Build Python bindings" ON)
-option(BUILD_EXAMPLES "Build cpp examples" ON)
+option(BUILD_EXAMPLES "Build Cpp examples" ON)
 
 ###############################################################################
 # Find 3rdparty dependencies
@@ -63,15 +63,24 @@ add_subdirectory(src)
 
 if(BUILD_EXAMPLES)
     add_subdirectory(examples/cpp)
+    # install python examples 
+    install(DIRECTORY examples/python
+        DESTINATION "${CMAKE_INSTALL_PREFIX}/misc3d/examples"
+        USE_SOURCE_PERMISSIONS
+        )
+    install(DIRECTORY examples/data
+    DESTINATION "${CMAKE_INSTALL_PREFIX}/misc3d/examples"
+    USE_SOURCE_PERMISSIONS
+    )
 endif()
 
 if(BUILD_PYTHON)
     add_subdirectory(python)
-endif(BUILD_PYTHON)
+endif()
 
-# install python examples 
-install(DIRECTORY examples
+install(DIRECTORY app
     DESTINATION "${CMAKE_INSTALL_PREFIX}/misc3d/"
     USE_SOURCE_PERMISSIONS
     )
+
 
