@@ -135,7 +135,9 @@ index_list = pe.segment(pc, 0.02, ev)
 # draw a pose represented as a axis
 m3d.vis.draw_pose(vis, size=0.1)
 # draw point clouds painted with red
-m3d.vis.draw_point_cloud(vis, pcd, (1, 0, 0), size=3.0)
+m3d.vis.draw_geometry3d(vis, pcd, color=(1, 0, 0), size=3.0)
+m3d.vis.draw_geometry3d(vis, mesh, color=(1, 0, 0))
+m3d.vis.draw_geometry3d(vis, bbox, color=(1, 0, 0))
 ```
 
 ```python
