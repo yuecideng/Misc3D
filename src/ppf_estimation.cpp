@@ -60,18 +60,6 @@ public:
         if (tmg_ptr_ != nullptr) {
             delete[] tmg_ptr_;
         }
-        if (alpha_2_shift_lut_ != nullptr) {
-            delete[] alpha_2_shift_lut_;
-        }
-        if (alpha_lut_ != nullptr) {
-            delete[] alpha_lut_;
-        }
-        if (alpha_shift_lut_ != nullptr) {
-            delete[] alpha_shift_lut_;
-        }
-        if (dist_shift_lut_ != nullptr) {
-            delete[] dist_shift_lut_;
-        }
 
         if (hashtable_boundary_ != nullptr) {
             delete[] hashtable_boundary_;
@@ -222,8 +210,11 @@ private:
 
     PointXYZ centroid_;
 
-    int *alpha_lut_ = nullptr, (*alpha_shift_lut_)[3] = nullptr,
-        (*dist_shift_lut_)[3] = nullptr, (*alpha_2_shift_lut_)[3] = nullptr;
+    std::vector<int> alpha_lut_;
+    std::vector<std::array<int, 3>> alpha_shift_lut_;
+    std::vector<std::array<int, 3>> dist_shift_lut_;
+    std::vector<std::array<int, 3>> alpha_2_shift_lut_;
+
     std::vector<std::vector<int>> pc_neighbor_;
 
     double dist_step_dense_;
@@ -1313,7 +1304,7 @@ void PPFEstimator::Impl::GenerateModelPCNeighbor(
 
 void PPFEstimator::Impl::GenerateLUT() {
     int alpha_model_num = 2 * angle_num_ - 1;
-    alpha_lut_ = new int[alpha_model_num * alpha_model_num];
+    alpha_lut_.resize(alpha_model_num * alpha_model_num);
     int row_idx;
     for (int i = 0; i < alpha_model_num; i++) {
         row_idx = i * alpha_model_num;
@@ -1322,14 +1313,14 @@ void PPFEstimator::Impl::GenerateLUT() {
                 (i - j + alpha_model_num) % alpha_model_num;
         }
     }
-    alpha_2_shift_lut_ = new int[alpha_model_num][3];
+    alpha_2_shift_lut_.resize(alpha_model_num);
     for (int i = 0; i < alpha_model_num; i++) {
         for (int j = 0; j < 3; j++) {
             alpha_2_shift_lut_[i][j] =
                 (i + j - 1 + alpha_model_num) % alpha_model_num;
         }
     }
-    alpha_shift_lut_ = new int[angle_num_][3];
+    alpha_shift_lut_.resize(angle_num_);
     int t;
     for (int i = 0; i < angle_num_; i++) {
         for (int j = 0; j < 3; j++) {
@@ -1339,7 +1330,7 @@ void PPFEstimator::Impl::GenerateLUT() {
             alpha_shift_lut_[i][j] = t;
         }
     }
-    dist_shift_lut_ = new int[dist_num_][3];
+    dist_shift_lut_.resize(dist_num_);
     for (int i = 0; i < dist_num_; i++) {
         for (int j = 0; j < 3; j++) {
             t = i + j - 1;
