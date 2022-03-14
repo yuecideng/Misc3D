@@ -78,9 +78,4 @@ if(BUILD_PYTHON)
     add_subdirectory(python)
 endif()
 
-install(DIRECTORY app
-    DESTINATION "${CMAKE_INSTALL_PREFIX}/misc3d/"
-    USE_SOURCE_PERMISSIONS
-    )
-
 
