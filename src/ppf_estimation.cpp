@@ -12,6 +12,7 @@
 #include <unordered_map>
 
 #include <misc3d/features/edge_detection.h>
+#include <misc3d/logging.h>
 #include <misc3d/pose_estimation/data_structure.h>
 #include <misc3d/pose_estimation/ppf_estimation.h>
 #include <misc3d/utils.h>
@@ -19,7 +20,6 @@
 #include <open3d/geometry/KDTreeSearchParam.h>
 #include <open3d/pipelines/registration/GeneralizedICP.h>
 #include <open3d/pipelines/registration/Registration.h>
-#include <misc3d/logging.h>
 #include <Eigen/Core>
 #include <Eigen/Eigenvalues>
 
@@ -255,9 +255,8 @@ void PPFEstimator::Impl::PreprocessTrain(
     CalcModelNormalAndSampling(pc, kdtree, normal_r, dist_step_, view_pt,
                                pc_sample);
 
-    misc3d::LogInfo(
-        "Model sample point number is {} | {} after preprocessing",
-        pc_sample.points_.size(), pc->points_.size());
+    misc3d::LogInfo("Model sample point number is {} | {} after preprocessing",
+                    pc_sample.points_.size(), pc->points_.size());
 }
 
 void PPFEstimator::Impl::PreprocessEstimate(
@@ -284,9 +283,8 @@ void PPFEstimator::Impl::PreprocessEstimate(
     const size_t num = pc->points_.size();
     pc_sample = *pc->VoxelDownSample(dist_step_);
 
-    misc3d::LogInfo(
-        "Scene point number is {} | {} after preprocessing.",
-        pc_sample.points_.size(), num);
+    misc3d::LogInfo("Scene point number is {} | {} after preprocessing.",
+                    pc_sample.points_.size(), num);
 
     if (enable_edge_support_) {
         dense_scene_sample_ = *pc->VoxelDownSample(dist_step_dense_);
@@ -297,7 +295,7 @@ void PPFEstimator::Impl::PreprocessEstimate(
     }
 
     misc3d::LogInfo("Preprocess time cost for estimate stage: {}",
-                             timer.Stop());
+                    timer.Stop());
 }
 
 bool PPFEstimator::Impl::Estimate(const PointCloudPtr &pc,
@@ -355,8 +353,7 @@ bool PPFEstimator::Impl::Estimate(const PointCloudPtr &pc,
     if (pose_list.empty()) {
         return false;
     } else {
-        misc3d::LogInfo("Find {} raw poses after voting.",
-                                 pose_list.size());
+        misc3d::LogInfo("Find {} raw poses after voting.", pose_list.size());
     }
 
     std::vector<std::vector<Pose6D>> pose_cluster;
@@ -430,8 +427,8 @@ void PPFEstimator::Impl::VotingAndGetPose(
     pose_list.clear();
     const size_t reference_num = reference_pts.points_.size();
     const size_t refered_num = refered_pts.points_.size();
-    misc3d::LogInfo("Reference num: {}, Refered num: {}",
-                             reference_num, refered_num);
+    misc3d::LogInfo("Reference num: {}, Refered num: {}", reference_num,
+                    refered_num);
 
     const size_t votes_threshold = refered_model_num * VOTING_THRESHOLD_FACTOR;
     const int alpha_model_num = angle_num_ * 2 - 1;
@@ -575,8 +572,7 @@ bool PPFEstimator::Impl::Train(const PointCloudPtr &pc) {
     pc_num_ = model_sample_.points_.size();
 
     if (pc_num_ == 0) {
-        misc3d::LogError(
-            "There is no input points after preprocessing");
+        misc3d::LogError("There is no input points after preprocessing");
         return false;
     }
 
@@ -1203,9 +1199,8 @@ void PPFEstimator::Impl::CalcModelNormalAndSampling(
                            dense_model_sample_);
         model_edge_ind_.clear();
         ExtractEdges(dense_model_sample_, normal_r, model_edge_ind_);
-        misc3d::LogInfo(
-            "Extract {} edge points form model point clouds.",
-            model_edge_ind_.size());
+        misc3d::LogInfo("Extract {} edge points form model point clouds.",
+                        model_edge_ind_.size());
     }
 }
 
@@ -1399,8 +1394,7 @@ bool PPFEstimator::Train(const PointCloudPtr &pc) {
     if (impl_ptr_ != nullptr) {
         return impl_ptr_->Train(pc);
     } else {
-        misc3d::LogError(
-            "PPF Estimator not is initialized successfully");
+        misc3d::LogError("PPF Estimator not is initialized successfully");
         return false;
     }
 }
@@ -1410,8 +1404,7 @@ bool PPFEstimator::Estimate(const PointCloudPtr &pc,
     if (impl_ptr_ != nullptr) {
         return impl_ptr_->Estimate(pc, results);
     } else {
-        misc3d::LogError(
-            "PPF Estimator not is initialized successfully");
+        misc3d::LogError("PPF Estimator not is initialized successfully");
         return false;
     }
 }
@@ -1504,7 +1497,8 @@ PPFEstimatorConfig::~PPFEstimatorConfig() = default;
 bool PPFEstimator::CheckConfig(const PPFEstimatorConfig &config) {
     if (config.training_param_.rel_dense_sample_dist >=
         config.training_param_.rel_sample_dist) {
-        misc3d::LogError("Dense_sample_dist should be smaller than sample_dist.");
+        misc3d::LogError(
+            "Dense_sample_dist should be smaller than sample_dist.");
         return false;
     }
 
