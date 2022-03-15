@@ -27,15 +27,12 @@ namespace misc3d {
 
 namespace pose_estimation {
 
-inline bool IsNormalizedVector(double v[3]) {
-    double norm = sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
-    if (norm > 1.0e-6) {
-        for (int i = 0; i < 3; i++) {
-            v[i] *= 1 / norm;
-        }
-        return true;
+inline bool IsNormalizedVector(const PointXYZ &v) {
+    const double norm = v.norm();
+    if (norm < 1.0e-6) {
+        return false;
     }
-    return false;
+    return true;
 }
 
 class PPFEstimator::Impl {
@@ -100,8 +97,6 @@ private:
     // use_flag: 1: use translation, 2: dsadse rotation, 3: both
     bool MatchPose(const Pose6D &src, const Pose6D &dst, const int use_flag);
 
-    void SpreadPPFFasterMode(const size_t ppf[4], size_t idx[24], int &n);
-
     void SpreadPPF(const size_t ppf[4], size_t idx[81], int &n);
 
     void ClusterPoses(std::vector<Pose6D> &pose_list,
@@ -156,7 +151,7 @@ private:
     void CalcHashTable(const open3d::geometry::PointCloud &reference_pts,
                        const open3d::geometry::PointCloud &refered_pts,
                        std::vector<PointPair> *ptr_hashtable,
-                       double (**ptr_Tmg)[4][4], bool b_same_pointset);
+                       double (**tmg_ptr)[4][4], bool b_same_pointset);
 
     void DownSamplePCNormal(const open3d::geometry::PointCloud &pc,
                             const std::shared_ptr<KDTree> &kdtree,
@@ -166,7 +161,7 @@ private:
     void VotingAndGetPose(const open3d::geometry::PointCloud &reference_pts,
                           const open3d::geometry::PointCloud &refered_pts,
                           std::vector<PointPair> *ptr_hashtable,
-                          double (*ptr_Tmg)[4][4],
+                          double (*tmg_ptr)[4][4],
                           std::vector<Pose6D> &pose_list,
                           size_t reference_num_in_model,
                           size_t refered_model_num,
@@ -421,7 +416,7 @@ bool PPFEstimator::Impl::Estimate(const PointCloudPtr &pc,
 void PPFEstimator::Impl::VotingAndGetPose(
     const open3d::geometry::PointCloud &reference_pts,
     const open3d::geometry::PointCloud &refered_pts,
-    std::vector<PointPair> *ptr_hashtable, double (*ptr_Tmg)[4][4],
+    std::vector<PointPair> *ptr_hashtable, double (*tmg_ptr)[4][4],
     std::vector<Pose6D> &pose_list, size_t reference_model_num,
     size_t refered_model_num, std::vector<std::vector<int>> &neighbor_table) {
     pose_list.clear();
@@ -447,7 +442,7 @@ void PPFEstimator::Impl::VotingAndGetPose(
 
         double alpha_scene_rad;
         size_t quantize_alpha;
-        double Tsg[4][4], Tsg_inv[4][4];
+        double tsg[4][4], tsg_inv[4][4];
         int n_searched;
         size_t idx;
         ulong alpha_scene_bit, t;
@@ -456,17 +451,17 @@ void PPFEstimator::Impl::VotingAndGetPose(
         int alpha_index;
         // double model_pose[4][4];
         Transformation model_pose;
-        double(*Tmg)[4];
+        double(*tmg)[4];
 
-        auto &p0_p = reference_pts.points_[si];
-        auto &p0_n = reference_pts.normals_[si];
+        const PointXYZ &p0_p = reference_pts.points_[si];
+        const Normal &p0_n = reference_pts.normals_[si];
 
         size_t max_votes, corr_alpha_index, corr_model_index;
 
         std::vector<size_t> accumulator(acc_size, 0);
         std::vector<ulong> flags_b(hash_table_size_, 0);
 
-        CalcTNormal2RegionX(p0_p, p0_n, Tsg);
+        CalcTNormal2RegionX(p0_p, p0_n, tsg);
 
         std::vector<int> ret_indices;
         std::vector<double> out_dists_sqr;
@@ -476,8 +471,8 @@ void PPFEstimator::Impl::VotingAndGetPose(
 
         if (n_searched > votes_threshold) {
             for (int j = 0; j < n_searched; j++) {
-                auto &p1_p = refered_pts.points_[ret_indices[j]];
-                auto &p1_n = refered_pts.normals_[ret_indices[j]];
+                const PointXYZ &p1_p = refered_pts.points_[ret_indices[j]];
+                const Normal &p1_n = refered_pts.normals_[ret_indices[j]];
                 // filter out the angle between normal which less than
                 // angle threshold
                 if (sqrt(out_dists_sqr[j]) < dist_thresh &&
@@ -485,7 +480,7 @@ void PPFEstimator::Impl::VotingAndGetPose(
                     continue;
                 }
 
-                alpha_scene_rad = CalcAlpha(p1_p, Tsg);
+                alpha_scene_rad = CalcAlpha(p1_p, tsg);
                 quantize_alpha = round((alpha_scene_rad + M_PI) /
                                        config_.voting_param_.angle_step);
                 alpha_scene_bit = 1 << quantize_alpha;
@@ -520,7 +515,7 @@ void PPFEstimator::Impl::VotingAndGetPose(
                              neighbor_table);
 
             if (local_maximum.size() > 0) {
-                CalcMatrixInverse(Tsg, Tsg_inv);
+                CalcMatrixInverse(tsg, tsg_inv);
             } else {
                 continue;
             }
@@ -533,15 +528,15 @@ void PPFEstimator::Impl::VotingAndGetPose(
 
                 alpha = corr_alpha_index * config_.voting_param_.angle_step;
                 double ca = cos(alpha), sa = sin(alpha);
-                double Tr[4][4] = {{1, 0, 0, 0},
+                double tr[4][4] = {{1, 0, 0, 0},
                                    {0, ca, -sa, 0},
                                    {0, sa, ca, 0},
                                    {0, 0, 0, 1}};
 
-                Tmg = ptr_Tmg[corr_model_index];
+                tmg = tmg_ptr[corr_model_index];
 
-                model_pose = Transformation(Tsg_inv[0]) *
-                             Transformation(Tr[0]) * Transformation(Tmg[0]);
+                model_pose = Transformation(tsg_inv[0]) *
+                             Transformation(tr[0]) * Transformation(tmg[0]);
                 pose.UpdateByPose(model_pose);
                 pose.num_votes_ = max_votes;
                 pose.corr_mi_ = corr_model_index;
@@ -632,33 +627,32 @@ bool PPFEstimator::Impl::Train(const PointCloudPtr &pc) {
 void PPFEstimator::Impl::CalcHashTable(
     const open3d::geometry::PointCloud &reference_pts,
     const open3d::geometry::PointCloud &refered_pts,
-    std::vector<PointPair> *ptr_hashtable, double (**ptr_Tmg)[4][4],
+    std::vector<PointPair> *ptr_hashtable, double (**tmg_ptr)[4][4],
     bool b_same_pointset) {
     const size_t reference_num = reference_pts.points_.size();
     const size_t refered_num = refered_pts.points_.size();
     const int double_size = sizeof(double);
-    *ptr_Tmg = new double[reference_num][4][4];
+    *tmg_ptr = new double[reference_num][4][4];
 
 #pragma omp parallel for
     for (size_t i = 0; i < reference_num; i++) {
         size_t idx;
-        auto &p0_p = reference_pts.points_[i];
-        auto &p0_n = reference_pts.normals_[i];
+        const PointXYZ &p0_p = reference_pts.points_[i];
+        const Normal &p0_n = reference_pts.normals_[i];
+
+        double(*tmg)[4] = (*tmg_ptr)[i];
+        CalcTNormal2RegionX(p0_p, p0_n, tmg);
 
         double ppf[4];
-        double(*Tmg)[4];
-
-        Tmg = (*ptr_Tmg)[i];
-        CalcTNormal2RegionX(p0_p, p0_n, Tmg);
         for (size_t j = 0; j < refered_num; j++) {
             if ((!b_same_pointset) || (b_same_pointset && j != i)) {
                 PointPair pp;
-                auto &p1_p = refered_pts.points_[j];
-                auto &p1_n = refered_pts.normals_[j];
+                const PointXYZ &p1_p = refered_pts.points_[j];
+                const Normal &p1_n = refered_pts.normals_[j];
                 CalcPPF(p0_p, p0_n, p1_p, p1_n, ppf);
                 pp.i_ = i;
                 pp.j_ = j;
-                pp.alpha_ = CalcAlpha(p1_p, Tmg);
+                pp.alpha_ = CalcAlpha(p1_p, tmg);
                 pp.quant_alpha_ = round((pp.alpha_ + M_PI) /
                                         config_.voting_param_.angle_step);
                 idx = HashPPF(ppf);
@@ -702,16 +696,16 @@ size_t PPFEstimator::Impl::HashPPF(const double ppf[4]) {
 
 void PPFEstimator::Impl::CalcTNormal2RegionX(const PointXYZ &p, const Normal &n,
                                              double Tg[4][4]) {
-    double u[3] = {0, n(2), -n(1)};
+    PointXYZ u(0, n(2), -n(1));
     double angle_rad = acos(n(0));
     if (!IsNormalizedVector(u)) {
-        u[1] = 1;
-        u[2] = 0;
+        u(1) = 1;
+        u(2) = 0;
     }
     // quaternion to rotate matrix
     double half_alpha_rad = angle_rad / 2;
-    double a = cos(half_alpha_rad), b = 0, c = sin(half_alpha_rad) * u[1],
-           d = sin(half_alpha_rad) * u[2];
+    double a = cos(half_alpha_rad), b = 0, c = sin(half_alpha_rad) * u(1),
+           d = sin(half_alpha_rad) * u(2);
     double R[3][3] = {{1 - 2 * (c * c + d * d), -2 * a * d, 2 * a * c},
                       {2 * a * d, 1 - 2 * d * d, 2 * c * d},
                       {-2 * a * c, 2 * c * d, 1 - 2 * c * c}};
@@ -729,37 +723,6 @@ double PPFEstimator::Impl::CalcAlpha(const PointXYZ &pt,
     const Eigen::Matrix<double, 4, 4, Eigen::RowMajor> T(T_normal_to_region[0]);
     const auto tran_pt = T.block<3, 3>(0, 0) * pt + T.block<3, 1>(0, 3);
     return atan2(-tran_pt(2), tran_pt(1));
-}
-
-void PPFEstimator::Impl::SpreadPPFFasterMode(const size_t ppf[4],
-                                             size_t idx[24], int &n) {
-    int d, a0, a1, a2;
-    n = 0;
-    // TODO: Improve Here
-    for (int s0 = 0; s0 < 3; s0++) {
-        d = dist_shift_lut_[ppf[3]][s0] * angle_num_3_;
-        if (d < 0)
-            continue;
-        for (int s1 = 0; s1 < 2; s1++) {
-            a0 = alpha_shift_lut_[ppf[0]][s1];
-            if (a0 < 0)
-                continue;
-            a0 += d;
-            for (int s2 = 0; s2 < 2; s2++) {
-                a1 = alpha_shift_lut_[ppf[1]][s2] * angle_num_;
-                if (a1 < 0)
-                    continue;
-                a1 += a0;
-                for (int s3 = 0; s3 < 2; s3++) {
-                    a2 = alpha_shift_lut_[ppf[2]][s3] * angle_num_2_;
-                    if (a2 < 0)
-                        continue;
-                    idx[n] = a2 + a1;
-                    n++;
-                }
-            }
-        }
-    }
 }
 
 void PPFEstimator::Impl::SpreadPPF(const size_t ppf[4], size_t idx[81],
