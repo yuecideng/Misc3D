@@ -28,9 +28,6 @@ def preprocess_point_cloud(pcd, voxel_size):
     return pcd_down, pcd_fpfh
 
 
-vis = o3d.visualization.Visualizer()
-vis.create_window("Segmentation", 1920, 1200)
-
 depth = o3d.io.read_image('../data/indoor/depth/depth_0.png')
 color = o3d.io.read_image('../data/indoor/color/color_0.png')
 
@@ -74,7 +71,6 @@ pose = o3d.pipelines.registration.registration_icp(
 
 print('Transformation estimation time: %.3f' % (time.time() - t1))
 
-m3d.vis.draw_geometry3d(vis, pc, pose=pose)
-m3d.vis.draw_geometry3d(vis, pc_)
-
-vis.run()
+o3d.visualization.draw_geometries([pc, pc_], 'Before Registration')
+o3d.visualization.draw_geometries([pc.transform(pose), pc_],
+                                  'After Registration')

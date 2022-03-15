@@ -84,8 +84,13 @@ int main(int argc, char *argv[]) {
     std::cout << "Time cost for solving: " << timer.Stop() << std::endl;
 
     auto vis = std::make_shared<open3d::visualization::Visualizer>();
-    vis->CreateVisualizerWindow("Transformation estimation using RANSAC", 1920,
-                                1200);
+    vis->CreateVisualizerWindow("Before Registration", 1920, 1200);
+    misc3d::vis::DrawGeometry3D(vis, pcd);
+    misc3d::vis::DrawGeometry3D(vis, pcd_);
+    vis->Run();
+    
+    vis = std::make_shared<open3d::visualization::Visualizer>();
+    vis->CreateVisualizerWindow("After Registration", 1920, 1200);
     misc3d::vis::DrawGeometry3D(vis, pcd, {0, 0, 0}, pose);
     misc3d::vis::DrawGeometry3D(vis, pcd_);
     vis->Run();
