@@ -51,20 +51,12 @@ public:
     }
 
     ~Impl() {
-        if (hash_table_ != nullptr) {
-            delete[] hash_table_;
-        }
-        if (tmg_ptr_ != nullptr) {
-            delete[] tmg_ptr_;
-        }
-
-        if (hashtable_boundary_ != nullptr) {
-            delete[] hashtable_boundary_;
-        }
-
-        if (tmg_ptr_boundary_ != nullptr) {
-            delete[] tmg_ptr_boundary_;
-        }
+        // if (hash_table_ != nullptr) {
+        //     delete[] hash_table_;
+        // }
+        // if (hashtable_boundary_ != nullptr) {
+        //     delete[] hashtable_boundary_;
+        // }
     }
 
     bool SetConfig(const PPFEstimatorConfig &config);
@@ -89,10 +81,10 @@ private:
 
     size_t HashPPF(const double ppf[4]);
 
-    void CalcTNormal2RegionX(const PointXYZ &p, const Normal &n,
-                             double t_g[4][4]);
+    Transformation CalcTNormal2RegionX(const PointXYZ &p, const Normal &n);
 
-    double CalcAlpha(const PointXYZ &pt, const double T_normal_to_region[4][4]);
+    double CalcAlpha(const PointXYZ &pt,
+                     const Transformation t_normal_to_region);
 
     // use_flag: 1: use translation, 2: dsadse rotation, 3: both
     bool MatchPose(const Pose6D &src, const Pose6D &dst, const int use_flag);
@@ -150,22 +142,23 @@ private:
 
     void CalcHashTable(const open3d::geometry::PointCloud &reference_pts,
                        const open3d::geometry::PointCloud &refered_pts,
-                       std::vector<PointPair> *ptr_hashtable,
-                       double (**tmg_ptr)[4][4], bool b_same_pointset);
+                       std::vector<std::vector<PointPair>> &hashtable_ptr,
+                       std::vector<Transformation> &tmg_ptr,
+                       bool b_same_pointset);
 
     void DownSamplePCNormal(const open3d::geometry::PointCloud &pc,
                             const std::shared_ptr<KDTree> &kdtree,
                             const double radius, const size_t min_idx,
                             open3d::geometry::PointCloud &pc_normal);
 
-    void VotingAndGetPose(const open3d::geometry::PointCloud &reference_pts,
-                          const open3d::geometry::PointCloud &refered_pts,
-                          std::vector<PointPair> *ptr_hashtable,
-                          double (*tmg_ptr)[4][4],
-                          std::vector<Pose6D> &pose_list,
-                          size_t reference_num_in_model,
-                          size_t refered_model_num,
-                          std::vector<std::vector<int>> &neighbor_table);
+    void VotingAndGetPose(
+        const open3d::geometry::PointCloud &reference_pts,
+        const open3d::geometry::PointCloud &refered_pts,
+        const std::vector<std::vector<PointPair>> &hashtable_ptr,
+        const std::vector<Transformation> &tmg_ptr,
+        std::vector<Pose6D> &pose_list, size_t reference_num_in_model,
+        size_t refered_model_num,
+        std::vector<std::vector<int>> &neighbor_table);
 
 public:
     std::vector<Pose6D> pose_list_;
@@ -186,8 +179,8 @@ private:
     double dist_threshold_;
     open3d::geometry::PointCloud model_sample_centered_;
     size_t pc_num_;
-    std::vector<PointPair> *hash_table_ = nullptr;
-    std::vector<PointPair> *hashtable_boundary_ = nullptr;
+    std::vector<std::vector<PointPair>> hash_table_;
+    std::vector<std::vector<PointPair>> hashtable_boundary_;
     double r_min_, r_max_;
 
     size_t reference_num_;
@@ -195,8 +188,8 @@ private:
     size_t hash_table_size_;
     size_t angle_num_, dist_num_;
 
-    double (*tmg_ptr_)[4][4] = nullptr;
-    double (*tmg_ptr_boundary_)[4][4] = nullptr;
+    std::vector<Transformation> tmg_ptr_;
+    std::vector<Transformation> tmg_ptr_boundary_;
 
     bool trained_;
     double calc_normal_relative_;
@@ -416,9 +409,10 @@ bool PPFEstimator::Impl::Estimate(const PointCloudPtr &pc,
 void PPFEstimator::Impl::VotingAndGetPose(
     const open3d::geometry::PointCloud &reference_pts,
     const open3d::geometry::PointCloud &refered_pts,
-    std::vector<PointPair> *ptr_hashtable, double (*tmg_ptr)[4][4],
-    std::vector<Pose6D> &pose_list, size_t reference_model_num,
-    size_t refered_model_num, std::vector<std::vector<int>> &neighbor_table) {
+    const std::vector<std::vector<PointPair>> &hashtable_ptr,
+    const std::vector<Transformation> &tmg_ptr, std::vector<Pose6D> &pose_list,
+    size_t reference_model_num, size_t refered_model_num,
+    std::vector<std::vector<int>> &neighbor_table) {
     pose_list.clear();
     const size_t reference_num = reference_pts.points_.size();
     const size_t refered_num = refered_pts.points_.size();
@@ -438,20 +432,13 @@ void PPFEstimator::Impl::VotingAndGetPose(
     for (size_t si = 0; si < reference_num; si++) {
         double ppf[4];
         size_t quantized_ppf[4], spread_idx[81];
-        int n_ppfs;
 
-        double alpha_scene_rad;
-        size_t quantize_alpha;
-        double tsg[4][4], tsg_inv[4][4];
-        int n_searched;
-        size_t idx;
+        double alpha_scene_rad, alpha;
+        size_t quantize_alpha, idx;
+        int n_searched, alpha_index, n_ppfs;
         ulong alpha_scene_bit, t;
 
-        double alpha;
-        int alpha_index;
-        // double model_pose[4][4];
-        Transformation model_pose;
-        double(*tmg)[4];
+        Transformation model_pose, tsg_inv, tmg;
 
         const PointXYZ &p0_p = reference_pts.points_[si];
         const Normal &p0_n = reference_pts.normals_[si];
@@ -461,7 +448,7 @@ void PPFEstimator::Impl::VotingAndGetPose(
         std::vector<size_t> accumulator(acc_size, 0);
         std::vector<ulong> flags_b(hash_table_size_, 0);
 
-        CalcTNormal2RegionX(p0_p, p0_n, tsg);
+        Transformation tsg = CalcTNormal2RegionX(p0_p, p0_n);
 
         std::vector<int> ret_indices;
         std::vector<double> out_dists_sqr;
@@ -494,15 +481,15 @@ void PPFEstimator::Impl::VotingAndGetPose(
                     if (t == flags_b[idx]) {
                         continue;
                     }
+
                     flags_b[idx] = t;
-                    int n_vals = ptr_hashtable[idx].size();
-                    PointPair *pp;
+                    const int n_vals = hashtable_ptr[idx].size();
                     for (int hi = 0; hi < n_vals; hi++) {
-                        pp = &ptr_hashtable[idx][hi];
+                        const PointPair &pp = hashtable_ptr[idx][hi];
                         alpha_index =
-                            alpha_lut_[pp->quant_alpha_ * alpha_model_num +
+                            alpha_lut_[pp.quant_alpha_ * alpha_model_num +
                                        quantize_alpha];
-                        accumulator[pp->i_ * alpha_model_num + alpha_index]++;
+                        accumulator[pp.i_ * alpha_model_num + alpha_index]++;
                     }
                 }
             }
@@ -515,7 +502,8 @@ void PPFEstimator::Impl::VotingAndGetPose(
                              neighbor_table);
 
             if (local_maximum.size() > 0) {
-                CalcMatrixInverse(tsg, tsg_inv);
+                // CalcMatrixInverse(tsg, tsg_inv);
+                tsg_inv = tsg.inverse();
             } else {
                 continue;
             }
@@ -528,15 +516,12 @@ void PPFEstimator::Impl::VotingAndGetPose(
 
                 alpha = corr_alpha_index * config_.voting_param_.angle_step;
                 double ca = cos(alpha), sa = sin(alpha);
-                double tr[4][4] = {{1, 0, 0, 0},
-                                   {0, ca, -sa, 0},
-                                   {0, sa, ca, 0},
-                                   {0, 0, 0, 1}};
+                Transformation tr;
+                tr << 1, 0, 0, 0, 0, ca, -sa, 0, 0, sa, ca, 0, 0, 0, 0, 1;
 
                 tmg = tmg_ptr[corr_model_index];
 
-                model_pose = Transformation(tsg_inv[0]) *
-                             Transformation(tr[0]) * Transformation(tmg[0]);
+                model_pose = tsg_inv * tr * tmg;
                 pose.UpdateByPose(model_pose);
                 pose.num_votes_ = max_votes;
                 pose.corr_mi_ = corr_model_index;
@@ -583,9 +568,9 @@ bool PPFEstimator::Impl::Train(const PointCloudPtr &pc) {
         model_sample_centered_.points_[i] -= centroid_;
     }
 
-    hash_table_ = new std::vector<PointPair>[hash_table_size_];
+    hash_table_.resize(hash_table_size_);
     CalcHashTable(model_sample_centered_, model_sample_centered_, hash_table_,
-                  &tmg_ptr_, true);
+                  tmg_ptr_, true);
 
     GenerateModelPCNeighbor(model_sample_centered_, pc_neighbor_,
                             r_min_ * NEIGHBOR_RADIUS_FACTOR);
@@ -607,13 +592,13 @@ bool PPFEstimator::Impl::Train(const PointCloudPtr &pc) {
             dense_model_sample_centered.points_[i] -= centroid_;
         }
 
-        hashtable_boundary_ = new std::vector<PointPair>[hash_table_size_];
+        hashtable_boundary_.resize(hash_table_size_);
 
         const auto model_edge_pts =
             dense_model_sample_.SelectByIndex(model_edge_ind_);
 
         CalcHashTable(model_sample_centered_, *model_edge_pts,
-                      hashtable_boundary_, &tmg_ptr_boundary_, false);
+                      hashtable_boundary_, tmg_ptr_boundary_, false);
     }
 
     // generate ppf look-up table
@@ -627,12 +612,12 @@ bool PPFEstimator::Impl::Train(const PointCloudPtr &pc) {
 void PPFEstimator::Impl::CalcHashTable(
     const open3d::geometry::PointCloud &reference_pts,
     const open3d::geometry::PointCloud &refered_pts,
-    std::vector<PointPair> *ptr_hashtable, double (**tmg_ptr)[4][4],
-    bool b_same_pointset) {
+    std::vector<std::vector<PointPair>> &hashtable_ptr,
+    std::vector<Transformation> &tmg_ptr, bool b_same_pointset) {
     const size_t reference_num = reference_pts.points_.size();
     const size_t refered_num = refered_pts.points_.size();
     const int double_size = sizeof(double);
-    *tmg_ptr = new double[reference_num][4][4];
+    tmg_ptr.resize(reference_num);
 
 #pragma omp parallel for
     for (size_t i = 0; i < reference_num; i++) {
@@ -640,8 +625,8 @@ void PPFEstimator::Impl::CalcHashTable(
         const PointXYZ &p0_p = reference_pts.points_[i];
         const Normal &p0_n = reference_pts.normals_[i];
 
-        double(*tmg)[4] = (*tmg_ptr)[i];
-        CalcTNormal2RegionX(p0_p, p0_n, tmg);
+        const Transformation tmg = CalcTNormal2RegionX(p0_p, p0_n);
+        tmg_ptr[i] = tmg;
 
         double ppf[4];
         for (size_t j = 0; j < refered_num; j++) {
@@ -657,7 +642,7 @@ void PPFEstimator::Impl::CalcHashTable(
                                         config_.voting_param_.angle_step);
                 idx = HashPPF(ppf);
 #pragma omp critical
-                { ptr_hashtable[idx].emplace_back(pp); }
+                { hashtable_ptr[idx].emplace_back(pp); }
             }
         }
     }
@@ -694,34 +679,36 @@ size_t PPFEstimator::Impl::HashPPF(const double ppf[4]) {
     return HashPPF(quantized_ppf);
 }
 
-void PPFEstimator::Impl::CalcTNormal2RegionX(const PointXYZ &p, const Normal &n,
-                                             double Tg[4][4]) {
+Transformation PPFEstimator::Impl::CalcTNormal2RegionX(const PointXYZ &p,
+                                                       const Normal &n) {
     PointXYZ u(0, n(2), -n(1));
     double angle_rad = acos(n(0));
     if (!IsNormalizedVector(u)) {
         u(1) = 1;
         u(2) = 0;
     }
+
     // quaternion to rotate matrix
     double half_alpha_rad = angle_rad / 2;
-    double a = cos(half_alpha_rad), b = 0, c = sin(half_alpha_rad) * u(1),
-           d = sin(half_alpha_rad) * u(2);
-    double R[3][3] = {{1 - 2 * (c * c + d * d), -2 * a * d, 2 * a * c},
-                      {2 * a * d, 1 - 2 * d * d, 2 * c * d},
-                      {-2 * a * c, 2 * c * d, 1 - 2 * c * c}};
-    int len = sizeof(double) * 3;
-    for (int r = 0; r < 3; r++) {
-        Tg[r][3] = -R[r][0] * p(0) - R[r][1] * p(1) - R[r][2] * p(2);
-        memcpy(Tg[r], R[r], len);
-    }
-    memset(Tg[3], 0, len);
-    Tg[3][3] = 1.0;
+    const Eigen::Vector4d quat(cos(half_alpha_rad), 0,
+                               sin(half_alpha_rad) * u(1),
+                               sin(half_alpha_rad) * u(2));
+
+    Rotation rotation;
+    Pose6D::QuatToMat(quat, rotation);
+
+    Transformation tg;
+    tg.setIdentity();
+    tg.block<3, 1>(0, 3) = -1 * rotation * p;
+    tg.block<3, 3>(0, 0) = rotation;
+
+    return tg;
 }
 
 double PPFEstimator::Impl::CalcAlpha(const PointXYZ &pt,
-                                     const double T_normal_to_region[4][4]) {
-    const Eigen::Matrix<double, 4, 4, Eigen::RowMajor> T(T_normal_to_region[0]);
-    const auto tran_pt = T.block<3, 3>(0, 0) * pt + T.block<3, 1>(0, 3);
+                                     const Transformation t_normal_to_region) {
+    const auto tran_pt = t_normal_to_region.block<3, 3>(0, 0) * pt +
+                         t_normal_to_region.block<3, 1>(0, 3);
     return atan2(-tran_pt(2), tran_pt(1));
 }
 

@@ -329,16 +329,4 @@ inline void VectorToO3dPointCloud(const std::vector<Eigen::Vector6d> &pc,
     }
 }
 
-/**
- * @brief compute inverse matrix
- *
- * @param src_T
- * @param dst_T
- */
-inline void CalcMatrixInverse(const double src_T[4][4], double dst_T[4][4]) {
-    const Eigen::Matrix<double, 4, 4, Eigen::RowMajor> temp =
-        Eigen::Matrix<double, 4, 4, Eigen::RowMajor>(src_T[0]).inverse();
-    memcpy(dst_T, temp.data(), sizeof(double) * 16);
-}
-
 }  // namespace misc3d

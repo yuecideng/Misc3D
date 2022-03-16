@@ -31,14 +31,14 @@ struct PoseCluster {
 };
 
 class Pose6D {
-private:
+public:
     /**
      * @brief Convert quaternion to rotation matrix
      *
      * @param q
      * @param R
      */
-    void QuatToMat(const Eigen::Vector4d &q, Rotation &R) {
+    static void QuatToMat(const Eigen::Vector4d &q, Rotation &R) {
         R(0, 0) = 1 - 2 * (q(2) * q(2) + q(3) * q(3));
         R(0, 1) = 2 * (q(1) * q(2) - q(0) * q(3));
         R(0, 2) = 2 * (q(0) * q(2) + q(1) * q(3));
@@ -56,7 +56,7 @@ private:
      * @param R
      * @param q
      */
-    void MatToQuat(const Rotation &R, Eigen::Vector4d &q) {
+    static void MatToQuat(const Rotation &R, Eigen::Vector4d &q) {
         const double tr = R(0, 0) + R(1, 1) + R(2, 2);
         double s;
         if (tr > -1) {  // a != 0
@@ -120,9 +120,9 @@ public:
         Rotation R;
         QuatToMat(q, R);
         pose_.block<3, 3>(0, 0) = R;
+        pose_.block<3, 1>(0, 3) = t;
         q_ = q;
         t_ = t;
-        pose_.block<3, 1>(0, 3) = t;
     }
 
 public:
