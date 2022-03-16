@@ -56,7 +56,7 @@ public:
      * @return std::vector<T>
      */
     virtual std::vector<T> operator()(const std::vector<T> &indices,
-                                      size_t sample_size) const = 0;
+                                      size_t sample_size) = 0;
 };
 
 /**
@@ -68,20 +68,15 @@ template <typename T>
 class RandomSampler : public Sampler<T> {
 public:
     std::vector<T> operator()(const std::vector<T> &indices,
-                              size_t sample_size) const override {
+                              size_t sample_size) override {
         std::random_device rd;
         std::mt19937 rng(rd());
         const size_t num = indices.size();
-        std::vector<T> indices_ = indices;
-
-        for (size_t i = 0; i < sample_size; ++i) {
-            std::swap(indices_[i], indices_[rng() % num]);
-        }
 
         std::vector<T> sample;
         sample.reserve(sample_size);
         for (int idx = 0; idx < sample_size; ++idx) {
-            sample.push_back(indices_[idx]);
+            sample.push_back(indices[rng() % num]);
         }
 
         return sample;
