@@ -11,7 +11,7 @@ import misc3d as m3d
 config = m3d.pose_estimation.PPFEstimatorConfig()
 # init training param
 config.training_param.rel_sample_dist = 0.04
-config.score_thresh = 0.05
+config.score_thresh = 0.01
 config.refine_param.method = m3d.pose_estimation.PPFEstimatorConfig.PointToPlane
 
 # init ppf detector
@@ -46,7 +46,7 @@ scene_crop = m3d.preprocessing.crop_roi_pointcloud(
 
 # mathch scene points
 ret, results = ppf.estimate(scene_crop)
-
+print(len(results))
 if ret is False:
     print('No matched')
 else:

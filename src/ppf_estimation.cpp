@@ -384,10 +384,11 @@ bool PPFEstimator::Impl::Estimate(const PointCloudPtr &pc,
 
     // remove pose which votes is less than threshold
     size_t valid_num = 0;
-    for (; valid_num < results.size(); valid_num++) {
+    for (; valid_num < results.size();) {
         if (results[valid_num].score_ < config_.score_thresh_) {
             break;
         }
+        valid_num++;
     }
     results.erase(results.begin() + valid_num, results.end());
     misc3d::LogInfo("Find {} pose satisfy score threshold", valid_num);

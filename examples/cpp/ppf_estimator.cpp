@@ -19,7 +19,7 @@
 int main(int argc, char *argv[]) {
     misc3d::pose_estimation::PPFEstimatorConfig config;
     config.training_param_.rel_sample_dist = 0.04;
-    config.score_thresh_ = 0.05;
+    config.score_thresh_ = 0.01;
     config.refine_param_.method =
         misc3d::pose_estimation::PPFEstimatorConfig::RefineMethod::PointToPoint;
 
@@ -51,23 +51,28 @@ int main(int argc, char *argv[]) {
         *scene, {222, 296, 263, 340}, {640, 480});
 
     std::vector<misc3d::pose_estimation::Pose6D> results;
-    estimator.Estimate(scene_crop, results);
+    ret = estimator.Estimate(scene_crop, results);
 
-    // icp refine
-    auto pose = results[0].pose_;
-    auto sampled_model = estimator.GetSampledModel();
+    Eigen::Matrix4d pose;
+    if (ret) {
+        // icp refine
+        pose = results[0].pose_;
+        auto sampled_model = estimator.GetSampledModel();
 
-    auto res = open3d::pipelines::registration::RegistrationICP(
-        sampled_model, *scene_crop, 0.01, pose,
-        open3d::pipelines::registration::
-            TransformationEstimationPointToPoint());
-    pose = res.transformation_;
+        auto res = open3d::pipelines::registration::RegistrationICP(
+            sampled_model, *scene_crop, 0.01, pose,
+            open3d::pipelines::registration::
+                TransformationEstimationPointToPoint());
+        pose = res.transformation_;
+    } else {
+        std::cout << "No matched" << std::endl;
+    }
 
     auto vis = std::make_shared<open3d::visualization::Visualizer>();
     vis->CreateVisualizerWindow("PPF estimation", 1920, 1200);
 
     open3d::geometry::TriangleMesh mesh;
-    ret = open3d::io::ReadTriangleMesh(
+    open3d::io::ReadTriangleMesh(
         "../examples/data/pose_estimation/model/obj.ply", mesh);
     mesh.Scale(0.001, Eigen::Vector3d::Zero());
     misc3d::vis::DrawPose(vis, Eigen::Matrix4d::Identity(), 0.1);
