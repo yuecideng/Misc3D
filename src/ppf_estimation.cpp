@@ -254,7 +254,6 @@ void PPFEstimator::Impl::PreprocessEstimate(
         pc->EstimateNormals(open3d::geometry::KDTreeSearchParamHybrid(
             normal_radius, NORMAL_CALC_NN));
     }
-
     NormalConsistent(*pc);
 
     const size_t num = pc->points_.size();
@@ -306,7 +305,8 @@ bool PPFEstimator::Impl::Estimate(const PointCloudPtr &pc,
 
     RandomSampler<size_t> sampler;
     const size_t sample = config_.ref_param_.ratio * num;
-    std::vector<size_t> keypoints_indices = sampler(indices, sample);
+    std::vector<size_t> keypoints_indices =
+        sampler.SampleWithoutDuplicate(indices, sample);
 
     const auto key_points = scene_sample_.SelectByIndex(keypoints_indices);
     std::vector<Pose6D> pose_list;
@@ -1069,6 +1069,7 @@ void PPFEstimator::Impl::CalcModelNormalAndSampling(
             open3d::geometry::KDTreeSearchParamHybrid(normal_r, NORMAL_CALC_NN),
             false);
     }
+    pc->NormalizeNormals();
 
     // calc nearest point respect to view point
     std::vector<int> ret_indices(1);
