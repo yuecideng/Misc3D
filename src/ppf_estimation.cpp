@@ -18,7 +18,6 @@
 #include <misc3d/utils.h>
 #include <open3d/geometry/BoundingVolume.h>
 #include <open3d/geometry/KDTreeSearchParam.h>
-#include <open3d/pipelines/registration/GeneralizedICP.h>
 #include <open3d/pipelines/registration/Registration.h>
 #include <Eigen/Core>
 #include <Eigen/Eigenvalues>
@@ -27,12 +26,15 @@ namespace misc3d {
 
 namespace pose_estimation {
 
-inline bool IsNormalizedVector(const PointXYZ &v) {
+inline bool IsNormalizedVector(PointXYZ &v) {
     const double norm = v.norm();
-    if (norm < 1.0e-6) {
-        return false;
+    if (norm > 1.0e-6) {
+        for (int i = 0; i < 3; i++) {
+            v(i) *= 1 / norm;
+        }
+        return true;
     }
-    return true;
+    return false;
 }
 
 class PPFEstimator::Impl {
