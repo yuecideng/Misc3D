@@ -11,7 +11,6 @@ namespace pose_estimation {
 
 typedef Eigen::Vector3d PointXYZ;
 typedef Eigen::Vector3d Normal;
-// typedef Eigen::Matrix<double, 6, 1> PointXYZNormal;
 typedef Eigen::Matrix<double, 3, 3, Eigen::RowMajor> Rotation;
 typedef Eigen::Matrix<double, 4, 4, Eigen::RowMajor> Transformation;
 

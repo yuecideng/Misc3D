@@ -52,14 +52,7 @@ public:
         invert_normal_ = config.training_param_.invert_model_normal;
     }
 
-    ~Impl() {
-        // if (hash_table_ != nullptr) {
-        //     delete[] hash_table_;
-        // }
-        // if (hashtable_boundary_ != nullptr) {
-        //     delete[] hashtable_boundary_;
-        // }
-    }
+    ~Impl() {}
 
     bool SetConfig(const PPFEstimatorConfig &config);
 
@@ -75,13 +68,14 @@ private:
                             open3d::geometry::PointCloud &pc_sample);
 
     void CalcPPF(const PointXYZ &p0, const Normal &n0, const PointXYZ &p1,
-                 const Normal &n1, double ppf[4]);
+                 const Normal &n1, std::array<double, 4> &ppf);
 
-    void QuantizePPF(const double ppf[4], size_t quant_ppf[4]);
+    void QuantizePPF(const std::array<double, 4> &ppf,
+                     std::array<size_t, 4> &quant_ppf);
 
-    size_t HashPPF(const size_t ppf[4]);
+    size_t HashPPF(const std::array<size_t, 4> &ppf);
 
-    size_t HashPPF(const double ppf[4]);
+    size_t HashPPF(const std::array<double, 4> &ppf);
 
     Transformation CalcTNormal2RegionX(const PointXYZ &p, const Normal &n);
 
@@ -91,7 +85,8 @@ private:
     // use_flag: 1: use translation, 2: dsadse rotation, 3: both
     bool MatchPose(const Pose6D &src, const Pose6D &dst, const int use_flag);
 
-    void SpreadPPF(const size_t ppf[4], size_t idx[81], int &n);
+    void SpreadPPF(const std::array<size_t, 4> &ppf,
+                   std::array<size_t, 81> &idx, int &n);
 
     void ClusterPoses(std::vector<Pose6D> &pose_list,
                       std::vector<std::vector<Pose6D>> &clustered_pose);
@@ -121,11 +116,6 @@ private:
                                     const double normal_r, const double step,
                                     const PointXYZ &view_pt,
                                     open3d::geometry::PointCloud &pc_sample);
-
-    void CalcMeanAndCovarianceMatrix(const std::vector<PointXYZ> &pc,
-                                     int *indices, const int indices_num,
-                                     double cov_matrix[3][3],
-                                     double centoid[3]);
 
     void GenerateLUT();
 
@@ -195,11 +185,9 @@ private:
 
     bool trained_;
     double calc_normal_relative_;
-
-    size_t angle_num_2_, angle_num_3_;
-
     PointXYZ centroid_;
 
+    size_t angle_num_2_, angle_num_3_;
     std::vector<int> alpha_lut_;
     std::vector<std::array<int, 3>> alpha_shift_lut_;
     std::vector<std::array<int, 3>> dist_shift_lut_;
@@ -268,7 +256,6 @@ void PPFEstimator::Impl::PreprocessEstimate(
     }
 
     NormalConsistent(*pc);
-    pc->NormalizeNormals();
 
     const size_t num = pc->points_.size();
     pc_sample = *pc->VoxelDownSample(dist_step_);
@@ -433,8 +420,9 @@ void PPFEstimator::Impl::VotingAndGetPose(
     KDTree kdtree(refered_pts);
 #pragma omp parallel for
     for (size_t si = 0; si < reference_num; si++) {
-        double ppf[4];
-        size_t quantized_ppf[4], spread_idx[81];
+        std::array<double, 4> ppf;
+        std::array<size_t, 4> quantized_ppf;
+        std::array<size_t, 81> spread_idx;
 
         double alpha_scene_rad, alpha;
         size_t quantize_alpha, idx;
@@ -631,7 +619,7 @@ void PPFEstimator::Impl::CalcHashTable(
         const Transformation tmg = CalcTNormal2RegionX(p0_p, p0_n);
         tmg_ptr[i] = tmg;
 
-        double ppf[4];
+        std::array<double, 4> ppf;
         for (size_t j = 0; j < refered_num; j++) {
             if ((!b_same_pointset) || (b_same_pointset && j != i)) {
                 PointPair pp;
@@ -653,7 +641,7 @@ void PPFEstimator::Impl::CalcHashTable(
 
 void PPFEstimator::Impl::CalcPPF(const PointXYZ &p0, const Normal &n0,
                                  const PointXYZ &p1, const Normal &n1,
-                                 double ppf[4]) {
+                                 std::array<double, 4> &ppf) {
     Eigen::Vector3d d(p1(0) - p0(0), p1(1) - p0(1), p1(2) - p0(2));
     const double norm = d.norm();
     d.normalize();
@@ -664,20 +652,21 @@ void PPFEstimator::Impl::CalcPPF(const PointXYZ &p0, const Normal &n0,
     ppf[3] = norm;
 }
 
-void PPFEstimator::Impl::QuantizePPF(const double ppf[4], size_t quant_ppf[4]) {
+void PPFEstimator::Impl::QuantizePPF(const std::array<double, 4> &ppf,
+                                     std::array<size_t, 4> &quant_ppf) {
     for (int i = 0; i < 3; i++) {
         quant_ppf[i] = round(ppf[i] / config_.voting_param_.angle_step);
     }
     quant_ppf[3] = round(ppf[3] / dist_step_);
 }
 
-size_t PPFEstimator::Impl::HashPPF(const size_t ppf[4]) {
+size_t PPFEstimator::Impl::HashPPF(const std::array<size_t, 4> &ppf) {
     return ppf[0] + ppf[1] * angle_num_ + ppf[2] * angle_num_2_ +
            ppf[3] * angle_num_3_;
 }
 
-size_t PPFEstimator::Impl::HashPPF(const double ppf[4]) {
-    size_t quantized_ppf[4];
+size_t PPFEstimator::Impl::HashPPF(const std::array<double, 4> &ppf) {
+    std::array<size_t, 4> quantized_ppf;
     QuantizePPF(ppf, quantized_ppf);
     return HashPPF(quantized_ppf);
 }
@@ -685,14 +674,13 @@ size_t PPFEstimator::Impl::HashPPF(const double ppf[4]) {
 Transformation PPFEstimator::Impl::CalcTNormal2RegionX(const PointXYZ &p,
                                                        const Normal &n) {
     PointXYZ u(0, n(2), -n(1));
-    double angle_rad = acos(n(0));
     if (!IsNormalizedVector(u)) {
         u(1) = 1;
         u(2) = 0;
     }
 
     // quaternion to rotate matrix
-    double half_alpha_rad = angle_rad / 2;
+    const double half_alpha_rad = acos(n(0)) / 2;
     const Eigen::Vector4d quat(cos(half_alpha_rad), 0,
                                sin(half_alpha_rad) * u(1),
                                sin(half_alpha_rad) * u(2));
@@ -715,8 +703,8 @@ double PPFEstimator::Impl::CalcAlpha(const PointXYZ &pt,
     return atan2(-tran_pt(2), tran_pt(1));
 }
 
-void PPFEstimator::Impl::SpreadPPF(const size_t ppf[4], size_t idx[81],
-                                   int &n) {
+void PPFEstimator::Impl::SpreadPPF(const std::array<size_t, 4> &ppf,
+                                   std::array<size_t, 81> &idx, int &n) {
     int d, a0, a1, a2;
     n = 0;
 
@@ -1081,7 +1069,6 @@ void PPFEstimator::Impl::CalcModelNormalAndSampling(
             open3d::geometry::KDTreeSearchParamHybrid(normal_r, NORMAL_CALC_NN),
             false);
     }
-    pc->NormalizeNormals();
 
     // calc nearest point respect to view point
     std::vector<int> ret_indices(1);
@@ -1138,7 +1125,7 @@ void PPFEstimator::Impl::CalcModelNormalAndSampling(
                 auto &cur_n = pc->normals_[cur_i];
                 auto &near_n = pc->normals_[near_i];
                 if (cur_n.dot(near_n) < 0)
-                    FlipNormal(cur_n);
+                    cur_n *= -1;
                 break;
             }
         }
@@ -1287,49 +1274,6 @@ void PPFEstimator::Impl::GenerateLUT() {
             dist_shift_lut_[i][j] = t;
         }
     }
-}
-
-void PPFEstimator::Impl::CalcMeanAndCovarianceMatrix(
-    const std::vector<PointXYZ> &pc, int *indices, const int indices_num,
-    double cov_matrix[3][3], double centoid[3]) {
-    double Sxx = 0, Sxy = 0, Sxz = 0, Syy = 0, Syz = 0, Szz = 0, Sx = 0, Sy = 0,
-           Sz = 0;
-    int n_pt = indices_num;
-    double scale = 1. / n_pt;
-    const double *pt;
-    for (int i = 0; i < n_pt; i++) {
-        pt = pc[indices[i]].data();
-        Sxx += pt[0] * pt[0];
-        Sxy += pt[0] * pt[1];
-        Sxz += pt[0] * pt[2];
-        Syy += pt[1] * pt[1];
-        Syz += pt[1] * pt[2];
-        Szz += pt[2] * pt[2];
-        Sx += pt[0];
-        Sy += pt[1];
-        Sz += pt[2];
-    }
-    Sxx *= scale;
-    Sxy *= scale;
-    Sxz *= scale;
-    Syy *= scale;
-    Syz *= scale;
-    Szz *= scale;
-    Sx *= scale;
-    Sy *= scale;
-    Sz *= scale;
-    cov_matrix[0][0] = Sxx - Sx * Sx;
-    cov_matrix[1][1] = Syy - Sy * Sy;
-    cov_matrix[2][2] = Szz - Sz * Sz;
-    cov_matrix[0][1] = Sxy - Sx * Sy;
-    cov_matrix[0][2] = Sxz - Sx * Sz;
-    cov_matrix[1][2] = Syz - Sy * Sz;
-    cov_matrix[1][0] = cov_matrix[0][1];
-    cov_matrix[2][0] = cov_matrix[0][2];
-    cov_matrix[2][1] = cov_matrix[1][2];
-    centoid[0] = Sx;
-    centoid[1] = Sy;
-    centoid[2] = Sz;
 }
 
 PPFEstimator::PPFEstimator() {
