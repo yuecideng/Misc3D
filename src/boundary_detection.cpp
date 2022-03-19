@@ -1,4 +1,4 @@
-#include <misc3d/features/edge_detection.h>
+#include <misc3d/features/boundary_detection.h>
 #include <misc3d/logging.h>
 
 namespace misc3d {
@@ -59,14 +59,14 @@ bool IsBoundaryPoint(const open3d::geometry::PointCloud& pc,
         return false;
 }
 
-std::vector<size_t> DetectEdgePoints(
+std::vector<size_t> DetectBoundaryPoints(
     const open3d::geometry::PointCloud& pc,
     const open3d::geometry::KDTreeSearchParam& param, double angle_threshold) {
-    std::vector<size_t> edge_indices;
+    std::vector<size_t> boundary_indices;
     if (!pc.HasPoints()) {
         misc3d::LogError("No PointCloud data.");
         
-        return edge_indices;
+        return boundary_indices;
     }
 
     open3d::geometry::PointCloud pc_(pc);
@@ -94,14 +94,14 @@ std::vector<size_t> DetectEdgePoints(
         if (IsBoundaryPoint(pc_, pc_.points_[idx], ret_indices, u, v,
                             angle_threshold)) {
 #pragma omp critical
-            { edge_indices.push_back(idx); }
+            { boundary_indices.push_back(idx); }
         }
     }
 
-    misc3d::LogInfo("Found {} edge points from {} input points.",
-                             edge_indices.size(), num);
+    misc3d::LogInfo("Found {} boundary points from {} input points.",
+                             boundary_indices.size(), num);
 
-    return edge_indices;
+    return boundary_indices;
 }
 
 }  // namespace features

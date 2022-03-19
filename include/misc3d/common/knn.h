@@ -13,6 +13,14 @@ namespace misc3d {
 
 namespace common {
 
+/**
+ * @brief This is a K nearest neighbor search class based on annoy.
+ * It is recommanded to use this class instead of the KDTreeFlann class when the
+ * feature dimension is large, eg. for descriptor-based feature matching usage
+ * As for point cloud based nearest neighbor search, the KDTreeFlann class is
+ * more suitable.
+ *
+ */
 class KNearestSearch {
 public:
     KNearestSearch();
@@ -21,8 +29,7 @@ public:
 
     KNearestSearch(const Eigen::MatrixXd &data, int n_trees = 4);
 
-    KNearestSearch(const open3d::geometry::Geometry &geometry,
-                   int n_trees = 4);
+    KNearestSearch(const open3d::geometry::Geometry &geometry, int n_trees = 4);
 
     KNearestSearch(const open3d::pipelines::registration::Feature &feature,
                    int n_trees = 4);

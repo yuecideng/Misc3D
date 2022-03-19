@@ -2,7 +2,7 @@
 #include <memory>
 
 #include <misc3d/common/ransac.h>
-#include <misc3d/features/edge_detection.h>
+#include <misc3d/features/boundary_detection.h>
 #include <misc3d/utils.h>
 #include <misc3d/vis/vis_utils.h>
 #include <open3d/camera/PinholeCameraIntrinsic.h>
@@ -43,20 +43,20 @@ int main(int argc, char *argv[]) {
 
     auto pcd_plane = pcd_down->SelectByIndex(inliers);
     timer.Start();
-    auto indices = misc3d::features::DetectEdgePoints(
+    auto indices = misc3d::features::DetectBoundaryPoints(
         *pcd_plane, open3d::geometry::KDTreeSearchParamHybrid(0.02, 30));
-    std::cout << "Time cost for edge detection: " << timer.Stop() << std::endl;
+    std::cout << "Time cost for boundary detection: " << timer.Stop() << std::endl;
 
-    auto pcd_edges = pcd_plane->SelectByIndex(indices);
+    auto boundary = pcd_plane->SelectByIndex(indices);
 
     auto vis = std::make_shared<open3d::visualization::Visualizer>();
-    vis->CreateVisualizerWindow("Ransac and edge detection", 1920, 1200);
+    vis->CreateVisualizerWindow("Ransac and boundary detection", 1920, 1200);
     misc3d::vis::DrawGeometry3D(vis, pcd_down, {0.5, 0.5, 0.5});
     misc3d::vis::DrawGeometry3D(vis, pcd_plane);
     auto bbox = std::make_shared<open3d::geometry::OrientedBoundingBox>(
         pcd_plane->GetOrientedBoundingBox());
     misc3d::vis::DrawGeometry3D(vis, bbox, {0, 1, 0});
-    misc3d::vis::DrawGeometry3D(vis, pcd_edges, {1, 0, 0});
+    misc3d::vis::DrawGeometry3D(vis, boundary, {1, 0, 0});
     vis->Run();
 
     return 0;

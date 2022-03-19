@@ -11,7 +11,7 @@
 #include <stack>
 #include <unordered_map>
 
-#include <misc3d/features/edge_detection.h>
+#include <misc3d/features/boundary_detection.h>
 #include <misc3d/logging.h>
 #include <misc3d/pose_estimation/data_structure.h>
 #include <misc3d/pose_estimation/ppf_estimation.h>
@@ -1148,7 +1148,7 @@ void PPFEstimator::Impl::CalcModelNormalAndSampling(
 void PPFEstimator::Impl::ExtractEdges(const open3d::geometry::PointCloud &pc,
                                       double radius,
                                       std::vector<size_t> &edge_ind) {
-    edge_ind = features::DetectEdgePoints(
+    edge_ind = features::DetectBoundaryPoints(
         pc, open3d::geometry::KDTreeSearchParamHybrid(
                 radius, config_.edge_param_.pts_num));
 }

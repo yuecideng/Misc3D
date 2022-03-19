@@ -13,7 +13,7 @@ Core modules:
     2. Crop ROI of point clouds.
     3. Project point clouds into a plane. 
 - `features`:
-    1. Edge points detection from point clouds.
+    1. Boundary points detection from point clouds.
 - `registration`:
     1. Corresponding matching with descriptors.
     2. 3D rigid transformation solver including SVD, RANSAC and [TEASERPP](https://github.com/MIT-SPARK/TEASER-plusplus).
@@ -89,10 +89,10 @@ pcd_plane = m3d.preprocessing.project_into_plane(pcd)
 ```
 
 ```python
-# edge points detection
-index = m3d.features.detect_edge_points(
+# boundary points detection
+index = m3d.features.detect_boundary_points(
     pcd, o3d.geometry.KDTreeSearchParamHybrid(0.02, 30))
-edges = pcd.select_by_index(index)
+boundary = pcd.select_by_index(index)
 ```
 
 ```python

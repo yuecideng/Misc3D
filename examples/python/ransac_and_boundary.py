@@ -9,7 +9,7 @@ import misc3d as m3d
 
 
 vis = o3d.visualization.Visualizer()
-vis.create_window("Segmentation", 1920, 1200)
+vis.create_window("Ransac and Bounary Detection", 1920, 1200)
 
 depth = o3d.io.read_image('../data/indoor/depth/depth_0.png')
 color = o3d.io.read_image('../data/indoor/color/color_0.png')
@@ -33,17 +33,17 @@ print('Plan fitting time: %.3f' % (time.time() - t0))
 plane = pcd.select_by_index(index)
 
 t1 = time.time()
-index = m3d.features.detect_edge_points(
+index = m3d.features.detect_boundary_points(
     plane, o3d.geometry.KDTreeSearchParamHybrid(0.02, 30))
-print('Edges detection time: %.3f' % (time.time() - t1))
+print('Boundary detection time: %.3f' % (time.time() - t1))
 
-edges = plane.select_by_index(index)
+boundary = plane.select_by_index(index)
 
 # scene points painted with gray
 bbox = plane.get_oriented_bounding_box()
 m3d.vis.draw_geometry3d(vis, pcd, color=(0.5, 0.5, 0.5))
 m3d.vis.draw_geometry3d(vis, bbox, color=(0, 1, 0))
 m3d.vis.draw_geometry3d(vis, plane)
-m3d.vis.draw_geometry3d(vis, edges, color=(1, 0, 0), size=5)
+m3d.vis.draw_geometry3d(vis, boundary, color=(1, 0, 0), size=5)
 
 vis.run()
