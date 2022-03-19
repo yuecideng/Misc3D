@@ -34,7 +34,7 @@ Core modules:
 
 ### Build
 ##### Linux (currently only supported)
-1. Build `open3d` as external library. You can follow the instruction from here [guide](https://github.com/intel-isl/open3d-cmake-find-package). Build `pybind11` in your system as well.
+1. Build `open3d` as external library. You can follow the instruction from here [guide](https://github.com/intel-isl/open3d-cmake-find-package). Build `pybind11` in your system as well. If you only use C++ API, you can skip this step and just download the pre-built `open3d` library from [official website](http://www.open3d.org/docs/release/getting_started.html).
 
 2. Git clone the repo and run:
     ```bash
@@ -42,10 +42,11 @@ Core modules:
     cmake .. -DCMAKE_INSTALL_PREFIX=</path/to/installation>
     make install -j
     ```
-    If you don't want to build python binding, just add `-DBUILD_PYTHON=OFF`.
+    If you only use C++ API, make sure you add `-DBUILD_PYTHON=OFF`.
 
 3. After installation, add these two lines to `~/.bashrc` file:
     ```bash
+    # this is not necessary if you do not build python binding
     export PYTHONPATH="$PYTHONPATH:</path/to/installation>/misc3d/lib/python"
     export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:</path/to/installation>/misc3d/lib"
     ```
@@ -148,7 +149,7 @@ m3d.set_verbosity_level(m3d.VerbosityLevel.Error)
 ```
 
 #### C++
-You can run c++ examples after finish build the library. The source code of examples are in `examples/cpp`.
+You can run c++ examples after finish build the library, which are inside `/path/to/install/misc3d/bin`. The source code of examples are in `examples/cpp`.
 Some results are as follow:
 <p float="left">
   <img src="images/farthest.png" width="250" height=200/>
