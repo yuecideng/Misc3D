@@ -18,6 +18,7 @@ void pybind_registration(py::module &m) {
         "Compute 3D rigid transformation from corresponding point clouds using "
         "SVD",
         py::arg("src"), py::arg("dst"));
+#ifdef WIN32
     m.def(
         "compute_transformation_teaser",
         [](const PointCloudPtr &src, const PointCloudPtr &dst,
@@ -28,6 +29,7 @@ void pybind_registration(py::module &m) {
         "Compute 3D rigid transformation from corresponding point clouds using "
         "Teaser PlusPlus algorithm",
         py::arg("src"), py::arg("dst"), py::arg("noise_bound") = 0.01);
+#endif
     m.def(
         "compute_transformation_ransac",
         [](const PointCloudPtr &src, const PointCloudPtr &dst,

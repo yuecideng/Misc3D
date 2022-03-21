@@ -20,6 +20,20 @@ if(UNIX)
     set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 endif()
 
+if(WIN32)
+    message(STATUS "Windows Build System")
+    SET(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
+    if(MSVC)
+
+        add_compile_options("$<$<COMPILE_LANGUAGE:CXX>:/bigobj;/Ob2>")
+    endif()
+    if (STATIC_WINDOWS_RUNTIME)
+        set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+    else()
+        set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
+    endif()
+endif()
+
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
@@ -44,7 +58,7 @@ if(OPENMP_FOUND)
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
 endif()
 
-# Find open3d 
+# Find open3d (Linux default)
 set(Open3D_DIR "/usr/local/lib/cmake/Open3D" CACHE FILEPATH "Set to find Open3D")
 find_package(Open3D REQUIRED NO_DEFAULT_PATH)
 
@@ -56,7 +70,9 @@ endif()
 set(CMAKE_INSTALL_PREFIX $ENV{HOME} CACHE PATH "install path")
 message(STATUS "Install path: " ${CMAKE_INSTALL_PREFIX})
 
-add_subdirectory(3rdparty)
+if(NOT WIN32)
+    add_subdirectory(3rdparty)
+endif()
 
 include_directories(${SPDLOG_INCLUDE_DIRS})
 add_subdirectory(src)

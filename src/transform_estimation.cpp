@@ -70,6 +70,7 @@ Eigen::Matrix4d SVDSolver::Solve(
     return res;
 }
 
+#ifdef WIN32
 Eigen::Matrix4d TeaserSolver::Solve(
     const open3d::geometry::PointCloud& src,
     const open3d::geometry::PointCloud& dst) const {
@@ -116,6 +117,7 @@ Eigen::Matrix4d TeaserSolver::Solve(
 
     return res;
 }
+#endif
 
 Eigen::Matrix4d RANSACSolver::Solve(
     const open3d::geometry::PointCloud& src,
