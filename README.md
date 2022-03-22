@@ -33,9 +33,8 @@ Core modules:
 - `pybind11` >= 2.6.2
 
 ### Build
-##### Linux (currently only supported)
 1. Build `open3d` as external library. You can follow the instruction from here [guide](https://github.com/intel-isl/open3d-cmake-find-package). Build `pybind11` in your system as well. If you only use C++ API, you can skip this step and just download the pre-built `open3d` library from [official website](http://www.open3d.org/docs/release/getting_started.html).
-
+##### Linux 
 2. Git clone the repo and run:
     ```bash
     mkdir build && cd build
@@ -51,6 +50,11 @@ Core modules:
     export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:</path/to/installation>/misc3d/lib"
     ```
     Run `sources ~/.bashrc` to save changes.
+##### Windows
+2. Git clone and run: `mkdir build && cd build`. You can use Cmake GUI to configure your build options. Then run `cmake --build. --config Release --target INSTALL` to install `Misc3D`.
+
+3. After installation, add this variable: `/path/to/installation/misc3d/lib/python` to your system environment variable `Path` to make sure you can import `misc3d` in python. 
+
 ### How to use
 #### Python
 The example python scripts can be found in `examples/python`. You can run it after you install the library successfully.

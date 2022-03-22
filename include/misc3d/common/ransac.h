@@ -562,7 +562,7 @@ private:
         Model best_model;
         size_t count = 0;
         size_t current_iteration = std::numeric_limits<size_t>::max();
-        RandomIndexSampler sampler(num_points);
+        RandomSampler<size_t> sampler(num_points);
 #pragma omp parallel for schedule(static)
         for (int i = 0; i < max_iteration_; ++i) {
             if (count > current_iteration) {
