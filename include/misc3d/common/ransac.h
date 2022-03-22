@@ -177,7 +177,7 @@ public:
 
         double xx = 0, xy = 0, xz = 0, yy = 0, yz = 0, zz = 0;
 #pragma omp parallel for reduction(+ : xx, xy, xz, yy, yz, zz)
-        for (size_t i = 0; i < num; ++i) {
+        for (int i = 0; i < num; ++i) {
             const Eigen::Vector3d residual = points[i] - mean;
             xx += residual(0) * residual(0);
             xy += residual(0) * residual(1);
@@ -562,13 +562,14 @@ private:
         Model best_model;
         size_t count = 0;
         size_t current_iteration = std::numeric_limits<size_t>::max();
+        RandomIndexSampler sampler(num_points);
 #pragma omp parallel for schedule(static)
-        for (size_t i = 0; i < max_iteration_; ++i) {
+        for (int i = 0; i < max_iteration_; ++i) {
             if (count > current_iteration) {
                 continue;
             }
             const std::vector<size_t> sample_indices =
-                sampler_(indices_list, estimator_.minimal_sample_);
+                sampler(estimator_.minimal_sample_);
             const auto sample = pc_.SelectByIndex(sample_indices);
 
             Model model_trial;
@@ -579,7 +580,8 @@ private:
                 continue;
             }
 
-            const auto result = EvaluateModel(pc_.points_, threshold, model_trial);
+            const auto result =
+                EvaluateModel(pc_.points_, threshold, model_trial);
             double fitness = std::get<0>(result);
             double inlier_rmse = std::get<1>(result);
 #pragma omp critical
@@ -647,7 +649,6 @@ private:
     size_t max_iteration_;
     double fitness_;
     double inlier_rmse_;
-    Sampler sampler_;
     ModelEstimator estimator_;
 };
 

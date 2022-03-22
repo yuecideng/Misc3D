@@ -1,3 +1,6 @@
+#ifdef WIN32
+#define NOMINMAX
+#endif
 #include <iostream>
 #include <memory>
 #include <vector>

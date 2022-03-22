@@ -1,3 +1,6 @@
+#ifdef WIN32
+#define NOMINMAX
+#endif
 #include <float.h>
 #include <omp.h>
 #include <time.h>
@@ -300,13 +303,10 @@ bool PPFEstimator::Impl::Estimate(const PointCloudPtr &pc,
 
     // currently only supporting key points random selection
     const size_t num = scene_sample_.points_.size();
-    std::vector<size_t> indices(num);
-    std::iota(indices.begin(), indices.end(), 0);
-
-    RandomSampler<size_t> sampler;
+    RandomSampler<size_t> sampler(num);
     const size_t sample = config_.ref_param_.ratio * num;
     std::vector<size_t> keypoints_indices =
-        sampler.SampleWithoutDuplicate(indices, sample);
+        sampler.SampleWithoutDuplicate(sample);
 
     const auto key_points = scene_sample_.SelectByIndex(keypoints_indices);
     std::vector<Pose6D> pose_list;
@@ -419,7 +419,7 @@ void PPFEstimator::Impl::VotingAndGetPose(
 
     KDTree kdtree(refered_pts);
 #pragma omp parallel for
-    for (size_t si = 0; si < reference_num; si++) {
+    for (int si = 0; si < reference_num; si++) {
         std::array<double, 4> ppf;
         std::array<size_t, 4> quantized_ppf;
         std::array<size_t, 81> spread_idx;
@@ -427,7 +427,7 @@ void PPFEstimator::Impl::VotingAndGetPose(
         double alpha_scene_rad, alpha;
         size_t quantize_alpha, idx;
         int n_searched, alpha_index, n_ppfs;
-        ulong alpha_scene_bit, t;
+        size_t alpha_scene_bit, t;
 
         Transformation model_pose, tsg_inv, tmg;
 
@@ -437,7 +437,7 @@ void PPFEstimator::Impl::VotingAndGetPose(
         size_t max_votes, corr_alpha_index, corr_model_index;
 
         std::vector<size_t> accumulator(acc_size, 0);
-        std::vector<ulong> flags_b(hash_table_size_, 0);
+        std::vector<size_t> flags_b(hash_table_size_, 0);
 
         Transformation tsg = CalcTNormal2RegionX(p0_p, p0_n);
 
@@ -611,7 +611,7 @@ void PPFEstimator::Impl::CalcHashTable(
     tmg_ptr.resize(reference_num);
 
 #pragma omp parallel for
-    for (size_t i = 0; i < reference_num; i++) {
+    for (int i = 0; i < reference_num; i++) {
         size_t idx;
         const PointXYZ &p0_p = reference_pts.points_[i];
         const Normal &p0_n = reference_pts.normals_[i];
@@ -845,7 +845,7 @@ void PPFEstimator::Impl::CalcPoseNeighbor(
     std::vector<std::vector<bool>> match_table(
         n_pose, std::vector<bool>(n_pose, false));
 #pragma omp parallel for
-    for (size_t i = 0; i < n_pose; i++) {
+    for (int i = 0; i < n_pose; i++) {
         bool matched;
         const Pose6D *center_pose, *cur_pose;
         center_pose = &pose_list[indices[i]];
@@ -859,7 +859,7 @@ void PPFEstimator::Impl::CalcPoseNeighbor(
     }
     neibor_idx.resize(n_pose);
 #pragma omp parallel for
-    for (size_t pi = 0; pi < n_pose; pi++) {
+    for (int pi = 0; pi < n_pose; pi++) {
         for (size_t j = 0; j < n_pose; j++) {
             if (match_table[pi][j]) {
                 neibor_idx[pi].emplace_back(j);
@@ -912,7 +912,7 @@ void PPFEstimator::Impl::ClusterPoses(
     pose_clustered_by_t_.resize(n_cluster);
 
 #pragma omp parallel for
-    for (size_t i = 0; i < n_cluster; i++) {
+    for (int i = 0; i < n_cluster; i++) {
         std::vector<std::vector<int>> temp_neighbor_indices;
 
         for (size_t index : pose_cluster[i].pose_indices_) {
@@ -944,7 +944,7 @@ void PPFEstimator::Impl::RefineSparsePose(
     const open3d::pipelines::registration::ICPConvergenceCriteria criteria(
         1e-6, 1e-6, SPARSE_REFINE_ICP_ITERATION);
 #pragma omp parallel for
-    for (size_t i = 0; i < clustered_pose.size(); i++) {
+    for (int i = 0; i < clustered_pose.size(); i++) {
         if (clustered_pose[i].size() == 0) {
             continue;
         }
@@ -1228,7 +1228,7 @@ void PPFEstimator::Impl::GenerateModelPCNeighbor(
 
     int n_search;
 #pragma omp parallel for
-    for (size_t i = 0; i < pts_size; i++) {
+    for (int i = 0; i < pts_size; i++) {
         std::vector<int> ret_indices;
         std::vector<double> out_dists_sqr;
         const PointXYZ &temp = pts.points_[i];

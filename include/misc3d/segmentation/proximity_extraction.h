@@ -1,13 +1,12 @@
 #pragma once
 
-#include <math.h>
 #include <iostream>
 #include <limits>
 #include <vector>
 
+#include <misc3d/logging.h>
 #include <misc3d/utils.h>
 #include <open3d/geometry/KDTreeFlann.h>
-#include <misc3d/logging.h>
 #include <Eigen/Core>
 
 namespace misc3d {
@@ -36,12 +35,13 @@ class DistanceProximityEvaluator : public BaseProximityEvaluator {
 public:
     /**
      * @brief Construct a new Distance Proximity Evaluator with a given distance
-     * threshold The distance threshold is used to determine whether two points are
-     * close enough to be considered as proximal.
+     * threshold The distance threshold is used to determine whether two points
+     * are close enough to be considered as proximal.
      *
      * @param dist_thresh
      */
-    DistanceProximityEvaluator(double dist_thresh) : max_distance_(dist_thresh) {}
+    DistanceProximityEvaluator(double dist_thresh)
+        : max_distance_(dist_thresh) {}
 
     inline bool operator()(size_t i, size_t j, double dist) const {
         return dist < max_distance_;
@@ -54,8 +54,8 @@ private:
 class NormalsProximityEvaluator : public BaseProximityEvaluator {
 public:
     /**
-     * @brief Construct a new Normals Proximity Evaluator with computed normals and
-     * angle threshold
+     * @brief Construct a new Normals Proximity Evaluator with computed normals
+     * and angle threshold
      *
      * @param normals the normal of each point.
      * @param angle_thresh angle in degree
@@ -91,8 +91,9 @@ public:
      * @param dist_thresh  distance in meter
      * @param angle_thresh angle in degree
      */
-    DistanceNormalsProximityEvaluator(const std::vector<Eigen::Vector3d> &normals,
-                                      double dist_thresh, double angle_thresh)
+    DistanceNormalsProximityEvaluator(
+        const std::vector<Eigen::Vector3d> &normals, double dist_thresh,
+        double angle_thresh)
         : normals_(normals)
         , max_distance_(dist_thresh)
         , max_angle_(Deg2Rad(angle_thresh)) {}

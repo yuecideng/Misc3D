@@ -1,11 +1,17 @@
 #pragma once
 
-#include <float.h>
+#ifdef WIN32
+#define _USE_MATH_DEFINES
 #include <math.h>
+#else
+#include <math.h>
+#endif
+#include <float.h>
 #include <omp.h>
 #include <string.h>
 #include <chrono>
 #include <memory>
+#include <mutex>
 #include <random>
 #include <vector>
 
@@ -51,12 +57,10 @@ public:
     /**
      * @brief pure virtual operator, which define the I/O of this sampler
      *
-     * @param indices
      * @param sample_size
      * @return std::vector<T>
      */
-    virtual std::vector<T> operator()(const std::vector<T> &indices,
-                                      size_t sample_size) = 0;
+    virtual std::vector<T> operator()(size_t sample_size) = 0;
 };
 
 /**
@@ -67,40 +71,54 @@ public:
 template <typename T>
 class RandomSampler : public Sampler<T> {
 public:
-    std::vector<T> operator()(const std::vector<T> &indices,
-                              size_t sample_size) override {
+    explicit RandomSampler(const size_t size) : Sampler<T>(), size_(size) {
         std::random_device rd;
-        std::mt19937 rng(rd());
-        const size_t num = indices.size();
+        rng_ = std::mt19937(rd());
+    }
+
+    // This operator is usually used in for loop and sample a small subset from
+    // original indices
+    std::vector<T> operator()(size_t sample_size) override {
+        // Lock this operation when using OpenMP to ensure synchronization
+        std::lock_guard<std::mutex> guard(mutex_);
 
         std::vector<T> sample;
         sample.reserve(sample_size);
-        for (int idx = 0; idx < sample_size; ++idx) {
-            sample.push_back(indices[rng() % num]);
+        size_t valid_sample = 0;
+        while (valid_sample < sample_size) {
+            size_t idx = rng_() % size_;
+            if (std::find(sample.begin(), sample.end(), idx) == sample.end()) {
+                sample.push_back(idx);
+                valid_sample++;
+            }
         }
 
         return sample;
     }
 
-    std::vector<T> SampleWithoutDuplicate(const std::vector<T> &indices,
-                                          size_t sample_size) const {
-        std::random_device rd;
-        std::mt19937 rng(rd());
-        const size_t num = indices.size();
-        std::vector<T> indices_ = indices;
+    // This function is usually called once to sample more than half of original
+    // indices
+    std::vector<T> SampleWithoutDuplicate(size_t sample_size) {
+        std::vector<T> indices(size_);
+        std::iota(indices.begin(), indices.end(), 0);
 
         for (size_t i = 0; i < sample_size; ++i) {
-            std::swap(indices_[i], indices_[rng() % num]);
+            std::swap(indices[i], indices[rng_() % size_]);
         }
 
         std::vector<T> sample;
         sample.reserve(sample_size);
         for (int idx = 0; idx < sample_size; ++idx) {
-            sample.push_back(indices_[idx]);
+            sample.push_back(indices[idx]);
         }
 
         return sample;
     }
+
+private:
+    size_t size_;
+    std::mt19937 rng_;
+    std::mutex mutex_;
 };
 
 /**
@@ -116,7 +134,7 @@ inline void NormalConsistent(open3d::geometry::PointCloud &pc) {
         const int size = pc.points_.size();
 
 #pragma omp parallel for
-        for (size_t i = 0; i < size; i++) {
+        for (int i = 0; i < size; i++) {
             if (pc.points_[i].dot(pc.normals_[i]) > 0) {
                 pc.normals_[i] *= -1;
             }
@@ -139,7 +157,7 @@ inline void GetVectorByIndex(const std::vector<T> &src,
     const size_t num = index.size();
     dst.resize(num);
 #pragma omp parallel for
-    for (size_t i = 0; i < num; i++) {
+    for (int i = 0; i < num; i++) {
         dst[i] = src[index[i]];
     }
 }
@@ -161,7 +179,7 @@ inline void GetMatrixByIndex(const std::vector<Eigen::Matrix<T, 3, 1>> &src,
         return;
     }
 #pragma omp parallel for
-    for (size_t i = 0; i < num; i++) {
+    for (int i = 0; i < num; i++) {
         dst.col(i) = src[index[i]];
     }
 }
@@ -180,7 +198,7 @@ inline void EigenMatrixToVector(const Eigen::Matrix<T, Eigen::Dynamic, 3> &pc,
     new_pc.resize(num);
 
 #pragma omp parallel for
-    for (size_t i = 0; i < num; i++) {
+    for (int i = 0; i < num; i++) {
         const Eigen::Matrix<T, 3, 1> &p = pc.row(i);
         memcpy(new_pc[i].data(), p.data(), data_length);
     }
@@ -203,7 +221,7 @@ inline void EigenMatrixToVector(
     new_pc.resize(num);
 
 #pragma omp parallel for
-    for (size_t i = 0; i < num; i++) {
+    for (int i = 0; i < num; i++) {
         const Eigen::Matrix<T, 3, 1> &p = pc.row(i);
         const Eigen::Matrix<T, 3, 1> &n = normal.row(i);
         memcpy(new_pc[i].data(), p.data(), data_length);
@@ -224,7 +242,7 @@ inline void VectorToEigenMatrix(const std::vector<Eigen::Matrix<T, 3, 1>> &pc,
     new_pc.setZero(3, num);
 
 #pragma omp parallel for
-    for (size_t i = 0; i < num; i++) {
+    for (int i = 0; i < num; i++) {
         new_pc.col(i) = pc[i];
     }
 }
@@ -242,7 +260,7 @@ inline void VectorToEigenMatrix(const std::vector<Eigen::Matrix<T, 6, 1>> &pc,
     new_pc.setZero(6, num);
 
 #pragma omp parallel for
-    for (size_t i = 0; i < num; i++) {
+    for (int i = 0; i < num; i++) {
         new_pc.col(i) = pc[i];
     }
 }
@@ -339,7 +357,7 @@ inline void VectorToO3dPointCloud(const std::vector<Eigen::Vector6d> &pc,
     new_pc.normals_.resize(n_pt);
 
 #pragma omp parallel for
-    for (size_t i = 0; i < n_pt; i++) {
+    for (int i = 0; i < n_pt; i++) {
         memcpy(new_pc.points_[i].data(), pc[i].data(), data_length);
         memcpy(new_pc.normals_[i].data(), pc[i].data() + 3, data_length);
     }

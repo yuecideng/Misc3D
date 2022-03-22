@@ -28,5 +28,11 @@ install(TARGETS py_misc3d
   EXPORT py_misc3d_target 
   LIBRARY DESTINATION "${CMAKE_INSTALL_PREFIX}/misc3d/lib/python/misc3d")
 
+if(WIN32)
+  install(TARGETS misc3d
+    RUNTIME DESTINATION "${CMAKE_INSTALL_PREFIX}/misc3d/lib/python/misc3d")
+endif()
+
+
 install(FILES "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/python/misc3d/__init__.py"
         DESTINATION "${CMAKE_INSTALL_PREFIX}/misc3d/lib/python/misc3d")

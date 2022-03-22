@@ -85,7 +85,7 @@ PointCloudPtr CropROIPointCloud(const open3d::geometry::PointCloud &pc,
     }
 
 #pragma omp parallel for
-    for (size_t i = 0; i < size; i++) {
+    for (int i = 0; i < size; i++) {
         const size_t ind = (i / roi_w + tl_y) * width + (i % roi_w) + tl_x;
         // indices[i] = ind;
         pcd->points_[i] = pc.points_[ind];

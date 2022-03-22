@@ -4,9 +4,6 @@ project(Misc3D VERSION 1.0.0)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-SET(CMAKE_CXX_FLAGS_DEBUG "-O0 -g2 -ggdb")
-SET(CMAKE_CXX_FLAGS_RELEASE "-O3")
-
 set(CMAKE_BUILD_TYPE "Release")
 message(STATUS "cmake build type: " ${CMAKE_BUILD_TYPE})
 
@@ -15,13 +12,16 @@ if(NOT ${CMAKE_SYSTEM_PROCESSOR} STREQUAL "x86_64")
     add_definitions(-DARM_CPU)
 endif()
 
+SET(CMAKE_CXX_FLAGS_DEBUG "-O0 -g2 -ggdb")
+SET(CMAKE_CXX_FLAGS_RELEASE "-O3")
 if(UNIX)
     set(CMAKE_INSTALL_RPATH ${CMAKE_INSTALL_PREFIX}/${PROJECT_NAME}/lib)
     set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 endif()
 
 if(WIN32)
-    message(STATUS "Windows Build System")
+    message(STATUS "Windows Build System.")
+    message(STATUS "Teaserpp is not supported on Windows currently.")
     SET(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
     if(MSVC)
 

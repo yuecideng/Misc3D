@@ -18,7 +18,7 @@ void NearestSearch(const Eigen::MatrixXd& src, const Eigen::MatrixXd& dst,
         const int num = src.cols();
         nn_inds.resize(num);
 #pragma omp parallel for schedule(static)
-        for (size_t i = 0; i < num; i++) {
+        for (int i = 0; i < num; i++) {
             std::vector<size_t> ret_indices;
             std::vector<double> out_dists_sqr;
             const Eigen::VectorXd& temp_pt = src.col(i);
@@ -32,7 +32,7 @@ void NearestSearch(const Eigen::MatrixXd& src, const Eigen::MatrixXd& dst,
         const int num = src.cols();
         nn_inds.resize(num);
 #pragma omp parallel for schedule(static)
-        for (size_t i = 0; i < num; i++) {
+        for (int i = 0; i < num; i++) {
             std::vector<int> ret_indices;
             std::vector<double> out_dists_sqr;
             const Eigen::VectorXd& temp_pt = src.col(i);

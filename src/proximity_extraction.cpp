@@ -15,7 +15,7 @@ void ProximityExtractor::SearchNeighborhoodSet(
     nn_map.resize(size);
 
 #pragma omp parallel for shared(nn_map)
-    for (size_t i = 0; i < size; i++) {
+    for (int i = 0; i < size; i++) {
         std::vector<int> ret_indices;
         std::vector<double> out_dists_sqr;
         const int n = kdtree.SearchRadius(pc.points_[i], search_radius, ret_indices,
@@ -36,7 +36,7 @@ void ProximityExtractor::BuildNeighborhoodSet(
     nn_map.resize(size);
 
 #pragma omp parallel for shared(nn_map)
-    for (size_t i = 0; i < size; i++) {
+    for (int i = 0; i < size; i++) {
         const size_t sub_size = nn_indices[i].size();
         nn_map[i].resize(sub_size);
         for (size_t j = 0; j < sub_size; j++) {
@@ -90,7 +90,7 @@ std::vector<std::vector<size_t>> ProximityExtractor::Segment(
 
 #pragma omp parallel for shared(seeds_indices, current_label, seed_active, \
                                 seeds_to_merge_with) private(frontier_set)
-    for (size_t i = 0; i < num; i++) {
+    for (int i = 0; i < num; i++) {
         if (current_label[seeds_indices[i]] != unassigned)
             continue;
 
@@ -195,8 +195,8 @@ std::vector<size_t> ProximityExtractor::GetClusterIndexMap() {
     // noise points will be assign largest label
     indices_map_.resize(points_num_, cluster_num_);
 
-#pragma omp parallel for shared(clustered_indices_map_, indices_map_)
-    for (size_t i = 0; i < clustered_indices_map_.size(); i++) {
+#pragma omp parallel for schedule(static)
+    for (int i = 0; i < clustered_indices_map_.size(); i++) {
         for (size_t j = 0; j < clustered_indices_map_[i].size(); j++) {
             indices_map_[clustered_indices_map_[i][j]] = i;
         }

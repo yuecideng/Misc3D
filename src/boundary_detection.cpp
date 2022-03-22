@@ -1,3 +1,9 @@
+#ifdef WIN32
+#define _USE_MATH_DEFINES
+#include <cmath>
+#else
+#include <math.h>
+#endif
 #include <misc3d/features/boundary_detection.h>
 #include <misc3d/logging.h>
 
@@ -65,7 +71,7 @@ std::vector<size_t> DetectBoundaryPoints(
     std::vector<size_t> boundary_indices;
     if (!pc.HasPoints()) {
         misc3d::LogError("No PointCloud data.");
-        
+
         return boundary_indices;
     }
 
@@ -78,7 +84,7 @@ std::vector<size_t> DetectBoundaryPoints(
     const size_t num = pc_.points_.size();
     open3d::geometry::KDTreeFlann kdtree(pc_);
 #pragma omp parallel for
-    for (size_t idx = 0; idx < num; idx++) {
+    for (int idx = 0; idx < num; idx++) {
         std::vector<int> ret_indices;
         std::vector<double> out_dists_sqr;
         if (kdtree.Search(pc_.points_[idx], param, ret_indices, out_dists_sqr) <
@@ -99,7 +105,7 @@ std::vector<size_t> DetectBoundaryPoints(
     }
 
     misc3d::LogInfo("Found {} boundary points from {} input points.",
-                             boundary_indices.size(), num);
+                    boundary_indices.size(), num);
 
     return boundary_indices;
 }

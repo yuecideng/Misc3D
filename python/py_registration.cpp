@@ -18,7 +18,7 @@ void pybind_registration(py::module &m) {
         "Compute 3D rigid transformation from corresponding point clouds using "
         "SVD",
         py::arg("src"), py::arg("dst"));
-#ifdef WIN32
+#ifndef WIN32
     m.def(
         "compute_transformation_teaser",
         [](const PointCloudPtr &src, const PointCloudPtr &dst,

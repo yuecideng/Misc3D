@@ -6,7 +6,9 @@
 #include <open3d/pipelines/registration/Registration.h>
 #include <open3d/pipelines/registration/TransformationEstimation.h>
 #include <misc3d/logging.h>
+#ifndef WIN32
 #include <teaser/registration.h>
+#endif
 
 namespace misc3d {
 
@@ -70,7 +72,7 @@ Eigen::Matrix4d SVDSolver::Solve(
     return res;
 }
 
-#ifdef WIN32
+#ifndef WIN32
 Eigen::Matrix4d TeaserSolver::Solve(
     const open3d::geometry::PointCloud& src,
     const open3d::geometry::PointCloud& dst) const {

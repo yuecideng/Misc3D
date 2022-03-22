@@ -11,7 +11,7 @@ set(SRCS utils.cpp
          ppf_estimation.cpp
          vis_utils.cpp)
 
-add_library(misc3d SHARED ${SRCS})
+add_library(misc3d ${SRCS})
 target_include_directories(misc3d PUBLIC
     $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>)
@@ -32,6 +32,7 @@ install(DIRECTORY ../include
 
 install(TARGETS misc3d 
   EXPORT misc3d_target
+  ARCHIVE DESTINATION "${CMAKE_INSTALL_PREFIX}/misc3d/lib"
   LIBRARY DESTINATION "${CMAKE_INSTALL_PREFIX}/misc3d/lib"
   RUNTIME DESTINATION "${CMAKE_INSTALL_PREFIX}/misc3d/bin"
 )

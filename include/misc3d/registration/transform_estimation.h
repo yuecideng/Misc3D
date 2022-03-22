@@ -63,7 +63,7 @@ public:
                           const open3d::geometry::PointCloud &dst) const;
 };
 
-#ifdef WIN32
+#ifndef WIN32
 /**
  * @brief 3D-3D correspondences with outlier transformation matrix estimation using
  * teaser robust solver. reference: https://github.com/MIT-SPARK/TEASER-plusplus

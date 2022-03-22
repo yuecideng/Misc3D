@@ -15,7 +15,7 @@ namespace common {
 void VectorToPointer(const std::vector<Eigen::Vector3d> &data, double *ptr) {
     const size_t num = data.size();
 #pragma omp parallel for
-    for (size_t i = 0; i < num; i++) {
+    for (int i = 0; i < num; i++) {
         ptr[3 * i] = data[i](0);
         ptr[3 * i + 1] = data[i](1);
         ptr[3 * i + 2] = data[i](2);
@@ -26,7 +26,7 @@ void PointerToVector(const double *ptr, int num,
                      std::vector<Eigen::Vector3d> &data) {
     data.resize(num);
 #pragma omp parallel for
-    for (size_t i = 0; i < num; i++) {
+    for (int i = 0; i < num; i++) {
         Eigen::Vector3d d(ptr[i * 3], ptr[i * 3 + 1], ptr[i * 3 + 2]);
         data[i] = d;
     }
