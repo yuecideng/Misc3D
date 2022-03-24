@@ -49,7 +49,7 @@ Core modules:
     export PYTHONPATH="$PYTHONPATH:</path/to/installation>/misc3d/lib/python"
     export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:</path/to/installation>/misc3d/lib"
     ```
-    Run `sources ~/.bashrc` to save changes.
+    Run `source ~/.bashrc` to save changes.
 ##### Windows
 2. Git clone and run: `mkdir build && cd build`. You can use Cmake GUI to configure your build options. Then run `cmake --build. --config Release --target INSTALL` to install `Misc3D`.
 
