@@ -33,7 +33,8 @@ Core modules:
 - `pybind11` >= 2.6.2
 
 ### Build
-1. Build `open3d` as external library. You can follow the instruction from here [guide](https://github.com/intel-isl/open3d-cmake-find-package). Build `pybind11` in your system as well. If you only use C++ API, you can skip this step and just download the pre-built `open3d` library from [official website](http://www.open3d.org/docs/release/getting_started.html).
+1. Build `open3d` as external library. You can follow the instruction from here [guide](https://github.com/intel-isl/open3d-cmake-find-package). 
+Build `pybind11` in your system as well. If you only use C++ API, you can skip this step and just download the pre-built `open3d` library from [official website](http://www.open3d.org/docs/release/getting_started.html).
 ##### Linux 
 2. Git clone the repo and run:
     ```bash
@@ -47,6 +48,7 @@ Core modules:
     ```bash
     # this is not necessary if you do not build python binding
     export PYTHONPATH="$PYTHONPATH:</path/to/installation>/misc3d/lib/python"
+    # this is necessary for c++ to find the customized installation library
     export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:</path/to/installation>/misc3d/lib"
     ```
     Run `sources ~/.bashrc` to save changes.
