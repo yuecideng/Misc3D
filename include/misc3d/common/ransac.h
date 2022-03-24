@@ -425,7 +425,7 @@ public:
      * @return false
      */
     bool GeneralFit(const open3d::geometry::PointCloud &pc,
-                    Model &model) const {
+                    Model &model) const override {
         // if (!MinimalCheck(points.cols())) {
         //     return false;
         // }
@@ -459,6 +459,7 @@ public:
         : fitness_(0)
         , inlier_rmse_(0)
         , max_iteration_(1000)
+        , min_iteration_(1)
         , probability_(0.9999) {}
 
     /**
@@ -488,6 +489,14 @@ public:
      * @param num
      */
     void SetMaxIteration(size_t num) { max_iteration_ = num; }
+
+    /**
+     * @brief set minimum iteration, usually used if you want to run ransac loop
+     * up to a number.
+     *
+     * @param num
+     */
+    void SetMinIteration(size_t num) { min_iteration_ = num; }
 
     /**
      * @brief fit model with given parameters
@@ -565,7 +574,7 @@ private:
         RandomSampler<size_t> sampler(num_points);
 #pragma omp parallel for schedule(static)
         for (int i = 0; i < max_iteration_; ++i) {
-            if (count > current_iteration) {
+            if (count > current_iteration && count > min_iteration_) {
                 continue;
             }
             const std::vector<size_t> sample_indices =
@@ -647,6 +656,7 @@ private:
 
     double probability_;
     size_t max_iteration_;
+    size_t min_iteration_;
     double fitness_;
     double inlier_rmse_;
     ModelEstimator estimator_;

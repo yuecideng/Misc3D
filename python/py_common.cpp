@@ -10,9 +10,10 @@ namespace common {
 
 std::tuple<Eigen::VectorXd, std::vector<size_t>> FitPlane(
     const PointCloudPtr &pc, double threshold, size_t max_iteration,
-    double probability) {
+    size_t min_iteration, double probability) {
     RANSACPlane fit;
     fit.SetMaxIteration(max_iteration);
+    fit.SetMinIteration(min_iteration);
     fit.SetProbability(probability);
     Plane plane;
     std::vector<size_t> inliers;
@@ -28,9 +29,10 @@ std::tuple<Eigen::VectorXd, std::vector<size_t>> FitPlane(
 
 std::tuple<Eigen::VectorXd, std::vector<size_t>> FitSphere(
     const PointCloudPtr &pc, double threshold, size_t max_iteration,
-    double probability) {
+    size_t min_iteration, double probability) {
     RANSACShpere fit;
     fit.SetMaxIteration(max_iteration);
+    fit.SetMinIteration(min_iteration);
     fit.SetProbability(probability);
     Sphere sphere;
     std::vector<size_t> inliers;
@@ -46,32 +48,40 @@ std::tuple<Eigen::VectorXd, std::vector<size_t>> FitSphere(
 
 std::tuple<Eigen::VectorXd, std::vector<size_t>> FitCylinder(
     const PointCloudPtr &pc, double threshold, size_t max_iteration,
-    double probability) {
-    RANSACShpere fit;
+    size_t min_iteration, double probability) {
+    if (!pc->HasNormals()) {
+        misc3d::LogError("Fit cylinder requires normals.");
+    }
+
+    RANSACCylinder fit;
     fit.SetMaxIteration(max_iteration);
+    fit.SetMinIteration(min_iteration);
     fit.SetProbability(probability);
-    Sphere sphere;
+    Cylinder Cylinder;
     std::vector<size_t> inliers;
     fit.SetPointCloud(*pc);
-    const bool ret = fit.FitModel(threshold, sphere, inliers);
+    const bool ret = fit.FitModel(threshold, Cylinder, inliers);
     if (!ret) {
-        sphere.parameters_.setZero(4);
-        return std::make_tuple(sphere.parameters_, inliers);
+        Cylinder.parameters_.setZero(4);
+        return std::make_tuple(Cylinder.parameters_, inliers);
     } else {
-        return std::make_tuple(sphere.parameters_, inliers);
+        return std::make_tuple(Cylinder.parameters_, inliers);
     }
 }
 
 void pybind_common(py::module &m) {
     m.def("fit_plane", &FitPlane, "Fit a plane from point clouds",
           py::arg("pc"), py::arg("threshold") = 0.01,
-          py::arg("max_iteration") = 1000, py::arg("probability") = 0.9999);
+          py::arg("max_iteration") = 1000, py::arg("min_iteration") = 1,
+          py::arg("probability") = 0.9999);
     m.def("fit_sphere", &FitSphere, "Fit a sphere from point clouds",
           py::arg("pc"), py::arg("threshold") = 0.01,
-          py::arg("max_iteration") = 1000, py::arg("probability") = 0.9999);
+          py::arg("max_iteration") = 1000, py::arg("min_iteration") = 1,
+          py::arg("probability") = 0.9999);
     m.def("fit_cylinder", &FitCylinder, "Fit a cylinder from point clouds",
           py::arg("pc"), py::arg("threshold") = 0.01,
-          py::arg("max_iteration") = 1000, py::arg("probability") = 0.9999);
+          py::arg("max_iteration") = 1000, py::arg("min_iteration") = 1,
+          py::arg("probability") = 0.9999);
     m.def(
         "estimate_normals",
         [](const PointCloudPtr &pc, const std::tuple<int, int> shape, int k,
