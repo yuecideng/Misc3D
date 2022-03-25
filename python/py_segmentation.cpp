@@ -84,10 +84,16 @@ void pybind_segmentation(py::module &m) {
         .def("get_cluster_index_map", &ProximityExtractor::GetClusterIndexMap)
         .def("get_cluster_num", &ProximityExtractor::GetClusterNum);
 
-    m.def("segment_plane_iterative", &SegmentPlaneIterative,
-          "Segment plane iteratively using RANSAC plane fitting",
-          py::arg("pcd"), py::arg("threshold"), py::arg("max_iteration") = 100,
-          py::arg("min_ratio") = 0.05);
+    m.def(
+        "segment_plane_iterative",
+        [](const PointCloudPtr &pcd, const double threshold,
+           const int max_iteration, const double min_ratio) {
+            return SegmentPlaneIterative(*pcd, threshold, max_iteration,
+                                         min_ratio);
+        },
+        "Segment plane iteratively using RANSAC plane fitting", py::arg("pcd"),
+        py::arg("threshold"), py::arg("max_iteration") = 100,
+        py::arg("min_ratio") = 0.05);
 }
 
 }  // namespace segmentation
