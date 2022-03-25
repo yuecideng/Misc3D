@@ -5,6 +5,7 @@ set(SRCS utils.cpp
          filter.cpp
          normal_estimation.cpp
          proximity_extraction.cpp
+         iterative_plane_segmentation.cpp
          boundary_detection.cpp
          transform_estimation.cpp
          correspondence_matching.cpp

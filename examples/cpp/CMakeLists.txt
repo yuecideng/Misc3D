@@ -16,9 +16,13 @@ target_link_libraries(ransac_and_boundary PUBLIC misc3d::misc3d)
 add_executable(segmentation segmentation.cpp)
 target_link_libraries(segmentation PUBLIC misc3d::misc3d)
 
+add_executable(segment_plane_iterative segment_plane_iterative.cpp)
+target_link_libraries(segment_plane_iterative PUBLIC misc3d::misc3d)
+
 add_executable(transform_estimation transform_estimation.cpp)
 target_link_libraries(transform_estimation PUBLIC misc3d::misc3d)
 
 install(TARGETS farthest_point_sampling normal_estimation ppf_estimator 
-                preprocessing ransac_and_boundary segmentation transform_estimation
+                preprocessing ransac_and_boundary segmentation segment_plane_iterative 
+                transform_estimation
                 RUNTIME DESTINATION "${CMAKE_INSTALL_PREFIX}/misc3d/bin")

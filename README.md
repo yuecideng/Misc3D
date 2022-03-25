@@ -22,6 +22,7 @@ Core modules:
     
 - `segmentation`: 
     1. Proximity extraction in scalable implementation with different vriants, including distance, and normal angle.
+    2. Plane segementation using iterative ransac plane fitting.  
 - `vis`: Helper tools for drawing 6D pose, painted point cloud, triangle mesh and etc.
 
 ## How to build 
@@ -135,6 +136,11 @@ ret, results = ppf.estimate(scene)
 pe = m3d.segmentation.ProximityExtractor(100)
 ev = m3d.segmentation.DistanceProximityEvaluator(0.02)
 index_list = pe.segment(pc, 0.02, ev)
+```
+
+```python
+# plane segmentation using iterative ransac
+results = m3d.segmentation.segment_plane_iterative(pcd, 0.01, 100, 0.1)
 ```
 
 ```python

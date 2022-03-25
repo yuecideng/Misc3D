@@ -1,5 +1,6 @@
 #include <py_misc3d.h>
 
+#include <misc3d/segmentation/iterative_plane_segmentation.h>
 #include <misc3d/segmentation/proximity_extraction.h>
 #include <misc3d/utils.h>
 
@@ -82,6 +83,11 @@ void pybind_segmentation(py::module &m) {
             py::arg("pc"), py::arg("search_radius"), py::arg("evaluator"))
         .def("get_cluster_index_map", &ProximityExtractor::GetClusterIndexMap)
         .def("get_cluster_num", &ProximityExtractor::GetClusterNum);
+
+    m.def("segment_plane_iterative", &SegmentPlaneIterative,
+          "Segment plane iteratively using RANSAC plane fitting",
+          py::arg("pcd"), py::arg("threshold"), py::arg("max_iteration") = 100,
+          py::arg("min_ratio") = 0.05);
 }
 
 }  // namespace segmentation
