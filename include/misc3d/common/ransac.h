@@ -459,7 +459,6 @@ public:
         : fitness_(0)
         , inlier_rmse_(0)
         , max_iteration_(1000)
-        , min_iteration_(1)
         , probability_(0.9999) {}
 
     /**
@@ -480,7 +479,12 @@ public:
      *
      * @param probability
      */
-    void SetProbability(double probability) { probability_ = probability; }
+    void SetProbability(double probability) {
+        if (probability <= 0 || probability > 1) {
+            misc3d::LogError("Probability must be > 0 or <= 1.0");
+        }
+        probability_ = probability;
+    }
 
     /**
      * @brief set maximum iteration, usually used if using parallel ransac
@@ -489,14 +493,6 @@ public:
      * @param num
      */
     void SetMaxIteration(size_t num) { max_iteration_ = num; }
-
-    /**
-     * @brief set minimum iteration, usually used if you want to run ransac loop
-     * up to a number.
-     *
-     * @param num
-     */
-    void SetMinIteration(size_t num) { min_iteration_ = num; }
 
     /**
      * @brief fit model with given parameters
@@ -574,7 +570,7 @@ private:
         RandomSampler<size_t> sampler(num_points);
 #pragma omp parallel for schedule(static)
         for (int i = 0; i < max_iteration_; ++i) {
-            if (count > current_iteration && count > min_iteration_) {
+            if (count > current_iteration) {
                 continue;
             }
             const std::vector<size_t> sample_indices =
@@ -602,10 +598,16 @@ private:
                     inlier_rmse_ = inlier_rmse;
                     best_model = model_trial;
 
-                    const size_t tmp =
-                        log(1 - probability_) /
-                        log(1 - pow(fitness, estimator_.minimal_sample_));
-                    current_iteration = std::min(tmp, max_iteration_);
+                    if (fitness_ < 1.0) {
+                        current_iteration = std::min(
+                            log(1 - probability_) /
+                                log(1 -
+                                    pow(fitness_, estimator_.minimal_sample_)),
+                            (double)max_iteration_);
+                    } else {
+                        // Set break_iteration to 0 to force to break the loop.
+                        current_iteration = 0;
+                    }
                 }
                 count++;
             }
@@ -656,7 +658,6 @@ private:
 
     double probability_;
     size_t max_iteration_;
-    size_t min_iteration_;
     double fitness_;
     double inlier_rmse_;
     ModelEstimator estimator_;
