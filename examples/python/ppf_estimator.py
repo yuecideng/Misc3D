@@ -6,7 +6,6 @@ import open3d as o3d
 import time
 import misc3d as m3d
 
-
 # init ppf config
 config = m3d.pose_estimation.PPFEstimatorConfig()
 # init training param

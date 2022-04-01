@@ -9,9 +9,8 @@
 
 int main(int argc, char *argv[]) {
     open3d::geometry::PointCloud pcd;
-    bool ret =
-    open3d::io::ReadPointCloud("../examples/data/segmentation/test.ply",
-    pcd);
+    bool ret = open3d::io::ReadPointCloud(
+        "../examples/data/segmentation/test.ply", pcd);
 
     misc3d::Timer timer;
     timer.Start();

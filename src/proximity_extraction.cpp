@@ -18,12 +18,13 @@ void ProximityExtractor::SearchNeighborhoodSet(
     for (int i = 0; i < size; i++) {
         std::vector<int> ret_indices;
         std::vector<double> out_dists_sqr;
-        const int n = kdtree.SearchRadius(pc.points_[i], search_radius, ret_indices,
-                                          out_dists_sqr);
+        const int n = kdtree.SearchRadius(pc.points_[i], search_radius,
+                                          ret_indices, out_dists_sqr);
 
         nn_map[i].resize(n);
         for (size_t j = 0; j < n; j++) {
-            nn_map[i][j] = std::make_pair(ret_indices[j], sqrt(out_dists_sqr[j]));
+            nn_map[i][j] =
+                std::make_pair(ret_indices[j], sqrt(out_dists_sqr[j]));
         }
     }
 }
@@ -40,7 +41,8 @@ void ProximityExtractor::BuildNeighborhoodSet(
         const size_t sub_size = nn_indices[i].size();
         nn_map[i].resize(sub_size);
         for (size_t j = 0; j < sub_size; j++) {
-            const double dis = (pc.points_[i] - pc.points_[nn_indices[i][j]]).norm();
+            const double dis =
+                (pc.points_[i] - pc.points_[nn_indices[i][j]]).norm();
             nn_map[i][j] = std::make_pair(nn_indices[i][j], dis);
         }
     }
@@ -181,7 +183,7 @@ std::vector<std::vector<size_t>> ProximityExtractor::Segment(
 
     const size_t cluster_num = clustered_indices_map.size();
     clustered_indices_map_.assign(clustered_indices_map.begin(),
-                                   clustered_indices_map.end());
+                                  clustered_indices_map.end());
     cluster_num_ = cluster_num;
 
     return clustered_indices_map;

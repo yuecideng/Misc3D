@@ -45,7 +45,8 @@ int main(int argc, char *argv[]) {
     timer.Start();
     auto indices = misc3d::features::DetectBoundaryPoints(
         *pcd_plane, open3d::geometry::KDTreeSearchParamHybrid(0.02, 30));
-    std::cout << "Time cost for boundary detection: " << timer.Stop() << std::endl;
+    std::cout << "Time cost for boundary detection: " << timer.Stop()
+              << std::endl;
 
     auto boundary = pcd_plane->SelectByIndex(indices);
 

@@ -9,7 +9,6 @@ import cv2
 import copy
 import misc3d as m3d
 
-
 vis = o3d.visualization.Visualizer()
 vis.create_window("Crop ROI", 1920, 1200)
 

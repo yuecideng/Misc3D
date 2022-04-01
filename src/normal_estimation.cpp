@@ -6,8 +6,8 @@
 #include <vector>
 
 #include <misc3d/common/normal_estimation.h>
-#include <misc3d/utils.h>
 #include <misc3d/logging.h>
+#include <misc3d/utils.h>
 
 namespace misc3d {
 namespace common {

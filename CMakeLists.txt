@@ -94,4 +94,37 @@ if(BUILD_PYTHON)
     add_subdirectory(python)
 endif()
 
+# Coding style check 
+if (BUILD_PYTHON)
+    # `make check-style` checks style for c++/cuda/python/ipynb files
+    add_custom_target(check-style
+        COMMAND python3
+        ${CMAKE_CURRENT_SOURCE_DIR}/utils/check_style.py
+        COMMENT "Python executable used for style check: ${Python3_EXECUTABLE}."
+    )
 
+    # `make apply-style` applies style for c++/cuda/python/ipynb files
+    add_custom_target(apply-style
+        COMMAND python3
+        ${CMAKE_CURRENT_SOURCE_DIR}/utils/check_style.py --do_apply_style
+        COMMENT "Python executable used for style check: ${Python3_EXECUTABLE}."
+    )
+endif()
+
+# `make check-cpp-style` checks style for c++/cuda files.
+# This works outside of python virtualenv.
+add_custom_target(check-cpp-style
+    COMMAND ${CMAKE_COMMAND}
+    -DPROJECT_SOURCE_DIR="${PROJECT_SOURCE_DIR}"
+    -DDO_APPLY_STYLE=OFF
+    -P ${CMAKE_CURRENT_SOURCE_DIR}/utils/check_cpp_style.cmake
+)
+
+# `make apply-cpp-style` applies style for c++/cuda files.
+# This works outside of python virtualenv.
+add_custom_target(apply-cpp-style
+    COMMAND ${CMAKE_COMMAND}
+    -DPROJECT_SOURCE_DIR="${PROJECT_SOURCE_DIR}"
+    -DDO_APPLY_STYLE=ON
+    -P ${CMAKE_CURRENT_SOURCE_DIR}/utils/check_cpp_style.cmake
+)

@@ -1,14 +1,14 @@
 #include <iostream>
 #include <memory>
 
+#include <misc3d/common/normal_estimation.h>
+#include <misc3d/utils.h>
+#include <misc3d/vis/vis_utils.h>
 #include <open3d/camera/PinholeCameraIntrinsic.h>
 #include <open3d/geometry/Image.h>
 #include <open3d/geometry/PointCloud.h>
 #include <open3d/geometry/RGBDImage.h>
 #include <open3d/io/ImageIO.h>
-#include <misc3d/utils.h>
-#include <misc3d/common/normal_estimation.h>
-#include <misc3d/vis/vis_utils.h>
 
 int main(int argc, char *argv[]) {
     bool ret;

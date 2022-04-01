@@ -33,8 +33,7 @@ struct Logger::Impl {
     VerbosityLevel verbosity_level_;
 
     // Colorize and reset the color of a string, does not work on Windows,
-    std::string ColorString(const std::string &text,
-                            TextColor text_color,
+    std::string ColorString(const std::string &text, TextColor text_color,
                             int highlight_text) const {
         std::ostringstream msg;
 #ifndef _WIN32
@@ -50,7 +49,7 @@ struct Logger::Impl {
 };
 
 std::function<void(const std::string &)> Logger::Impl::console_print_fcn_ =
-        [](const std::string &msg) { std::cout << msg << std::endl; };
+    [](const std::string &msg) { std::cout << msg << std::endl; };
 
 Logger::Logger() : impl_(new Logger::Impl()) {
     impl_->print_fcn_ = Logger::Impl::console_print_fcn_;
@@ -62,10 +61,9 @@ Logger &Logger::GetInstance() {
     return instance;
 }
 
-void Logger::VError [[noreturn]] (const char *file,
-                                  int line,
-                                  const char *function,
-                                  const std::string &message) const {
+void Logger::VError
+    [[noreturn]] (const char *file, int line, const char *function,
+                  const std::string &message) const {
     std::string err_msg = fmt::format("[Misc3D Error] ({}) {}:{}: {}\n",
                                       function, file, line, message);
     err_msg = impl_->ColorString(err_msg, TextColor::Red, 1);
@@ -75,33 +73,27 @@ void Logger::VError [[noreturn]] (const char *file,
     throw std::runtime_error(err_msg);
 }
 
-void Logger::VWarning(const char *file,
-                      int line,
-                      const char *function,
+void Logger::VWarning(const char *file, int line, const char *function,
                       const std::string &message) const {
     std::string err_msg = fmt::format("[Misc3D WARNING] {}", message);
     err_msg = impl_->ColorString(err_msg, TextColor::Yellow, 1);
     impl_->print_fcn_(err_msg);
 }
 
-void Logger::VInfo(const char *file,
-                   int line,
-                   const char *function,
+void Logger::VInfo(const char *file, int line, const char *function,
                    const std::string &message) const {
     std::string err_msg = fmt::format("[Misc3D INFO] {}", message);
     impl_->print_fcn_(err_msg);
 }
 
-void Logger::VDebug(const char *file,
-                    int line,
-                    const char *function,
+void Logger::VDebug(const char *file, int line, const char *function,
                     const std::string &message) const {
     std::string err_msg = fmt::format("[Misc3D DEBUG] {}", message);
     impl_->print_fcn_(err_msg);
 }
 
 void Logger::SetPrintFunction(
-        std::function<void(const std::string &)> print_fcn) {
+    std::function<void(const std::string &)> print_fcn) {
     impl_->print_fcn_ = print_fcn;
 }
 
@@ -129,4 +121,4 @@ VerbosityLevel GetVerbosityLevel() {
     return Logger::GetInstance().GetVerbosityLevel();
 }
 
-}  // namespace open3d
+}  // namespace misc3d

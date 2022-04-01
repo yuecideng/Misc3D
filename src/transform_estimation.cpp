@@ -1,11 +1,11 @@
 #include <iostream>
 #include <numeric>
 
+#include <misc3d/logging.h>
 #include <misc3d/registration/transform_estimation.h>
 #include <misc3d/utils.h>
 #include <open3d/pipelines/registration/Registration.h>
 #include <open3d/pipelines/registration/TransformationEstimation.h>
-#include <misc3d/logging.h>
 #ifndef WIN32
 #include <teaser/registration.h>
 #endif

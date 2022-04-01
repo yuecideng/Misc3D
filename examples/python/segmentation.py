@@ -7,7 +7,6 @@ from random import random
 import open3d as o3d
 import misc3d as m3d
 
-
 vis = o3d.visualization.Visualizer()
 vis.create_window("Segmentation", 1920, 1200)
 
