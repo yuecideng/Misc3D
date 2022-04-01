@@ -172,6 +172,7 @@ Some results are as follow:
 </p>
 
 ## How to contribute
-Please see this [WIKI](https://github.com/yuecideng/Misc3D/wiki/How-to-contribute).
+Misc3D is very open minded and welcomes any contribution. If you have any question or idea, please feel free to create issue or pull request to make Misc3D better.
+Please see this [WIKI](https://github.com/yuecideng/Misc3D/wiki/How-to-contribute) for contribution method.
 
 
