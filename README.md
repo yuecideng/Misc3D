@@ -58,8 +58,8 @@ Build `pybind11` in your system as well. If you only use C++ API, you can skip t
 
 3. After installation, add this variable: `/path/to/installation/misc3d/lib/python` to your system environment variable `Path` to make sure you can import `misc3d` in python. 
 
-### How to use
-#### Python
+## How to use
+### Python
 The example python scripts can be found in `examples/python`. You can run it after you install the library successfully.
 
 You can import `misc3d` same as `open3d`:
@@ -160,7 +160,7 @@ m3d.vis.draw_geometry3d(vis, bbox, color=(1, 0, 0))
 m3d.set_verbosity_level(m3d.VerbosityLevel.Error)
 ```
 
-#### C++
+### C++
 You can run c++ examples after finish build the library, which are inside `/path/to/install/misc3d/bin`. The source code of examples are in `examples/cpp`.
 Some results are as follow:
 <p float="left">
@@ -170,5 +170,8 @@ Some results are as follow:
   <img src="images/registration.png" width="350" height=250/>
   <img src="images/ppf.png" width="350" height=250/> 
 </p>
+
+## How to contribute
+Please see this [WIKI](https://github.com/yuecideng/Misc3D/wiki/How-to-contribute).
 
 
