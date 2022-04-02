@@ -981,8 +981,9 @@ void PPFEstimator::Impl::RefineSparsePose(
         {
             pose_list.emplace_back(max_votes_pose);
             if (config_.refine_param_.method !=
-                   PPFEstimatorConfig::RefineMethod::NoRefine){
-                pose_list[pose_list.size() - 1].UpdateByPose(res.transformation_);
+                PPFEstimatorConfig::RefineMethod::NoRefine) {
+                pose_list[pose_list.size() - 1].UpdateByPose(
+                    res.transformation_);
             }
         }
     }
