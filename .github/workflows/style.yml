@@ -30,9 +30,15 @@ jobs:
           sudo apt-get install --yes clang-7
           sudo apt-get install --yes clang-format-10
           python3 -m pip install -U yapf==0.30.0 nbformat
+
+    - name: Install pre-built Open3D c++ library
+      run: | 
+        sudo wget https://github.com/isl-org/Open3D/releases/download/v0.15.1/open3d-devel-linux-x86_64-cxx11-abi-0.15.1.tar.xz -P /home
+        sudo tar -xf /home/open3d-devel-linux-x86_64-cxx11-abi-0.15.1.tar.xz -C /home
+      
       - name: Run style check
         run: |
           mkdir build
           cd build
-          cmake ..
+          cmake .. -DOpen3D_DIR=/home/open3d-devel-linux-x86_64-cxx11-abi-0.15.1/lib/cmake/Open3D
           make check-style
