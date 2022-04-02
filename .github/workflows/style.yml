@@ -24,6 +24,8 @@ jobs:
           python-version: 3.6
       - name: Install dependencies
         run: |
+          sudo apt install libeigen3-dev 
+          pip3 install "pybind11[global]"
           sudo apt-get install --yes cmake
           sudo apt-get install --yes clang-7
           sudo apt-get install --yes clang-format-10
