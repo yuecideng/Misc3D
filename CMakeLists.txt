@@ -58,6 +58,8 @@ if(OPENMP_FOUND)
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
 endif()
 
+add_subdirectory(3rdparty)
+
 # Find open3d (Linux default)
 set(Open3D_DIR "/usr/local/lib/cmake/Open3D" CACHE FILEPATH "Set to find Open3D")
 find_package(Open3D REQUIRED NO_DEFAULT_PATH)
@@ -69,10 +71,6 @@ endif()
 
 set(CMAKE_INSTALL_PREFIX $ENV{HOME} CACHE PATH "install path")
 message(STATUS "Install path: " ${CMAKE_INSTALL_PREFIX})
-
-if(NOT WIN32)
-    add_subdirectory(3rdparty)
-endif()
 
 include_directories(${SPDLOG_INCLUDE_DIRS})
 add_subdirectory(src)
