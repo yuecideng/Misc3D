@@ -27,10 +27,15 @@ jobs:
         sudo apt install libeigen3-dev 
         pip3 install "pybind11[global]"
 
+    - name: Install pre-built Open3D c++ library
+      run: | 
+        sudo wget https://github.com/isl-org/Open3D/releases/download/v0.15.1/open3d-devel-linux-x86_64-cxx11-abi-0.15.1.tar.xz -P /home
+        tar -xf /home/open3d-devel-linux-x86_64-cxx11-abi-0.15.1.tar.xz -C /home
+
     - name: Configure CMake
       # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
       # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
-      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DBUILD_WITH_OPEN3D=ON
+      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DOpen3D_DIR=/home/open3d-devel-linux-x86_64-cxx11-abi-0.15.1/lib/cmake/Open3D
 
     - name: Build
       # Build your program with the given configuration

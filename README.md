@@ -1,6 +1,6 @@
 # Misc3D
 
-[![Ubuntu CI](https://github.com/yuecideng/Misc3D/actions/workflows/cmake.yml/badge.svg)](https://github.com/yuecideng/Misc3D/actions/workflows/cmake.yml)
+[![Ubuntu CI](https://github.com/yuecideng/Misc3D/actions/workflows/ubuntu.yml/badge.svg)](https://github.com/yuecideng/Misc3D/actions/workflows/ubuntu.yml)
 
 
 A unified library for 3D data processing and analysis with both C++&amp;Python API based on [Open3D](https://github.com/isl-org/Open3D).

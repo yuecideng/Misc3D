@@ -44,8 +44,6 @@ file(MAKE_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 option(BUILD_SHARED_LIBS "Build using shared libraries" ON)
 option(BUILD_PYTHON "Build Python bindings" ON)
 option(BUILD_EXAMPLES "Build Cpp examples" ON)
-# Set ths option ON if you want to build Open3D along with Misc3D
-option(BUILD_WITH_OPEN3D "Build Open3D with Misc3D" OFF)
 
 ###############################################################################
 # Find 3rdparty dependencies
@@ -62,11 +60,9 @@ endif()
 
 add_subdirectory(3rdparty)
 
-if(NOT BUILD_WITH_OPEN3D)
-    # Find open3d (Linux default)
-    set(Open3D_DIR "/usr/local/lib/cmake/Open3D" CACHE FILEPATH "Set to find Open3D")
-    find_package(Open3D REQUIRED NO_DEFAULT_PATH)
-endif()
+# Find open3d (Linux default)
+set(Open3D_DIR "/usr/local/lib/cmake/Open3D" CACHE FILEPATH "Set to find Open3D")
+find_package(Open3D REQUIRED NO_DEFAULT_PATH)
 
 # Find pybind11 for Python wrappers
 if(BUILD_PYTHON)
