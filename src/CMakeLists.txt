@@ -45,6 +45,20 @@ if(NOT WIN32)
       )
 endif()
 
+if(BUILD_WITH_OPEN3D)
+  install(TARGETS Open3DHelper  
+    EXPORT Open3DHelper_target
+    ARCHIVE DESTINATION "${CMAKE_INSTALL_PREFIX}/misc3d/lib"
+    LIBRARY DESTINATION "${CMAKE_INSTALL_PREFIX}/misc3d/lib"
+    RUNTIME DESTINATION "${CMAKE_INSTALL_PREFIX}/misc3d/bin"
+  )
+  install(EXPORT Open3DHelper_target
+  NAMESPACE Open3D::
+  FILE open3d-config.cmake
+  DESTINATION ${CMAKE_INSTALL_PREFIX}/misc3d/lib/cmake/)
+endif()
+
+
 install(EXPORT misc3d_target
     NAMESPACE misc3d::
     FILE misc3d-config.cmake
