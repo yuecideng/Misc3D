@@ -41,8 +41,9 @@ public:
 
     // sparse pose refine methods
     enum class RefineMethod {
-        PointToPoint = 0,
-        PointToPlane = 1,
+        NoRefine = 0,
+        PointToPoint = 1,
+        PointToPlane = 2,
     };
 
     struct TrainingParam {

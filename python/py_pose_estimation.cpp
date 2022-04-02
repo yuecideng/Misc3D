@@ -57,6 +57,7 @@ void pybind_pose_estimation(py::module &m) {
         .export_values();
 
     py::enum_<PPFEstimatorConfig::RefineMethod>(config, "RefineMethod")
+        .value("NoRefine", PPFEstimatorConfig::RefineMethod::NoRefine)
         .value("PointToPlane", PPFEstimatorConfig::RefineMethod::PointToPlane)
         .value("PointToPoint", PPFEstimatorConfig::RefineMethod::PointToPoint)
         .export_values();
