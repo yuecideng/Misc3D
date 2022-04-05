@@ -23,6 +23,7 @@ Core modules:
     2. 3D rigid transformation solver including SVD, RANSAC and [TEASERPP](https://github.com/MIT-SPARK/TEASER-plusplus).
 - `pose_estimation`: 
     1. Point Pair Features (PPF) based 6D pose estimator. (This implementation is evaluated on Linemod, Linemod-Occluded and YCB-Video dataset, the performance can be found in [BOP Leaderboards/PPF-3D-ICP](https://bop.felk.cvut.cz/leaderboards/))
+    2. A RayCastRenderer, whcih is useful for partial view point clouds, depth map and instance map generation.
     
 - `segmentation`: 
     1. Proximity extraction in scalable implementation with different vriants, including distance, and normal angle.
@@ -73,59 +74,59 @@ import misc3d as m3d
 ```
 
 ```python
-# estimate normals inplace
+# Estimate normals inplace.
 m3d.common.estimate_normals(pcd, (640, 480), 3)
 ```
 
 ```python
-# ransac for primitives fitting
+# Ransac for primitives fitting.
 w, indices = m3d.common.fit_plane(pcd, 0.01, 100)
 w, indices = m3d.common.fit_sphere(pcd, 0.01, 100)
 w, indices = m3d.common.fit_cylinder(pcd, 0.01, 100)
 ```
 
 ```python
-# farthest point sampling
+# Farthest point sampling.
 indices = m3d.preprocessing.farthest_point_sampling(pcd, 1000)
 ```
 
 ```python
-# crop ROI point clouds
+# Crop ROI point clouds.
 pcd_roi = m3d.preprocessing.crop_roi_pointcloud(pcd, (500, 300, 600, 400), (640, 480))
 ```
 
 ```python
-# project point clouds into a plane
+# Project point clouds into a plane.
 pcd_plane = m3d.preprocessing.project_into_plane(pcd)
 ```
 
 ```python
-# boundary points detection
+# Boundary points detection.
 index = m3d.features.detect_boundary_points(
     pcd, o3d.geometry.KDTreeSearchParamHybrid(0.02, 30))
 boundary = pcd.select_by_index(index)
 ```
 
 ```python
-# features matching using FLANN or ANNOY
+# Features matching using FLANN or ANNOY
 # `fpfh_src` is open3d.pipeline.registration.Feature instance which is computed using FPFH 3d descriptor.
 index1, index2 = m3d.registration.match_correspondence(fpfh_src, fpfh_dst, m3d.registration.MatchMethod.FLANN)
 index1, index2 = m3d.registration.match_correspondence(fpfh_src, fpfh_dst, m3d.registration.MatchMethod.ANNOY)
 ```
 
 ```python
-# solve 3d rigid transformation
-# ransac solver
+# Solve 3d rigid transformation.
+# Ransac solver
 pose = m3d.registration.compute_transformation_ransac(pc_src, pc_dst, (index1, index2), 0.03, 100000)
-# svd solver
+# SVD solver
 pose = m3d.registration.compute_transformation_svd(pc_src, pc_dst)
-# teaser solver
+# Teaser solver
 pose = m3d.registration.compute_transformation_teaser(pc_src, pc_dst, 0.01)
 ```
 
 ```python
-# ppf pose estimator
-# init config for ppf pose estimator
+# PPF pose estimator.
+# Init config for ppf pose estimator.
 config = m3d.pose_estimation.PPFEstimatorConfig()
 config.training_param.rel_sample_dist = 0.04
 config.score_thresh = 0.1
@@ -133,6 +134,21 @@ config.refine_param.method = m3d.pose_estimation.PPFEstimatorConfig.PointToPlane
 ppf = m3d.pose_estimation.PPFEstimator(config)
 ret = ppf.train(model)
 ret, results = ppf.estimate(scene)
+```
+
+```python
+# Create a ray cast renderer.
+intrinsic = o3d.camera.PinholeCameraIntrinsic(
+    640, 480, 572.4114, 573.5704, 325.2611, 242.0489)
+renderer = m3d.pose_estimation.RayCastRenderer(intrinsic)
+
+# Cast rays for single mesh with a associated pose.
+ret = renderer.cast_rays([mesh], [pose])
+depth = renderer.get_depth_map()
+# Convert depth map into numpy array. 
+depth = depth.numpy()
+# Get partial view point clouds of the mesh in the scene.
+pcd = renderer.get_point_cloud()
 ```
 
 ```python

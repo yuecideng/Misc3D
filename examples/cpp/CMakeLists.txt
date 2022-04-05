@@ -7,6 +7,9 @@ target_link_libraries(normal_estimation PUBLIC misc3d::misc3d)
 add_executable(ppf_estimator ppf_estimator.cpp)
 target_link_libraries(ppf_estimator PUBLIC misc3d::misc3d)
 
+add_executable(ray_cast_rendering ray_cast_rendering.cpp)
+target_link_libraries(ray_cast_rendering PUBLIC misc3d::misc3d)
+
 add_executable(preprocessing preprocessing.cpp)
 target_link_libraries(preprocessing PUBLIC misc3d::misc3d)
 
@@ -22,7 +25,7 @@ target_link_libraries(segment_plane_iterative PUBLIC misc3d::misc3d)
 add_executable(transform_estimation transform_estimation.cpp)
 target_link_libraries(transform_estimation PUBLIC misc3d::misc3d)
 
-install(TARGETS farthest_point_sampling normal_estimation ppf_estimator 
+install(TARGETS farthest_point_sampling normal_estimation ppf_estimator ray_cast_rendering
                 preprocessing ransac_and_boundary segmentation segment_plane_iterative 
                 transform_estimation
                 RUNTIME DESTINATION "${CMAKE_INSTALL_PREFIX}/misc3d/bin")
