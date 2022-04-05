@@ -51,7 +51,7 @@ RayCastRenderer::RayCastRenderer(
 
     // Create a ray cast tensor for each pixel.
     const auto &mat = intrinsic.intrinsic_matrix_;
-    if (mat.IsRowMajor()) {
+    if (mat.IsRowMajor) {
         rays_ = open3d::t::geometry::RaycastingScene::CreateRaysPinhole(
             intrinsic_tensor, extrinsic_tensor.T(), width_, height_);
     } else {
@@ -80,7 +80,7 @@ bool RayCastRenderer::CastRays(
 
         open3d::core::Tensor pose;
         const auto &mat = pose_list[i];
-        if (mat.IsRowMajor()) {
+        if (mat.IsRowMajor) {
             pose = open3d::core::Tensor(pose_list[i].data(), {4, 4},
                                         open3d::core::Float64,
                                         open3d::core::Device("CPU:0"));
