@@ -1,6 +1,7 @@
 #include <py_misc3d.h>
 
 #include <misc3d/pose_estimation/ppf_estimation.h>
+#include <misc3d/pose_estimation/ray_cast_renderer.h>
 #include <misc3d/utils.h>
 
 namespace misc3d {
@@ -104,6 +105,15 @@ void pybind_pose_estimation(py::module &m) {
     config.def_readwrite("score_thresh", &PPFEstimatorConfig::score_thresh_);
     config.def_readwrite("num_result", &PPFEstimatorConfig::num_result_);
     config.def_readwrite("object_id", &PPFEstimatorConfig::object_id_);
+
+    py::class_<RayCastRenderer>(m, "RayCastRenderer")
+        .def(py::init<const open3d::camera::PinholeCameraIntrinsic &>())
+        .def("cast_rays", &RayCastRenderer::CastRays)
+        .def("get_depth_map", &RayCastRenderer::GetDepthMap)
+        .def("get_instance_map", &RayCastRenderer::GetInstanceMap)
+        .def("get_point_cloud", &RayCastRenderer::GetPointCloud)
+        .def("get_instance_point_cloud",
+             &RayCastRenderer::GetInstancePointCloud);
 }
 
 }  // namespace pose_estimation

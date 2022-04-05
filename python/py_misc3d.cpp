@@ -13,6 +13,9 @@ PYBIND11_MODULE(py_misc3d, m) {
     py::object o3d_camera =
         (py::object)py::module_::import("open3d").attr("camera");
 
+    py::object o3d_core =
+        (py::object)py::module_::import("open3d").attr("core");
+
     py::object o3d_vis =
         (py::object)py::module_::import("open3d").attr("visualization");
 

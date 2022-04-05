@@ -10,6 +10,7 @@ set(SRCS utils.cpp
          transform_estimation.cpp
          correspondence_matching.cpp
          ppf_estimation.cpp
+         ray_cast_renderer.cpp
          vis_utils.cpp)
 
 add_library(misc3d ${SRCS})
