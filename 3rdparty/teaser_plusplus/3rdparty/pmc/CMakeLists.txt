@@ -12,6 +12,11 @@ set(PMC_SOURCE_FILES
         ${CMAKE_CURRENT_SOURCE_DIR}/pmc_clique_utils.cpp
         )
 
+if(WIN32)
+        list(APPEND PMC_SOURCE_FILES getopt.c)
+endif()
+
+
 add_library(pmc ${PMC_SOURCE_FILES})
 
 target_include_directories(pmc PUBLIC
@@ -29,24 +34,3 @@ target_link_libraries(pmc_main OpenMP::OpenMP_CXX)
 
 set(CMAKE_INSTALL_LIBDIR  Lib)
 set(CMAKE_INSTALL_INCLUDEDIR Include)
-
-# Installation
-# include(GNUInstallDirs)
-
-# install(TARGETS pmc
-#         EXPORT pmc-export
-#         LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-#         ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-#         )
-
-# install(EXPORT pmc-export
-#         DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/pmc
-#         NAMESPACE pmc::
-#         FILE pmcTargets.cmake
-#         )
-
-# install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
-
-# install(FILES cmake/pmcConfig.cmake
-#         DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/pmc
-#         )

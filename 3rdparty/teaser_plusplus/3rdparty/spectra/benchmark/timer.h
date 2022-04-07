@@ -38,9 +38,9 @@ inline double get_cpu_time()
     }
 }
 
+#include <time.h>
 //  Posix/Linux
 #else
-#include <time.h>
 #include <sys/time.h>
 
 inline double get_wall_time()

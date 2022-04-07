@@ -19,11 +19,9 @@ target_include_directories(misc3d PUBLIC
     $<INSTALL_INTERFACE:include>)
 target_link_libraries(misc3d PUBLIC 
     Open3D::Open3D  
+    teaser_registration
     OpenMP::OpenMP_CXX
     Threads::Threads)
-if(NOT WIN32)
-    target_link_libraries(misc3d PUBLIC $<BUILD_INTERFACE:teaser_registration>)
-endif()    
 
 add_library(misc3d::misc3d ALIAS misc3d)
 
@@ -32,21 +30,14 @@ install(DIRECTORY ../include
   USE_SOURCE_PERMISSIONS
   )
 
-install(TARGETS misc3d 
+install(TARGETS misc3d teaser_registration pmc
   EXPORT misc3d_target
   ARCHIVE DESTINATION "${CMAKE_INSTALL_PREFIX}/misc3d/lib"
   LIBRARY DESTINATION "${CMAKE_INSTALL_PREFIX}/misc3d/lib"
   RUNTIME DESTINATION "${CMAKE_INSTALL_PREFIX}/misc3d/bin"
 )
 
-if(NOT WIN32)
-    install(TARGETS teaser_registration pmc
-            LIBRARY DESTINATION "${CMAKE_INSTALL_PREFIX}/misc3d/lib"
-            RUNTIME DESTINATION "${CMAKE_INSTALL_PREFIX}/misc3d/bin"
-      )
-endif()
-
-install(EXPORT misc3d_target
+install(EXPORT misc3d_target 
     NAMESPACE misc3d::
     FILE misc3d-config.cmake
     DESTINATION ${CMAKE_INSTALL_PREFIX}/misc3d/lib/cmake/)

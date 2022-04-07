@@ -50,9 +50,15 @@ void usage(char *argv0) {
 
 
 double get_time() {
+#ifdef WIN32
+	SYSTEMTIME t; 
+	GetLocalTime(&t); 
+	return (t.wHour * 60 + t.wMinute) * 60.0 + t.wSecond + t.wMilliseconds / 1000.0; 
+#else
     timeval t;
     gettimeofday(&t, NULL);
     return t.tv_sec*1.0 + t.tv_usec/1000000.0;
+#endif
 }
 
 string memory_usage() {

@@ -21,105 +21,100 @@
 #define PMCX_MAXCLIQUE_H_
 
 #include <cstddef>
+
+#ifdef WIN32
+#include <io.h>
+#include <process.h>
+#include <time.h>
+#else
 #include <sys/time.h>
 #include <unistd.h>
-#include <iostream>
-#include "pmc_headers.h"
-#include "pmc_utils.h"
-#include "pmc_graph.h"
-#include "pmc_input.h"
-#include "pmc_vertex.h"
-#include "pmc_neigh_cores.h"
-#include "pmc_neigh_coloring.h"
+#endif
+
 #include <algorithm>
+#include <iostream>
+#include "pmc_graph.h"
+#include "pmc_headers.h"
+#include "pmc_input.h"
+#include "pmc_neigh_coloring.h"
+#include "pmc_neigh_cores.h"
+#include "pmc_utils.h"
+#include "pmc_vertex.h"
 
 using namespace std;
 
 namespace pmc {
 
-    class pmcx_maxclique {
-        public:
-            vector<int>* edges;
-            vector<long long>* vertices;
-            vector<int>* bound;
-            vector<int>* order;
-            int param_ub;
-            int ub;
-            int lb;
-            double time_limit;
-            double sec;
-            double wait_time;
-            bool not_reached_ub;
-            bool time_expired_msg;
-            bool decr_order;
+class pmcx_maxclique {
+public:
+    vector<int>* edges;
+    vector<long long>* vertices;
+    vector<int>* bound;
+    vector<int>* order;
+    int param_ub;
+    int ub;
+    int lb;
+    double time_limit;
+    double sec;
+    double wait_time;
+    bool not_reached_ub;
+    bool time_expired_msg;
+    bool decr_order;
 
-            string vertex_ordering;
-            int edge_ordering;
-            int style_bounds;
-            int style_dynamic_bounds;
+    string vertex_ordering;
+    int edge_ordering;
+    int style_bounds;
+    int style_dynamic_bounds;
 
-            int num_threads;
+    int num_threads;
 
-            void initialize() {
-                vertex_ordering = "deg";
-                edge_ordering = 0;
-                style_bounds = 0;
-                style_dynamic_bounds = 0;
-                not_reached_ub = true;
-                time_expired_msg = true;
-                decr_order = false;
-            }
+    void initialize() {
+        vertex_ordering = "deg";
+        edge_ordering = 0;
+        style_bounds = 0;
+        style_dynamic_bounds = 0;
+        not_reached_ub = true;
+        time_expired_msg = true;
+        decr_order = false;
+    }
 
-            void setup_bounds(input& params) {
-                lb = params.lb;
-                ub = params.ub;
-                param_ub = params.param_ub;
-                if (param_ub == 0)
-                    param_ub = ub;
-                time_limit = params.time_limit;
-                wait_time = params.remove_time;
-                sec = get_time();
+    void setup_bounds(input& params) {
+        lb = params.lb;
+        ub = params.ub;
+        param_ub = params.param_ub;
+        if (param_ub == 0)
+            param_ub = ub;
+        time_limit = params.time_limit;
+        wait_time = params.remove_time;
+        sec = get_time();
 
-                num_threads = params.threads;
-            }
+        num_threads = params.threads;
+    }
 
-            pmcx_maxclique(pmc_graph& G, input& params) {
-                bound = G.get_kcores();
-                order = G.get_kcore_ordering();
-                setup_bounds(params);
-                initialize();
-                vertex_ordering = params.vertex_search_order;
-                decr_order = params.decreasing_order;
-            }
+    pmcx_maxclique(pmc_graph& G, input& params) {
+        bound = G.get_kcores();
+        order = G.get_kcore_ordering();
+        setup_bounds(params);
+        initialize();
+        vertex_ordering = params.vertex_search_order;
+        decr_order = params.decreasing_order;
+    }
 
-            ~pmcx_maxclique() {};
+    ~pmcx_maxclique(){};
 
-            int search(pmc_graph& G, vector<int>& sol);
-            inline void branch(
-                    vector<long long>& vs,
-                    vector<int>& es,
-                    vector<Vertex> &P,
-                    vector<short>& ind,
-                    vector<int>& C,
-                    vector<int>& C_max,
-                    vector< vector<int> >& colors,
-                    int* &pruned,
-                    int& mc);
+    int search(pmc_graph& G, vector<int>& sol);
+    inline void branch(vector<long long>& vs, vector<int>& es,
+                       vector<Vertex>& P, vector<short>& ind, vector<int>& C,
+                       vector<int>& C_max, vector<vector<int>>& colors,
+                       int*& pruned, int& mc);
 
-            int search_dense(pmc_graph& G, vector<int>& sol);
-            inline void branch_dense(
-                    vector<long long>& vs,
-                    vector<int>& es,
-                    vector<Vertex> &P,
-                    vector<short>& ind,
-                    vector<int>& C,
-                    vector<int>& C_max,
-                    vector< vector<int> >& colors,
-                    int* &pruned,
-                    int& mc,
-                    vector<vector<bool>> &adj);
-
-    };
+    int search_dense(pmc_graph& G, vector<int>& sol);
+    inline void branch_dense(vector<long long>& vs, vector<int>& es,
+                             vector<Vertex>& P, vector<short>& ind,
+                             vector<int>& C, vector<int>& C_max,
+                             vector<vector<int>>& colors, int*& pruned, int& mc,
+                             vector<vector<bool>>& adj);
 };
+};  // namespace pmc
 
 #endif

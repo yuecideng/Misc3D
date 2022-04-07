@@ -21,12 +21,22 @@
 #define PMC_UTILS_H_
 
 #include <cstddef>
+#ifdef WIN32
+#include <io.h>
+#include <process.h>
+#include <time.h>
+#else
 #include <sys/time.h>
 #include <unistd.h>
+#endif
 #include <iostream>
 #include "assert.h"
 #include <sys/types.h>
+#ifdef WIN32
+#include "dirent.h"
+#else
 #include <dirent.h>
+#endif
 #include <errno.h>
 #include <string>
 #include <set>

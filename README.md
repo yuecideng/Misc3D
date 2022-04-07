@@ -23,7 +23,7 @@ Core modules:
     2. 3D rigid transformation solver including SVD, RANSAC and [TEASERPP](https://github.com/MIT-SPARK/TEASER-plusplus).
 - `pose_estimation`: 
     1. Point Pair Features (PPF) based 6D pose estimator. (This implementation is evaluated on Linemod, Linemod-Occluded and YCB-Video dataset, the performance can be found in [BOP Leaderboards/PPF-3D-ICP](https://bop.felk.cvut.cz/leaderboards/))
-    2. A RayCastRenderer, whcih is useful for partial view point clouds, depth map and instance map generation.
+    2. A RayCastRenderer, which is useful for partial view point clouds, depth map and instance map generation.
     
 - `segmentation`: 
     1. Proximity extraction in scalable implementation with different vriants, including distance, and normal angle.
@@ -59,7 +59,7 @@ Build `pybind11` in your system as well. If you only use C++ API, you can skip t
     ```
     Run `source ~/.bashrc` to save changes.
 ##### Windows
-2. Git clone and run: `mkdir build && cd build`. You can use Cmake GUI to configure your build options. Then run `cmake --build. --config Release --target INSTALL` to install `Misc3D`.
+2. Git clone and run: `mkdir build && cd build`. You can use Cmake GUI to configure your build options. Then run `cmake --build . --config Release --target INSTALL` to install `Misc3D`.
 
 3. After installation, add this variable: `/path/to/installation/misc3d/lib/python` to your system environment variable `Path` to make sure you can import `misc3d` in python. 
 
@@ -186,9 +186,9 @@ Some results are as follow:
 <p float="left">
   <img src="images/farthest.png" width="250" height=200/>
   <img src="images/ransac_and_edges.png" width="250" height=200/>
-  <img src="images/segmentation.png" width="250" height=200/>
-  <img src="images/registration.png" width="350" height=250/>
-  <img src="images/ppf.png" width="350" height=250/> 
+  <img src="images/segmentation.png" width="300" height=200/>
+  <img src="images/registration.png" width="400" height=250/>
+  <img src="images/ppf.png" width="400" height=250/> 
 </p>
 
 ## How to contribute

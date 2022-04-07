@@ -3,7 +3,6 @@
 
 import numpy as np
 import open3d as o3d
-from torch import embedding
 import misc3d as m3d
 from matplotlib import pyplot as plt
 import time

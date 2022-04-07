@@ -31,6 +31,12 @@
 #include <sstream>
 #include <stdint.h>
 #include <omp.h>
+
+#ifdef WIN32
+#include "getopt.h"
+#include <windows.h>
+#endif
+
 using namespace std;
 
 #ifndef LINE_LENGTH

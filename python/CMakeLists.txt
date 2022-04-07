@@ -31,6 +31,8 @@ install(TARGETS py_misc3d
 if(WIN32)
   install(TARGETS misc3d
     RUNTIME DESTINATION "${CMAKE_INSTALL_PREFIX}/misc3d/lib/python/misc3d")
+  install(TARGETS teaser_registration
+    RUNTIME DESTINATION "${CMAKE_INSTALL_PREFIX}/misc3d/lib/python/misc3d")
 endif()
 
 
