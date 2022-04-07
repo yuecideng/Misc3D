@@ -161,9 +161,9 @@ void teaser::ScalarTLSEstimator::estimate_tiled(const Eigen::RowVectorXd& X,
 #pragma omp parallel for default(none) shared(                                                     \
     jh_bound, ih_bound, ranges_inverse_sum_vec, dot_X_weights_vec, dot_weights_consensus_vec,      \
     X_consensus_table, h_centers, weights, N, X, x_hat, x_cost, s, ranges, inner_loop_f)
-  for (size_t ih = 0; ih < ih_bound; ih += s) {
-    for (size_t jh = 0; jh < jh_bound; jh += s) {
-      for (size_t il = 0; il < s; ++il) {
+  for (int ih = 0; ih < ih_bound; ih += s) {
+    for (int jh = 0; jh < jh_bound; jh += s) {
+      for (int il = 0; il < s; ++il) {
         size_t i = ih + il;
         inner_loop_f(i, jh, 0, s);
       }
@@ -176,7 +176,7 @@ void teaser::ScalarTLSEstimator::estimate_tiled(const Eigen::RowVectorXd& X,
     shared(jh_bound, ih_bound, ranges_inverse_sum_vec, dot_X_weights_vec,                          \
            dot_weights_consensus_vec, X_consensus_table, h_centers, weights, N, X, x_hat, x_cost,  \
            s, ranges, nr_centers, inner_loop_f)
-  for (size_t i = 0; i < nr_centers; ++i) {
+  for (int i = 0; i < nr_centers; ++i) {
     inner_loop_f(i, 0, jh_bound, N);
   }
 
@@ -185,7 +185,7 @@ void teaser::ScalarTLSEstimator::estimate_tiled(const Eigen::RowVectorXd& X,
     shared(jh_bound, ih_bound, ranges_inverse_sum_vec, dot_X_weights_vec,                          \
            dot_weights_consensus_vec, X_consensus_table, h_centers, weights, N, X, x_hat, x_cost,  \
            s, ranges, nr_centers, inner_loop_f)
-  for (size_t i = ih_bound; i < nr_centers; ++i) {
+  for (int i = ih_bound; i < nr_centers; ++i) {
     inner_loop_f(i, 0, 0, N);
   }
 
@@ -353,7 +353,7 @@ teaser::RobustRegistrationSolver::computeTIMs(const Eigen::Matrix<double, 3, Eig
   map->resize(2, N * (N - 1) / 2);
 
 #pragma omp parallel for default(none) shared(N, v, vtilde, map)
-  for (size_t i = 0; i < N - 1; i++) {
+  for (int i = 0; i < N - 1; i++) {
     // Calculate some important indices
     // For each measurement, we compute the TIMs between itself and all the measurements after it.
     // For example:

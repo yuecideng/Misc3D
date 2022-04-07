@@ -19,16 +19,17 @@ public:
     virtual ~TransformationSolver() {}
 
     /**
-     * @brief Solve the transformation matrix between two corresponding point clouds.
-     * The correspondence relationship must be found before this function using flann
-     * matcher other matching mehtods.
+     * @brief Solve the transformation matrix between two corresponding point
+     * clouds. The correspondence relationship must be found before this
+     * function using flann matcher other matching mehtods.
      *
      * @param src
      * @param dst
      * @return Eigen::Matrix4d
      */
-    virtual Eigen::Matrix4d Solve(const open3d::geometry::PointCloud &src,
-                                  const open3d::geometry::PointCloud &dst) const;
+    virtual Eigen::Matrix4d Solve(
+        const open3d::geometry::PointCloud &src,
+        const open3d::geometry::PointCloud &dst) const;
 
     enum class SolverType {
         SVD = 0,
@@ -51,8 +52,8 @@ private:
 };
 
 /**
- * @brief 3D-3D outlier-free correspondences based least-squares estimation problem
- * using SVD.
+ * @brief 3D-3D outlier-free correspondences based least-squares estimation
+ * problem using SVD.
  *
  */
 class SVDSolver : public TransformationSolver {
@@ -63,10 +64,10 @@ public:
                           const open3d::geometry::PointCloud &dst) const;
 };
 
-#ifndef WIN32
 /**
- * @brief 3D-3D correspondences with outlier transformation matrix estimation using
- * teaser robust solver. reference: https://github.com/MIT-SPARK/TEASER-plusplus
+ * @brief 3D-3D correspondences with outlier transformation matrix estimation
+ * using teaser robust solver. reference:
+ * https://github.com/MIT-SPARK/TEASER-plusplus
  *
  */
 class TeaserSolver : public TransformationSolver {
@@ -85,7 +86,6 @@ public:
 private:
     double noise_bound_;
 };
-#endif
 
 class RANSACSolver : public TransformationSolver {
 public:
@@ -102,18 +102,18 @@ public:
         , edge_length_threshold_(edge_length_threshold_) {}
 
     /**
-     * @brief This function is not override from base class due to it need original
-     * point clouds for calculation.
+     * @brief This function is not override from base class due to it need
+     * original point clouds for calculation.
      *
      * @param src
      * @param dst
      * @param corres
      * @return Eigen::Matrix4d
      */
-    Eigen::Matrix4d Solve(
-        const open3d::geometry::PointCloud &src,
-        const open3d::geometry::PointCloud &dst,
-        const std::pair<std::vector<size_t>, std::vector<size_t>> &corres) const;
+    Eigen::Matrix4d Solve(const open3d::geometry::PointCloud &src,
+                          const open3d::geometry::PointCloud &dst,
+                          const std::pair<std::vector<size_t>,
+                                          std::vector<size_t>> &corres) const;
 
 private:
     double threshold_;

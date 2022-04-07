@@ -341,7 +341,11 @@ void pmc_graph::update_degrees(bool flag) {
 
 void pmc_graph::update_degrees(int* &pruned, int& mc) {
     max_degree = -1;
+#ifdef WIN32
+    min_degree = (std::numeric_limits<int>::max)();
+#else
     min_degree = std::numeric_limits<int>::max();
+#endif
     int p = 0;
     for (long long v=0; v < num_vertices(); v++) {
         degree[v] = vertices[v+1] - vertices[v];
