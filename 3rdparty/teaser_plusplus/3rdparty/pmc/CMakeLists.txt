@@ -25,12 +25,12 @@ target_include_directories(pmc PUBLIC
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
         )
 
-add_executable(pmc_main pmc_driver.cpp)
-target_link_libraries(pmc_main pmc)
+# add_executable(pmc_main pmc_driver.cpp)
+# target_link_libraries(pmc_main pmc)
 
 find_package(OpenMP REQUIRED)
 target_link_libraries(pmc OpenMP::OpenMP_CXX)
-target_link_libraries(pmc_main OpenMP::OpenMP_CXX)
+# target_link_libraries(pmc_main OpenMP::OpenMP_CXX)
 
 set(CMAKE_INSTALL_LIBDIR  Lib)
 set(CMAKE_INSTALL_INCLUDEDIR Include)

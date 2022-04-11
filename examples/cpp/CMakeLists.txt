@@ -29,3 +29,10 @@ install(TARGETS farthest_point_sampling normal_estimation ppf_estimator ray_cast
                 preprocessing ransac_and_boundary segmentation segment_plane_iterative 
                 transform_estimation
                 RUNTIME DESTINATION "${CMAKE_INSTALL_PREFIX}/misc3d/bin")
+
+if(WIN32)
+    # Copy Open3D.dll to build/bin for runtime dynamic linking
+    file(COPY ${Open3D_INCLUDE_DIRS}/../bin/Open3D.dll DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/Release)
+    # Install Open3D.dll to misc3d/bin for runtime dynamic linking
+    install(FILES ${Open3D_INCLUDE_DIRS}/../bin/Open3D.dll DESTINATION misc3d/bin)
+endif()

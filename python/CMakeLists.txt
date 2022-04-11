@@ -33,6 +33,8 @@ if(WIN32)
     RUNTIME DESTINATION "${CMAKE_INSTALL_PREFIX}/misc3d/lib/python/misc3d")
   install(TARGETS teaser_registration
     RUNTIME DESTINATION "${CMAKE_INSTALL_PREFIX}/misc3d/lib/python/misc3d")
+  install(FILES ${Open3D_INCLUDE_DIRS}/../bin/Open3D.dll
+    DESTINATION "${CMAKE_INSTALL_PREFIX}/misc3d/lib/python/misc3d")
 endif()
 
 

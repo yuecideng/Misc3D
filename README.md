@@ -59,7 +59,9 @@ Build `pybind11` in your system as well. If you only use C++ API, you can skip t
     ```
     Run `source ~/.bashrc` to save changes.
 ##### Windows
-2. Git clone and run: `mkdir build && cd build`. You can use Cmake GUI to configure your build options. Then run `cmake --build . --config Release --target INSTALL` to install `Misc3D`.
+**Note: In windows, you can download pre-build Open3D c++ Release and install python package via pip without build from source to access both c++ and python API of Misc3D.**
+
+2. (optional)) Git clone and run: `mkdir build && cd build`. You can use Cmake GUI to configure your build options. Then run `cmake --build . --config Release --target INSTALL` to install `Misc3D`.
 
 3. After installation, add this variable: `/path/to/installation/misc3d/lib/python` to your system environment variable `Path` to make sure you can import `misc3d` in python. 
 
