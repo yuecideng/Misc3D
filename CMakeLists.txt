@@ -43,7 +43,7 @@ file(MAKE_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 
 option(BUILD_SHARED_LIBS "Build using shared libraries" ON)
 option(BUILD_PYTHON "Build Python bindings" ON)
-option(BUILD_EXAMPLES "Build Cpp examples" ON)
+option(BUILD_EXAMPLES "Build C++ examples" ON)
 
 ###############################################################################
 # Find 3rdparty dependencies
@@ -75,6 +75,7 @@ message(STATUS "Install path: " ${CMAKE_INSTALL_PREFIX})
 include_directories(${SPDLOG_INCLUDE_DIRS})
 add_subdirectory(src)
 
+# Build C++ examples
 if(BUILD_EXAMPLES)
     add_subdirectory(examples/cpp)
     # install python examples 
@@ -88,6 +89,7 @@ if(BUILD_EXAMPLES)
     )
 endif()
 
+# Build Python binding
 if(BUILD_PYTHON)
     add_subdirectory(python)
 endif()
