@@ -31,12 +31,12 @@ int pmc_graph::initial_pruning(pmc_graph& G, int* &pruned, int lb) {
     }
 
     double sec = get_time();
-    cout << "[pmc: initial k-core pruning]  before pruning: |V| = " << G.num_vertices();
-    cout << ", |E| = " << G.num_edges() <<endl;
+    // cout << "[pmc: initial k-core pruning]  before pruning: |V| = " << G.num_vertices();
+    // cout << ", |E| = " << G.num_edges() <<endl;
     G.reduce_graph(pruned);
-    cout << "[pmc: initial k-core pruning]  after pruning:  |V| = " << G.num_vertices() - lb_idx;
-    cout << ", |E| = " << G.num_edges() <<endl;
-    cout << "[pmc]  initial pruning took " << get_time()-sec << " sec" <<endl;
+    // cout << "[pmc: initial k-core pruning]  after pruning:  |V| = " << G.num_vertices() - lb_idx;
+    // cout << ", |E| = " << G.num_edges() <<endl;
+    // cout << "[pmc]  initial pruning took " << get_time()-sec << " sec" <<endl;
 
     G.update_degrees();
     G.degree_bucket_sort(true); // largest to smallest degree
@@ -59,10 +59,10 @@ int pmc_graph::initial_pruning(pmc_graph& G, int* &pruned, int lb, vector<vector
     }
 
     double sec = get_time();
-    cout << "[pmc: initial k-core pruning]  before pruning: |V| = " << G.num_vertices() << ", |E| = " << G.num_edges() <<endl;
+    // cout << "[pmc: initial k-core pruning]  before pruning: |V| = " << G.num_vertices() << ", |E| = " << G.num_edges() <<endl;
     G.reduce_graph(pruned);
-    cout << "[pmc: initial k-core pruning]  after pruning:  |V| = " << G.num_vertices() - lb_idx << ", |E| = " << G.num_edges() <<endl;
-    cout << "[pmc]  initial pruning took " << get_time()-sec << " sec" <<endl;
+    // cout << "[pmc: initial k-core pruning]  after pruning:  |V| = " << G.num_vertices() - lb_idx << ", |E| = " << G.num_edges() <<endl;
+    // cout << "[pmc]  initial pruning took " << get_time()-sec << " sec" <<endl;
 
     G.update_degrees();
     G.degree_bucket_sort(true);

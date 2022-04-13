@@ -612,8 +612,8 @@ void pmc_graph::degree_bucket_sort(bool desc) {
         }
     }
 
-    cout << "[pmc: sorting neighbors]  |E| = " << edges.size();
-    cout << ", |E_sorted| = " << tmp_edges.size() <<endl;
+    // cout << "[pmc: sorting neighbors]  |E| = " << edges.size();
+    // cout << ", |E_sorted| = " << tmp_edges.size() <<endl;
     edges = tmp_edges;
 }
 
