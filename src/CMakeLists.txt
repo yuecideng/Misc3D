@@ -13,6 +13,10 @@ set(SRCS utils.cpp
          ray_cast_renderer.cpp
          vis_utils.cpp)
 
+if(BUILD_RECONSTRUCTION)
+    list(APPEND SRCS pipeline.cpp)
+endif()
+
 add_library(misc3d ${SRCS})
 target_include_directories(misc3d PUBLIC
     $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
@@ -22,6 +26,9 @@ target_link_libraries(misc3d PUBLIC
     teaser_registration
     OpenMP::OpenMP_CXX
     Threads::Threads)
+if(BUILD_RECONSTRUCTION)
+  target_link_libraries(misc3d PUBLIC ${OpenCV_LIBS})
+endif()
 
 add_library(misc3d::misc3d ALIAS misc3d)
 

@@ -31,6 +31,16 @@ public:
         const open3d::geometry::PointCloud &src,
         const open3d::geometry::PointCloud &dst) const;
 
+    /**
+     * @brief Eigen Matrix input
+     *
+     * @param src
+     * @param dst
+     * @return Eigen::Matrix4d
+     */
+    virtual Eigen::Matrix4d Solve(const Eigen::Matrix3Xd &src,
+                                  const Eigen::Matrix3Xd &dst) const;
+
     enum class SolverType {
         SVD = 0,
         TEASER = 1,
@@ -62,6 +72,9 @@ public:
 
     Eigen::Matrix4d Solve(const open3d::geometry::PointCloud &src,
                           const open3d::geometry::PointCloud &dst) const;
+
+    Eigen::Matrix4d Solve(const Eigen::Matrix3Xd &src,
+                          const Eigen::Matrix3Xd &dst) const;
 };
 
 /**
@@ -82,6 +95,9 @@ public:
 
     Eigen::Matrix4d Solve(const open3d::geometry::PointCloud &src,
                           const open3d::geometry::PointCloud &dst) const;
+
+    Eigen::Matrix4d Solve(const Eigen::Matrix3Xd &src,
+                          const Eigen::Matrix3Xd &dst) const;
 
 private:
     double noise_bound_;

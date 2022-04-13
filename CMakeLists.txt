@@ -44,6 +44,13 @@ file(MAKE_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 option(BUILD_SHARED_LIBS "Build using shared libraries" ON)
 option(BUILD_PYTHON "Build Python bindings" ON)
 option(BUILD_EXAMPLES "Build C++ examples" ON)
+option(BUILD_RECONSTRUCTION "Build reconstruction pipeline" OFF)
+
+# Set BUILD_SHARED_LIBS OFF if build reconstruction module with python binding 
+# under Windows.
+if(WIN32 AND BUILD_RECONSTRUCTION AND BUILD_PYTHON)
+    set(BUILD_SHARED_LIBS OFF)
+endif()
 
 ###############################################################################
 # Find 3rdparty dependencies
@@ -63,6 +70,15 @@ add_subdirectory(3rdparty)
 # Find open3d (Linux default)
 set(Open3D_DIR "/usr/local/lib/cmake/Open3D" CACHE FILEPATH "Set to find Open3D")
 find_package(Open3D REQUIRED NO_DEFAULT_PATH)
+
+if(BUILD_RECONSTRUCTION)
+    # Find opencv (Linux default)
+    set(OpenCV_DIR "/usr/local/lib/cmake/OpenCV" CACHE FILEPATH "Set to find OpenCV")
+    find_package(OpenCV REQUIRED NO_DEFAULT_PATH)
+
+    # Define micro
+    add_definitions(-DENABLE_RECONSTRUCTION)
+endif()
 
 # Find pybind11 for Python wrappers
 if(BUILD_PYTHON)

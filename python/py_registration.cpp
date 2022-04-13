@@ -20,6 +20,16 @@ void pybind_registration(py::module &m) {
         py::arg("src"), py::arg("dst"));
 
     m.def(
+        "compute_transformation_svd",
+        [](const Eigen::Matrix3Xd &src, const Eigen::Matrix3Xd &dst) {
+            SVDSolver solver;
+            return solver.Solve(src.transpose(), dst.transpose());
+        },
+        "Compute 3D rigid transformation from corresponding point clouds using "
+        "SVD, with numpy array input with shape (n, 3)",
+        py::arg("src"), py::arg("dst"));
+
+    m.def(
         "compute_transformation_teaser",
         [](const PointCloudPtr &src, const PointCloudPtr &dst,
            double noise_bound) {
@@ -28,6 +38,17 @@ void pybind_registration(py::module &m) {
         },
         "Compute 3D rigid transformation from corresponding point clouds using "
         "Teaser PlusPlus algorithm",
+        py::arg("src"), py::arg("dst"), py::arg("noise_bound") = 0.01);
+
+    m.def(
+        "compute_transformation_teaser",
+        [](const Eigen::Matrix3Xd &src, const Eigen::Matrix3Xd &dst,
+           double noise_bound) {
+            TeaserSolver solver(noise_bound);
+            return solver.Solve(src.transpose(), dst.transpose());
+        },
+        "Compute 3D rigid transformation from corresponding point clouds using "
+        "Teaser PlusPlus algorithm, with numpy array input with shape (n, 3)",
         py::arg("src"), py::arg("dst"), py::arg("noise_bound") = 0.01);
 
     m.def(
