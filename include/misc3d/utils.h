@@ -363,4 +363,31 @@ inline void VectorToO3dPointCloud(const std::vector<Eigen::Vector6d> &pc,
     }
 }
 
+/**
+ * @brief Convert 4x4 Mat to 16 array
+ *
+ * @tparam T
+ * @param mat
+ * @param array
+ */
+template <typename T>
+inline void EigenMat4x4ToArray(const Eigen::Matrix<T, 4, 4> &mat,
+                               std::array<T, 16> &array) {
+    for (size_t i = 0; i < 4; i++) {
+        for (size_t j = 0; j < 4; j++) {
+            array[i * 4 + j] = mat(i, j);
+        }
+    }
+}
+
+template <typename T>
+inline void ArrayToEigenMat4x4(const std::array<T, 16> &array,
+                               Eigen::Matrix<T, 4, 4> &mat) {
+    for (size_t i = 0; i < 4; i++) {
+        for (size_t j = 0; j < 4; j++) {
+            mat(i, j) = array[i * 4 + j];
+        }
+    }
+}
+
 }  // namespace misc3d

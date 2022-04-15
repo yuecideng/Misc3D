@@ -39,8 +39,8 @@ void pybind_reconstruction(py::module& m) {
                PipelineConfig::LocalRefineMethod::GeneralizedICP)
         .export_values();
 
-    py::enum_<PipelineConfig::GlobalRegistrationMethod>(config,
-                                                        "GlobalRegistrationMethod")
+    py::enum_<PipelineConfig::GlobalRegistrationMethod>(
+        config, "GlobalRegistrationMethod")
         .value("Ransac", PipelineConfig::GlobalRegistrationMethod::Ransac)
         .value("TeaserPlusPlus",
                PipelineConfig::GlobalRegistrationMethod::TeaserPlusPlus)
@@ -66,7 +66,10 @@ void pybind_reconstruction(py::module& m) {
 
     py::class_<ReconstructionPipeline>(m, "ReconstructionPipeline")
         .def(py::init<const PipelineConfig&>())
-        .def("make_fragments", &ReconstructionPipeline::MakeFragments);
+        .def("make_fragments", &ReconstructionPipeline::MakeFragments)
+        .def("register_fragments", &ReconstructionPipeline::RegisterFragments)
+        .def("integrate_scene", &ReconstructionPipeline::IntegrateScene)
+        .def("run_system", &ReconstructionPipeline::RunSystem);
 }
 
 }  // namespace reconstruction

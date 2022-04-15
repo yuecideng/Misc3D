@@ -1,7 +1,10 @@
+#include <fstream>
 #include <thread>
 #include <vector>
+#include "json.hpp"
 
 #include <misc3d/logging.h>
+#include <misc3d/registration/correspondence_matching.h>
 #include <misc3d/registration/transform_estimation.h>
 #include <misc3d/resonstruction/pipeline.h>
 #include <misc3d/utils.h>
@@ -9,15 +12,67 @@
 #include <open3d/io/ImageIO.h>
 #include <open3d/io/PointCloudIO.h>
 #include <open3d/io/PoseGraphIO.h>
+#include <open3d/io/TriangleMeshIO.h>
 #include <open3d/pipelines/integration/ScalableTSDFVolume.h>
 #include <open3d/pipelines/odometry/Odometry.h>
+#include <open3d/pipelines/registration/ColoredICP.h>
+#include <open3d/pipelines/registration/GeneralizedICP.h>
 #include <open3d/pipelines/registration/GlobalOptimization.h>
 #include <open3d/pipelines/registration/PoseGraph.h>
+#include <open3d/pipelines/registration/Registration.h>
 #include <open3d/utility/FileSystem.h>
 #include <opencv2/opencv.hpp>
 
 namespace misc3d {
 namespace reconstruction {
+
+using json = nlohmann::ordered_json;
+
+bool OdometryTrajectory::WriteToJsonFile(const std::string& file_name) {
+    json j;
+    j["class_name"] = "SceneOdomtryTrajectory";
+    const size_t num_poses = odomtry_list_.size();
+    for (size_t i = 0; i < num_poses; i++) {
+        const std::string id = std::to_string(i);
+        std::array<double, 16> arr;
+        EigenMat4x4ToArray<double>(odomtry_list_[i], arr);
+        j[id] = arr;
+    }
+
+    try {
+        std::ofstream file(file_name);
+        file << j.dump(0) << std::endl;
+    } catch (json::other_error& e) {
+        misc3d::LogWarning("Failed to write json file: {}", file_name.c_str());
+        return false;
+    }
+    return true;
+}
+
+bool OdometryTrajectory::ReadFromJsonFile(const std::string& file_name) {
+    try {
+        std::ifstream file(file_name);
+        json j = json::parse(file);
+        if (j["class_name"] != "SceneOdomtryTrajectory") {
+            misc3d::LogWarning("Invalid json file: {}", file_name.c_str());
+            return false;
+        }
+        odomtry_list_.clear();
+        for (auto& it : j) {
+            if (it.is_string())
+                continue;
+
+            const std::array<double, 16> arr = it.get<std::array<double, 16>>();
+            Eigen::Matrix4d mat;
+            ArrayToEigenMat4x4<double>(arr, mat);
+            odomtry_list_.push_back(mat);
+        }
+    } catch (json::other_error& e) {
+        misc3d::LogWarning("Failed to read json file: {}", file_name.c_str());
+        return false;
+    }
+    return true;
+}
 
 PipelineConfig::PipelineConfig() {
     data_path_ = "";
@@ -41,12 +96,18 @@ ReconstructionPipeline::ReconstructionPipeline(const PipelineConfig& config)
     if (config_.data_path_[config_.data_path_.size() - 1] != '/') {
         config_.data_path_ += "/";
     }
+
+    // Validate camera intrinsics.
+    if (config_.camera_intrinsic_.width_ <= 0 ||
+        config_.camera_intrinsic_.height_ <= 0) {
+        misc3d::LogError("Camera intrinsics must be valid.");
+    }
 }
 
 bool ReconstructionPipeline::ReadRGBDData() {
     const std::string& data_path = config_.data_path_;
-    const std::string color_path = data_path + "/color";
-    const std::string depth_path = data_path + "/depth";
+    const std::string color_path = data_path + "color";
+    const std::string depth_path = data_path + "depth";
     std::vector<std::string> color_files, depth_files;
     bool ret;
 
@@ -59,6 +120,12 @@ bool ReconstructionPipeline::ReadRGBDData() {
         return false;
     }
 
+    // Color image can be stored in `jpg` format.
+    if (color_files.size() == 0) {
+        open3d::utility::filesystem::ListFilesInDirectoryWithExtension(
+            color_path, "jpg", color_files);
+    }
+
     if (color_files.size() != depth_files.size()) {
         misc3d::LogWarning(
             "Number of color {} and depth {} images are not equal.",
@@ -68,6 +135,10 @@ bool ReconstructionPipeline::ReadRGBDData() {
 
     misc3d::LogInfo("Found {} RGBD images.", color_files.size());
     rgbd_lists_.resize(color_files.size());
+    intensity_img_lists_.resize(color_files.size());
+    kp_des_lists_.resize(color_files.size());
+    const int& width = config_.camera_intrinsic_.width_;
+    const int& heigth = config_.camera_intrinsic_.height_;
 #pragma omp parallel for schedule(static)
     for (int i = 0; i < color_files.size(); ++i) {
         // Read color image and depth image.
@@ -77,11 +148,81 @@ bool ReconstructionPipeline::ReadRGBDData() {
 
         // Create RGBD image.
         const auto rgbd = open3d::geometry::RGBDImage::CreateFromColorAndDepth(
-            color, depth, config_.depth_scale_, config_.max_depth_, true);
+            color, depth, config_.depth_scale_, config_.max_depth_, false);
         rgbd_lists_[i] = *rgbd;
+        const auto intensity_img = color.CreateFloatImage();
+        intensity_img_lists_[i] = *intensity_img;
+
+        // Detect ORB keypoints and descriptors.
+        cv::Mat cv_img(cv::Size(width, heigth), CV_8UC3, color.data_.data());
+        cv::cvtColor(cv_img, cv_img, cv::COLOR_RGB2BGR);
+        std::vector<cv::KeyPoint> kp;
+        cv::Mat des;
+        orb_detector_->detectAndCompute(cv_img, cv::Mat(), kp, des);
+        kp_des_lists_[i] = std::make_pair(kp, des);
     }
 
     return true;
+}
+
+bool ReconstructionPipeline::ReadFragmentData() {
+    const std::string& data_path = config_.data_path_;
+    const std::string fragments_path = data_path + "fragments";
+
+    misc3d::LogInfo("Reading Fragments data from {}", fragments_path.c_str());
+    if (!open3d::utility::filesystem::DirectoryExists(fragments_path)) {
+        misc3d::LogWarning("Fragment data path does not exist.");
+        return false;
+    }
+
+    std::vector<std::string> fragment_files, pose_graph_files;
+    if (!open3d::utility::filesystem::ListFilesInDirectoryWithExtension(
+            fragments_path, "ply", fragment_files) ||
+        !open3d::utility::filesystem::ListFilesInDirectoryWithExtension(
+            fragments_path, "json", pose_graph_files)) {
+        misc3d::LogWarning("Failed to read Fragments data.");
+        return false;
+    }
+
+    n_fragments_ = fragment_files.size();
+    // Read fragment point clouds.
+    fragment_features_.resize(n_fragments_);
+    preprocessed_fragment_lists_.resize(n_fragments_);
+#pragma omp parallel for schedule(static)
+    for (int i = 0; i < n_fragments_; i++) {
+        open3d::geometry::PointCloud pcd;
+        open3d::io::ReadPointCloud(fragment_files[i], pcd);
+        misc3d::LogInfo("Preprocessing fragment {}.", i);
+        PreProcessFragments(pcd, i);
+    }
+
+    // Read fragment pose graph.
+    fragment_pose_graphs_.resize(n_fragments_);
+    for (size_t i = 0; i < n_fragments_; i++) {
+        open3d::io::ReadPoseGraph(pose_graph_files[i],
+                                  fragment_pose_graphs_[i]);
+    }
+
+    return true;
+}
+
+void ReconstructionPipeline::PreProcessFragments(
+    const open3d::geometry::PointCloud& pcd, int i) {
+    const auto pcd_down = pcd.VoxelDownSample(config_.voxel_size_);
+    const auto fpfh = open3d::pipelines::registration::ComputeFPFHFeature(
+        *pcd_down, open3d::geometry::KDTreeSearchParamHybrid(
+                       config_.voxel_size_ * 5, 100));
+    if (fragment_features_.size() != n_fragments_ ||
+        preprocessed_fragment_lists_.size() != n_fragments_) {
+        misc3d::LogError(
+            "Fragment features size {} or fragment lists size {} "
+            "is not equal to n_fragments {}.",
+            fragment_features_.size(), preprocessed_fragment_lists_.size(),
+            n_fragments_);
+        return;
+    }
+    fragment_features_[i] = *fpfh;
+    preprocessed_fragment_lists_[i] = *pcd_down;
 }
 
 void ReconstructionPipeline::BuildSingleFragment(int fragment_id) {
@@ -91,8 +232,61 @@ void ReconstructionPipeline::BuildSingleFragment(int fragment_id) {
         std::min(sid + config_.make_fragment_param_.n_frame_per_fragment,
                  static_cast<int>(rgbd_lists_.size()));
     BuildPoseGraphForFragment(fragment_id, sid, eid);
-    OptimizePoseGraphForFragment(fragment_id);
+    OptimizePoseGraph(
+        config_.max_depth_diff_,
+        config_.optimization_param_.preference_loop_closure_odometry,
+        fragment_pose_graphs_[fragment_id]);
     IntegrateFragmentTSDF(fragment_id);
+}
+
+void ReconstructionPipeline::BuildPoseGraphForScene() {
+    Eigen::Matrix4d odom = Eigen::Matrix4d::Identity();
+    scene_pose_graph_.nodes_.push_back(
+        open3d::pipelines::registration::PoseGraphNode(odom));
+
+    for (int i = 0; i < n_fragments_; i++) {
+        for (int j = i + 1; j < n_fragments_; j++) {
+            fragment_matching_results_.push_back(MatchingResult(i, j));
+        }
+    }
+
+    const size_t num_pairs = fragment_matching_results_.size();
+    std::vector<std::thread> thread_list;
+    for (size_t i = 0; i < num_pairs; i++) {
+        MatchingResult& matching_result = fragment_matching_results_[i];
+        const int s = matching_result.s_;
+        const int t = matching_result.t_;
+        thread_list.push_back(
+            std::thread(&ReconstructionPipeline::RegisterFragmentPair, this, s,
+                        t, std::ref(matching_result)));
+    }
+    for (auto& thread : thread_list) {
+        thread.join();
+    }
+
+    for (size_t i = 0; i < num_pairs; i++) {
+        if (fragment_matching_results_[i].success_) {
+            const int& t = fragment_matching_results_[i].t_;
+            const int& s = fragment_matching_results_[i].s_;
+            const Eigen::Matrix4d& pose =
+                fragment_matching_results_[i].transformation_;
+            const Eigen::Matrix6d info =
+                fragment_matching_results_[i].information_;
+            if (s + 1 == t) {
+                odom = pose * odom;
+                const Eigen::Matrix4d& odom_inv = odom.inverse();
+                scene_pose_graph_.nodes_.push_back(
+                    open3d::pipelines::registration::PoseGraphNode(odom_inv));
+                scene_pose_graph_.edges_.push_back(
+                    open3d::pipelines::registration::PoseGraphEdge(
+                        s, t, pose, info, false));
+            } else {
+                scene_pose_graph_.edges_.push_back(
+                    open3d::pipelines::registration::PoseGraphEdge(s, t, pose,
+                                                                   info, true));
+            }
+        }
+    }
 }
 
 void ReconstructionPipeline::BuildPoseGraphForFragment(int fragment_id, int sid,
@@ -107,7 +301,8 @@ void ReconstructionPipeline::BuildPoseGraphForFragment(int fragment_id, int sid,
             // Compute odometry.
             if (t == s + 1) {
                 misc3d::LogInfo(
-                    "Fragment {:03d} / {:03d} :: RGBD odometry between frame : "
+                    "Fragment {:03d} / {:03d} :: RGBD odometry between "
+                    "frame : "
                     "{} and {}",
                     fragment_id, n_fragments_ - 1, s, t);
                 const auto result = RegisterRGBDPair(s, t);
@@ -140,12 +335,14 @@ void ReconstructionPipeline::BuildPoseGraphForFragment(int fragment_id, int sid,
     fragment_pose_graphs_[fragment_id] = pose_graph;
 }
 
-void ReconstructionPipeline::OptimizePoseGraphForFragment(int fragment_id) {
+void ReconstructionPipeline::OptimizePoseGraph(
+    double max_correspondence_distance, double preference_loop_closure,
+    open3d::pipelines::registration::PoseGraph& pose_graph) {
     open3d::pipelines::registration::GlobalOptimizationOption option(
-        config_.max_depth_diff_, 0.25,
-        config_.optimization_param_.preference_loop_closure_odometry, 0);
+        max_correspondence_distance, 0.25, preference_loop_closure, 0);
+
     open3d::pipelines::registration::GlobalOptimization(
-        fragment_pose_graphs_[fragment_id],
+        pose_graph,
         open3d::pipelines::registration::GlobalOptimizationLevenbergMarquardt(),
         open3d::pipelines::registration::
             GlobalOptimizationConvergenceCriteria(),
@@ -162,13 +359,12 @@ void ReconstructionPipeline::IntegrateFragmentTSDF(int fragment_id) {
         const int i_abs =
             fragment_id * config_.make_fragment_param_.n_frame_per_fragment + i;
         misc3d::LogInfo(
-            "Fragment {:03d} / {:03d} :: Integrate rgbd frame {:d} ({:d} of "
-            "{:d}.",
+            "Fragment {:03d} / {:03d} :: Integrate rgbd frame {:d} ({:d} "
+            "of "
+            "{:d}).",
             fragment_id, n_fragments_ - 1, i_abs, i + 1, graph_num);
         const open3d::geometry::RGBDImage& rgbd = rgbd_lists_[i_abs];
-        const auto color = rgbd.color_.CreateImageFromFloatImage<uint8_t>();
-        open3d::geometry::RGBDImage new_rgbd(*color, rgbd.depth_);
-        volume.Integrate(new_rgbd, config_.camera_intrinsic_,
+        volume.Integrate(rgbd, config_.camera_intrinsic_,
                          pose_graph.nodes_[i].pose_.inverse());
     }
     auto mesh = volume.ExtractTriangleMesh();
@@ -182,8 +378,103 @@ void ReconstructionPipeline::IntegrateFragmentTSDF(int fragment_id) {
     fragment_point_clouds_[fragment_id] = pcd;
 }
 
+void ReconstructionPipeline::IntegrateRGBDTSDF() {
+    open3d::pipelines::integration::ScalableTSDFVolume volume(
+        config_.integration_voxel_size_, 0.04,
+        open3d::pipelines::integration::TSDFVolumeColorType::RGB8);
+    const size_t num = rgbd_lists_.size();
+    for (size_t i = 0; i < num; i++) {
+        misc3d::LogInfo("Scene :: Integrate rgbd frame {} | {}", i, num);
+        volume.Integrate(rgbd_lists_[i], config_.camera_intrinsic_,
+                         scene_odometry_trajectory_.odomtry_list_[i].inverse());
+    }
+
+    const auto mesh = volume.ExtractTriangleMesh();
+    mesh->ComputeVertexNormals();
+
+    open3d::io::WriteTriangleMesh(config_.data_path_ + "scene/integrated.ply",
+                                  *mesh);
+}
+
+void ReconstructionPipeline::RefineRegistration() {
+    misc3d::LogInfo("Start Refine Registration.");
+    misc3d::Timer timer;
+    timer.Start();
+
+    // Clear matching results.
+    fragment_matching_results_.clear();
+
+    for (auto& edge : scene_pose_graph_.edges_) {
+        const int s = edge.source_node_id_;
+        const int t = edge.target_node_id_;
+        MatchingResult mr(s, t);
+        mr.transformation_ = edge.transformation_;
+        fragment_matching_results_.push_back(mr);
+    }
+
+    std::vector<std::thread> thread_list;
+    for (size_t i = 0; i < fragment_matching_results_.size(); i++) {
+        const int s = fragment_matching_results_[i].s_;
+        const int t = fragment_matching_results_[i].t_;
+        thread_list.push_back(
+            std::thread(&ReconstructionPipeline::RefineFragmentPair, this, s, t,
+                        std::ref(fragment_matching_results_[i])));
+    }
+    for (auto& thread : thread_list) {
+        thread.join();
+    }
+
+    // Update scene pose graph.
+    scene_pose_graph_.edges_.clear();
+    scene_pose_graph_.nodes_.clear();
+    Eigen::Matrix4d odom = Eigen::Matrix4d::Identity();
+    scene_pose_graph_.nodes_.push_back(
+        open3d::pipelines::registration::PoseGraphNode(odom));
+    for (auto& result : fragment_matching_results_) {
+        const int s = result.s_;
+        const int t = result.t_;
+        const Eigen::Matrix4d& pose = result.transformation_;
+        const Eigen::Matrix6d& info = result.information_;
+
+        if (s + 1 == t) {
+            odom = pose * odom;
+            scene_pose_graph_.nodes_.push_back(
+                open3d::pipelines::registration::PoseGraphNode(odom.inverse()));
+            scene_pose_graph_.edges_.push_back(
+                open3d::pipelines::registration::PoseGraphEdge(s, t, pose, info,
+                                                               false));
+        } else {
+            scene_pose_graph_.edges_.push_back(
+                open3d::pipelines::registration::PoseGraphEdge(s, t, pose, info,
+                                                               true));
+        }
+    }
+
+    OptimizePoseGraph(
+        config_.voxel_size_ * 1.4,
+        config_.optimization_param_.preference_loop_closure_registration,
+        scene_pose_graph_);
+
+    time_cost_table_["RefineRegistration"] = timer.Stop();
+    misc3d::LogInfo("End Refine Registration: {}",
+                    time_cost_table_.at("RefineRegistration"));
+}
+
+void ReconstructionPipeline::RefineFragmentPair(
+    int s, int t, MatchingResult& matched_result) {
+    const auto& pcd_s = preprocessed_fragment_lists_[s];
+    const auto& pcd_t = preprocessed_fragment_lists_[t];
+    const float voxel_size = config_.voxel_size_;
+    const auto& init_trans = matched_result.transformation_;
+    const auto result = MultiScaleICP(
+        pcd_s, pcd_t, {voxel_size, voxel_size / 2, voxel_size / 4},
+        {50, 30, 15}, init_trans);
+    matched_result.transformation_ = std::get<0>(result);
+    matched_result.information_ = std::get<1>(result);
+}
+
 void ReconstructionPipeline::SaveFragmentResults() {
-    const std::string pose_graph_path = config_.data_path_ + "fragments/";
+    const std::string fragments_path = config_.data_path_ + "fragments/";
     // Save fragment pose graph and point clouds.
     for (int i = 0; i < n_fragments_; i++) {
         std::string id = std::to_string(i);
@@ -193,7 +484,7 @@ void ReconstructionPipeline::SaveFragmentResults() {
                 id = "0" + id;
             }
         }
-        const std::string file_name = "fragment_" + id;
+        const std::string file_name = fragments_path + "fragment_" + id;
         open3d::io::WritePoseGraph(file_name + ".json",
                                    fragment_pose_graphs_[i]);
         open3d::io::WritePointCloud(file_name + ".ply",
@@ -201,56 +492,163 @@ void ReconstructionPipeline::SaveFragmentResults() {
     }
 }
 
+void ReconstructionPipeline::SaveSceneResults() {
+    for (size_t i = 0; i < n_fragments_; i++) {
+        const auto& fragment_pose_graph = fragment_pose_graphs_[i];
+        for (size_t j = 0; j < fragment_pose_graph.nodes_.size(); j++) {
+            const Eigen::Matrix4d odom = scene_pose_graph_.nodes_[i].pose_ *
+                                         fragment_pose_graph.nodes_[j].pose_;
+            scene_odometry_trajectory_.odomtry_list_.push_back(odom);
+        }
+    }
+    bool ret = scene_odometry_trajectory_.WriteToJsonFile(
+        config_.data_path_ + "scene/trajectory.json");
+}
+
 std::tuple<bool, Eigen::Matrix4d, Eigen::Matrix6d>
 ReconstructionPipeline::RegisterRGBDPair(int s, int t) {
-    bool success;
-    Eigen::Matrix4d odometry;
-    Eigen::Matrix6d information_matrix;
-
-    open3d::geometry::RGBDImage& rgbd_s = rgbd_lists_[s];
-    open3d::geometry::RGBDImage& rgbd_t = rgbd_lists_[t];
-
-    open3d::pipelines::odometry::OdometryOption option;
-    option.max_depth_diff_ = config_.max_depth_diff_;
     if (abs(s - t) != 1) {
-        Eigen::Matrix4d odo_init = PoseEstimation(rgbd_s, rgbd_t);
+        Eigen::Matrix4d odo_init = PoseEstimation(s, t);
         if (!odo_init.isIdentity(1e-8)) {
-            return open3d::pipelines::odometry::ComputeRGBDOdometry(
-                rgbd_s, rgbd_t, config_.camera_intrinsic_, odo_init,
-                open3d::pipelines::odometry::
-                    RGBDOdometryJacobianFromHybridTerm(),
-                option);
+            return ComputeOdometry(s, t, odo_init);
         } else {
             return std::make_tuple(false, Eigen::Matrix4d::Identity(),
                                    Eigen::Matrix6d::Identity());
         }
     } else {
-        return open3d::pipelines::odometry::ComputeRGBDOdometry(
-            rgbd_s, rgbd_t, config_.camera_intrinsic_,
-            Eigen::Matrix4d::Identity(),
-            open3d::pipelines::odometry::RGBDOdometryJacobianFromHybridTerm(),
-            option);
+        return ComputeOdometry(s, t, Eigen::Matrix4d::Identity());
     }
 }
 
-Eigen::Matrix4d ReconstructionPipeline::PoseEstimation(
-    const open3d::geometry::RGBDImage& src,
-    const open3d::geometry::RGBDImage& dst) {
+void ReconstructionPipeline::RegisterFragmentPair(
+    int s, int t, MatchingResult& matched_result) {
+    const open3d::geometry::PointCloud& pcd_s = preprocessed_fragment_lists_[s];
+    const open3d::geometry::PointCloud& pcd_t = preprocessed_fragment_lists_[t];
+    Eigen::Matrix4d pose;
+    Eigen::Matrix6d info;
+
+    // Odometry estimation.
+    if (s + 1 == t) {
+        misc3d::LogInfo("Fragment odometry {} and {}", s, t);
+        const auto& pose_graph_frag = fragment_pose_graphs_[s];
+        const int n_nodes = pose_graph_frag.nodes_.size();
+        const Eigen::Matrix4d init_trans =
+            pose_graph_frag.nodes_[n_nodes - 1].pose_.inverse();
+        const auto result = MultiScaleICP(pcd_s, pcd_t, {config_.voxel_size_},
+                                          {50}, init_trans);
+        pose = std::get<0>(result);
+        info = std::get<1>(result);
+    } else {
+        // Loop closure estimation.
+        misc3d::LogInfo("Fragment loop closure {} and {}", s, t);
+        const auto result = GlobalRegistration(s, t);
+        const bool success = std::get<0>(result);
+        if (!success) {
+            misc3d::LogWarning(
+                "Global registration failed. Skip pair ({} | {}).", s, t);
+            matched_result.success_ = false;
+            matched_result.transformation_ = Eigen::Matrix4d::Identity();
+            matched_result.information_ = Eigen::Matrix6d::Identity();
+        } else {
+            pose = std::get<1>(result);
+            info = std::get<2>(result);
+        }
+    }
+
+    matched_result.success_ = true;
+    matched_result.transformation_ = pose;
+    matched_result.information_ = info;
+}
+
+// TODO: Correspondence matching can also be done by using 2d features like ORB,
+// SIFT and SURF. Just store these features in 'Make Fragment' stage for each
+// RGBD and integrate them into the fragment point clouds.
+std::tuple<bool, Eigen::Matrix4d, Eigen::Matrix6d>
+ReconstructionPipeline::GlobalRegistration(int s, int t) {
+    const auto& pcd_s = preprocessed_fragment_lists_[s];
+    const auto& pcd_t = preprocessed_fragment_lists_[t];
+    const auto& fpfh_s = fragment_features_[s];
+    const auto& fpfh_t = fragment_features_[t];
+    const double max_dis = config_.voxel_size_ * 1.4;
     Eigen::Matrix4d pose = Eigen::Matrix4d::Identity();
 
-    // Create CV format images.
-    const int width = config_.camera_intrinsic_.width_;
-    const int heigth = config_.camera_intrinsic_.height_;
-    const auto color_src = src.color_.CreateImageFromFloatImage<uint8_t>();
-    const auto color_dst = dst.color_.CreateImageFromFloatImage<uint8_t>();
-    cv::Mat cv_src(cv::Size(width, heigth), CV_8UC1, color_src->data_.data());
-    cv::Mat cv_dst(cv::Size(width, heigth), CV_8UC1, color_dst->data_.data());
+    // Match correspondences.
+    misc3d::registration::ANNMatcher matcher(
+        misc3d::registration::MatchMethod::ANNOY);
+    const auto matched_list = matcher.Match(fpfh_s, fpfh_t);
 
-    // Compute ORB features.
-    std::vector<cv::KeyPoint> kp_src, kp_dst;
-    cv::Mat des_src, des_dst;
-    orb_detector_->detectAndCompute(cv_src, cv::Mat(), kp_src, des_src);
-    orb_detector_->detectAndCompute(cv_dst, cv::Mat(), kp_dst, des_dst);
+    if (config_.global_registration_method_ ==
+        PipelineConfig::GlobalRegistrationMethod::Ransac) {
+        misc3d::registration::RANSACSolver solver(max_dis);
+        pose = solver.Solve(pcd_s, pcd_t, matched_list);
+    } else if (config_.global_registration_method_ ==
+               PipelineConfig::GlobalRegistrationMethod::TeaserPlusPlus) {
+        misc3d::registration::TeaserSolver solver(config_.voxel_size_ * 3);
+        const auto pcd_s_ = pcd_s.SelectByIndex(matched_list.first);
+        const auto pcd_t_ = pcd_t.SelectByIndex(matched_list.second);
+        pose = solver.Solve(*pcd_s_, *pcd_t_);
+    }
+
+    if (pose.isIdentity(1e-8)) {
+        return std::make_tuple(true, pose, Eigen::Matrix6d::Identity());
+    }
+
+    const Eigen::Matrix6d info =
+        open3d::pipelines::registration::GetInformationMatrixFromPointClouds(
+            pcd_s, pcd_t, max_dis, pose);
+    if (info(5, 5) / std::min(pcd_s.points_.size(), pcd_t.points_.size()) <
+        0.3) {
+        return std::make_tuple(false, pose, Eigen::Matrix6d::Identity());
+    }
+    return std::make_tuple(true, pose, info);
+}
+
+std::tuple<bool, Eigen::Matrix4d, Eigen::Matrix6d>
+ReconstructionPipeline::ComputeOdometry(int s, int t,
+                                        const Eigen::Matrix4d& init_trans) {
+    open3d::geometry::RGBDImage& rgbd_s = rgbd_lists_[s];
+    open3d::geometry::RGBDImage& rgbd_t = rgbd_lists_[t];
+
+    const auto& cam = config_.camera_intrinsic_;
+    const double max_dis = config_.max_depth_diff_;
+    const auto pcd_s = open3d::geometry::PointCloud::CreateFromRGBDImage(
+        rgbd_s, cam, Eigen::Matrix4d::Identity(), true);
+    const auto pcd_t = open3d::geometry::PointCloud::CreateFromRGBDImage(
+        rgbd_t, cam, Eigen::Matrix4d::Identity(), true);
+
+    const auto pcd_down_s = pcd_s->RandomDownSample(0.2);
+    const auto pcd_down_t = pcd_t->RandomDownSample(0.2);
+
+    if (!init_trans.isIdentity(1e-8)) {
+        const Eigen::Matrix6d info = open3d::pipelines::registration::
+            GetInformationMatrixFromPointClouds(
+                *pcd_down_s, *pcd_down_t, config_.voxel_size_, init_trans);
+        return std::make_tuple(true, init_trans, info);
+    }
+
+    open3d::geometry::RGBDImage new_rgbd_s(intensity_img_lists_[s],
+                                           rgbd_s.depth_);
+    open3d::geometry::RGBDImage new_rgbd_t(intensity_img_lists_[t],
+                                           rgbd_t.depth_);
+
+    open3d::pipelines::odometry::OdometryOption option;
+    option.max_depth_diff_ = config_.max_depth_diff_;
+
+    return open3d::pipelines::odometry::ComputeRGBDOdometry(
+        new_rgbd_s, new_rgbd_t, config_.camera_intrinsic_, init_trans,
+        open3d::pipelines::odometry::RGBDOdometryJacobianFromHybridTerm(),
+        option);
+}
+
+Eigen::Matrix4d ReconstructionPipeline::PoseEstimation(int s, int t) {
+    Eigen::Matrix4d pose = Eigen::Matrix4d::Identity();
+
+    // Obtain ORB features from stored lists.
+    const auto& kp_src = std::get<0>(kp_des_lists_[s]);
+    const auto& kp_dst = std::get<0>(kp_des_lists_[t]);
+    const auto& des_src = std::get<1>(kp_des_lists_[s]);
+    const auto& des_dst = std::get<1>(kp_des_lists_[t]);
+
     if (kp_src.size() == 0 || kp_dst.size() == 0) {
         return pose;
     }
@@ -260,11 +658,18 @@ Eigen::Matrix4d ReconstructionPipeline::PoseEstimation(
     std::vector<cv::DMatch> matches;
     matcher.match(des_src, des_dst, matches);
 
+    // Number of correspondences must be greater than 3.
+    if (matches.size() < 3) {
+        return pose;
+    }
+
     std::vector<cv::Point2f> src_pts, dst_pts;
     for (auto& match : matches) {
         dst_pts.push_back(kp_dst[match.trainIdx].pt);
         src_pts.push_back(kp_src[match.queryIdx].pt);
     }
+
+    const size_t kp_size = src_pts.size();
 
     const double focal_input =
         (config_.camera_intrinsic_.intrinsic_matrix_(0, 0) +
@@ -274,45 +679,79 @@ Eigen::Matrix4d ReconstructionPipeline::PoseEstimation(
         cv::Point2d(config_.camera_intrinsic_.intrinsic_matrix_(0, 2),
                     config_.camera_intrinsic_.intrinsic_matrix_(1, 2));
 
-    const size_t kp_size = src_pts.size();
-    std::vector<cv::Point2i> src_pts_int, dst_pts_int;
-    src_pts_int.reserve(kp_size);
-    dst_pts_int.reserve(kp_size);
-    for (size_t i = 0; i < kp_size; i++) {
-        const auto& src_pt = src_pts[i];
-        const auto& dst_pt = dst_pts[i];
-        src_pts_int.push_back(cv::Point2i(src_pt.x + 0.5, src_pt.y + 0.5));
-        dst_pts_int.push_back(cv::Point2i(dst_pt.x + 0.5, dst_pt.y + 0.5));
-    }
-
-    std::vector<int> mask;
-    const cv::Mat em =
-        cv::findEssentialMat(src_pts_int, dst_pts_int, focal_input, pp,
-                             cv::RANSAC, 0.999, 1.0, 1000, mask);
-    if (mask.empty()) {
-        return pose;
-    }
-
     // Create 3D corresponding points.
     Eigen::Matrix3Xd src_pts_eigen(3, kp_size);
     Eigen::Matrix3Xd dst_pts_eigen(3, kp_size);
-    int count = 0;
-    for (size_t i = 0; i < kp_size; i++) {
-        if (mask[i] == 1) {
-            src_pts_eigen.col(count) =
-                GetXYZFromUVD(src_pts[i], src.depth_, pp.x, pp.y, focal_input);
-            dst_pts_eigen.col(count) =
-                GetXYZFromUVD(dst_pts[i], dst.depth_, pp.x, pp.y, focal_input);
-            count++;
-        }
+    const auto& src = rgbd_lists_[s];
+    const auto& dst = rgbd_lists_[t];
+    for (int i = 0; i < kp_size; i++) {
+        src_pts_eigen.col(i) =
+            GetXYZFromUVD(src_pts[i], src.depth_, pp.x, pp.y, focal_input);
+        dst_pts_eigen.col(i) =
+            GetXYZFromUVD(dst_pts[i], dst.depth_, pp.x, pp.y, focal_input);
     }
-    src_pts_eigen.conservativeResize(Eigen::NoChange, count);
-    dst_pts_eigen.conservativeResize(Eigen::NoChange, count);
 
     misc3d::registration::TeaserSolver teaser_solver(config_.max_depth_diff_);
     pose = teaser_solver.Solve(src_pts_eigen, dst_pts_eigen);
-
     return pose;
+}
+
+std::tuple<Eigen::Matrix4d, Eigen::Matrix6d>
+ReconstructionPipeline::MultiScaleICP(const open3d::geometry::PointCloud& src,
+                                      const open3d::geometry::PointCloud& dst,
+                                      const std::vector<float>& voxel_size,
+                                      const std::vector<int>& max_iter,
+                                      const Eigen::Matrix4d& init_trans) {
+    Eigen::Matrix4d current = init_trans;
+    Eigen::Matrix6d info;
+    const size_t num_scale = voxel_size.size();
+    for (size_t i = 0; i < num_scale; i++) {
+        const double max_dis = config_.voxel_size_ * 1.4;
+        const auto src_down = src.VoxelDownSample(voxel_size[i]);
+        const auto dst_down = dst.VoxelDownSample(voxel_size[i]);
+        const open3d::pipelines::registration::ICPConvergenceCriteria criteria(
+            1e-6, 1e-6, max_iter[i]);
+        open3d::pipelines::registration::RegistrationResult result;
+        if (config_.local_refine_method_ ==
+            PipelineConfig::LocalRefineMethod::Point2PointICP) {
+            result = open3d::pipelines::registration::RegistrationICP(
+                *src_down, *dst_down, max_dis, current,
+                open3d::pipelines::registration::
+                    TransformationEstimationPointToPoint(),
+                criteria);
+        } else if (config_.local_refine_method_ ==
+                   PipelineConfig::LocalRefineMethod::Point2PlaneICP) {
+            result = open3d::pipelines::registration::RegistrationICP(
+                *src_down, *dst_down, max_dis, current,
+                open3d::pipelines::registration::
+                    TransformationEstimationPointToPlane(),
+                criteria);
+        } else if (config_.local_refine_method_ ==
+                   PipelineConfig::LocalRefineMethod::ColoredICP) {
+            result = open3d::pipelines::registration::RegistrationColoredICP(
+                *src_down, *dst_down, max_dis, current,
+                open3d::pipelines::registration::
+                    TransformationEstimationForColoredICP(),
+                criteria);
+        } else if (config_.local_refine_method_ ==
+                   PipelineConfig::LocalRefineMethod::GeneralizedICP) {
+            result =
+                open3d::pipelines::registration::RegistrationGeneralizedICP(
+                    *src_down, *dst_down, max_dis, current,
+                    open3d::pipelines::registration::
+                        TransformationEstimationForGeneralizedICP(),
+                    criteria);
+        } else {
+            misc3d::LogError("Unknown local refine method.");
+        }
+        current = result.transformation_;
+        if (i == num_scale - 1) {
+            info = open3d::pipelines::registration::
+                GetInformationMatrixFromPointClouds(
+                    src, dst, voxel_size[i] * 1.4, current);
+        }
+    }
+    return std::make_tuple(current, info);
 }
 
 Eigen::Vector3d ReconstructionPipeline::GetXYZFromUVD(
@@ -327,10 +766,10 @@ Eigen::Vector3d ReconstructionPipeline::GetXYZFromUVD(
     if (u0 > 0 && u0 < width - 1 && v0 > 0 && v0 < height - 1) {
         const float up = u - u0;
         const float vp = v - v0;
-        float* d0 = depth.PointerAt<float>(v0, u0);
-        float* d1 = depth.PointerAt<float>(v0, u0 + 1);
-        float* d2 = depth.PointerAt<float>(v0 + 1, u0);
-        float* d3 = depth.PointerAt<float>(v0 + 1, u0 + 1);
+        float* d0 = depth.PointerAt<float>(u0, v0);
+        float* d1 = depth.PointerAt<float>(u0, v0 + 1);
+        float* d2 = depth.PointerAt<float>(u0 + 1, v0);
+        float* d3 = depth.PointerAt<float>(u0 + 1, v0 + 1);
         float d = (1.0 - vp) * ((*d1) * up + (*d0) * (1.0 - up)) +
                   vp * ((*d3) * up + (*d2) * (1.0 - up));
         return GetXYZFromUV(u, v, d, cx, cy, f);
@@ -355,11 +794,11 @@ Eigen::Vector3d ReconstructionPipeline::GetXYZFromUV(int u, int v, double depth,
 
 void ReconstructionPipeline::MakeFragments() {
     // Clear and create folder to save results.
-    const std::string pose_graph_path = config_.data_path_ + "fragments/";
-    if (open3d::utility::filesystem::DirectoryExists(pose_graph_path)) {
-        open3d::utility::filesystem::DeleteDirectory(pose_graph_path);
+    const std::string fragments_path = config_.data_path_ + "fragments/";
+    if (open3d::utility::filesystem::DirectoryExists(fragments_path)) {
+        open3d::utility::filesystem::DeleteDirectory(fragments_path);
     }
-    open3d::utility::filesystem::MakeDirectory(pose_graph_path);
+    open3d::utility::filesystem::MakeDirectory(fragments_path);
 
     misc3d::Timer timer;
     timer.Start();
@@ -371,8 +810,9 @@ void ReconstructionPipeline::MakeFragments() {
     }
 
     const size_t num = rgbd_lists_.size();
-    n_fragments_ = ceil(static_cast<float>(
-        num / config_.make_fragment_param_.n_frame_per_fragment));
+    n_fragments_ =
+        ceil(static_cast<float>(num) /
+             (float)config_.make_fragment_param_.n_frame_per_fragment);
     n_keyframes_per_n_frame_ =
         1.0 / config_.make_fragment_param_.keyframe_ratio;
     fragment_pose_graphs_.resize(n_fragments_);
@@ -388,8 +828,90 @@ void ReconstructionPipeline::MakeFragments() {
         thread.join();
     }
 
-    misc3d::LogInfo("End Make Fragment: {}.", timer.Stop());
+    time_cost_table_["MakeFragment"] = timer.Stop();
+    misc3d::LogInfo("End Make Fragment: {}.",
+                    time_cost_table_.at("MakeFragment"));
     SaveFragmentResults();
+}
+
+void ReconstructionPipeline::RegisterFragments() {
+    // Clear and create folder to save results.
+    const std::string scene_path = config_.data_path_ + "scene/";
+    if (open3d::utility::filesystem::DirectoryExists(scene_path)) {
+        open3d::utility::filesystem::DeleteDirectory(scene_path);
+    }
+    open3d::utility::filesystem::MakeDirectory(scene_path);
+
+    misc3d::Timer timer;
+    timer.Start();
+    misc3d::LogInfo("Start Register Fragments.");
+
+    if (!ReadFragmentData()) {
+        misc3d::LogInfo("End Register Fragments: {}.", timer.Stop());
+        return;
+    }
+
+    BuildPoseGraphForScene();
+
+    OptimizePoseGraph(
+        config_.voxel_size_ * 1.4,
+        config_.optimization_param_.preference_loop_closure_registration,
+        scene_pose_graph_);
+
+    // Perform refinement.
+    RefineRegistration();
+
+    // Save optimal results.
+    SaveSceneResults();
+
+    time_cost_table_["RegisterFragments"] = timer.Stop();
+    misc3d::LogInfo("End Register Fragments: {}",
+                    time_cost_table_.at("RegisterFragments"));
+}
+
+void ReconstructionPipeline::IntegrateScene() {
+    misc3d::Timer timer;
+    timer.Start();
+    misc3d::LogInfo("Start Integrate Scene.");
+
+    // Read raw RGBD data.
+    if (rgbd_lists_.size() == 0) {
+        if (!ReadRGBDData()) {
+            misc3d::LogInfo("End Integrate Scene: {}.", timer.Stop());
+            return;
+        }
+    }
+
+    // Read scene odometry.
+    if (scene_odometry_trajectory_.odomtry_list_.size() == 0) {
+        const std::string name = config_.data_path_ + "scene/trajectory.json";
+        if (!scene_odometry_trajectory_.ReadFromJsonFile(name)) {
+            misc3d::LogInfo("End Integrate Scene: {}.", timer.Stop());
+            return;
+        }
+    }
+
+    IntegrateRGBDTSDF();
+
+    time_cost_table_["IntegrateScene"] = timer.Stop();
+    misc3d::LogInfo("End Integrate Scene: {}",
+                    time_cost_table_.at("IntegrateScene"));
+}
+
+void ReconstructionPipeline::RunSystem() {
+    misc3d::LogInfo("Start Reconstruction Pipeline system.");
+    MakeFragments();
+    RegisterFragments();
+    IntegrateScene();
+
+    misc3d::LogInfo("End Reconstruction Pipeline system.");
+    misc3d::LogInfo("----------------------------------");
+    for (auto& item : time_cost_table_) {
+        std::string time;
+        time = std::to_string(int(item.second / 60)) + ":" +
+               std::to_string(int(item.second) % 60);
+        misc3d::LogInfo("{}: {}", item.first.c_str(), item.second);
+    }
 }
 
 }  // namespace reconstruction

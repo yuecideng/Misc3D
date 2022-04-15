@@ -73,12 +73,12 @@ void pmc_graph::read_graph(const string& filename) {
 }
 
 void pmc_graph::basic_stats(double sec) {
-    cout << "Reading time " << get_time() - sec << endl;
-    cout << "|V|: " << num_vertices() <<endl;
-    cout << "|E|: " << num_edges() <<endl;
-    cout << "p: " << density() <<endl;
-    cout << "d_max: " << get_max_degree() <<endl;
-    cout << "d_avg: " << get_avg_degree() <<endl;
+    // cout << "Reading time " << get_time() - sec << endl;
+    // cout << "|V|: " << num_vertices() <<endl;
+    // cout << "|E|: " << num_edges() <<endl;
+    // cout << "p: " << density() <<endl;
+    // cout << "d_max: " << get_max_degree() <<endl;
+    // cout << "d_avg: " << get_avg_degree() <<endl;
 }
 
 
@@ -282,7 +282,7 @@ void pmc_graph::create_adj() {
         for (long long j = vertices[i]; j < vertices[i + 1]; j++ )
             adj[i][edges[j]] = true;
     }
-    cout << "Created adjacency matrix in " << get_time() - sec << " seconds" <<endl;
+    // cout << "Created adjacency matrix in " << get_time() - sec << " seconds" <<endl;
 }
 
 
@@ -504,16 +504,16 @@ void pmc_graph::reduce_graph(
 
 
 void pmc_graph::bound_stats(int alg, int lb, pmc_graph& G) {
-    cout << "graph: " << fn <<endl;
-    cout << "alg: " << alg <<endl;
-    cout << "-------------------------------" <<endl;
-    cout << "Graph Stats for Max-Clique:" <<endl;
-    cout << "-------------------------------" <<endl;
-    cout << "|V|: " << num_vertices() <<endl;
-    cout << "|E|: " << num_edges() <<endl;
-    cout << "d_max: " << get_max_degree() <<endl;
-    cout << "d_avg: " << get_avg_degree() <<endl;
-    cout << "p: " << density() <<endl;
+    // cout << "graph: " << fn <<endl;
+    // cout << "alg: " << alg <<endl;
+    // cout << "-------------------------------" <<endl;
+    // cout << "Graph Stats for Max-Clique:" <<endl;
+    // cout << "-------------------------------" <<endl;
+    // cout << "|V|: " << num_vertices() <<endl;
+    // cout << "|E|: " << num_edges() <<endl;
+    // cout << "d_max: " << get_max_degree() <<endl;
+    // cout << "d_avg: " << get_avg_degree() <<endl;
+    // cout << "p: " << density() <<endl;
 }
 
 
