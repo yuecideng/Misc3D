@@ -7,14 +7,21 @@ namespace misc3d {
 
 namespace reconstruction {
 
-void pybind_reconstruction(py::module& m) {
+void pybind_reconstruction(py::module &m) {
     py::class_<PipelineConfig> config(m, "PipelineConfig");
     config.def(py::init<>());
 
+    py::enum_<PipelineConfig::DescriptorType>(config, "DescriptorType")
+        .value("ORB", PipelineConfig::DescriptorType::ORB)
+        .value("SIFT", PipelineConfig::DescriptorType::SIFT)
+        .export_values();
+
     py::class_<PipelineConfig::MakeFragmentParam>(config, "MakeFragmentParam")
         .def(py::init<>())
-        .def_readwrite("orb_feature_num",
-                       &PipelineConfig::MakeFragmentParam::orb_feature_num)
+        .def_readwrite("descriptor_type",
+                       &PipelineConfig::MakeFragmentParam::descriptor_type)
+        .def_readwrite("feature_num",
+                       &PipelineConfig::MakeFragmentParam::feature_num)
         .def_readwrite("n_frame_per_fragment",
                        &PipelineConfig::MakeFragmentParam::n_frame_per_fragment)
         .def_readwrite("keyframe_ratio",
@@ -65,7 +72,9 @@ void pybind_reconstruction(py::module& m) {
                          &PipelineConfig::optimization_param_);
 
     py::class_<ReconstructionPipeline>(m, "ReconstructionPipeline")
-        .def(py::init<const PipelineConfig&>())
+        .def(py::init<const PipelineConfig &>())
+        .def(py::init<const std::string &>())
+        .def("get_data_path", &ReconstructionPipeline::GetDataPath)
         .def("make_fragments", &ReconstructionPipeline::MakeFragments)
         .def("register_fragments", &ReconstructionPipeline::RegisterFragments)
         .def("integrate_scene", &ReconstructionPipeline::IntegrateScene)

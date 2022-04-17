@@ -11,8 +11,14 @@ public:
     virtual ~PipelineConfig() {}
 
 public:
+    enum class DescriptorType {
+        ORB = 0,
+        SIFT = 1
+    };
+    
     struct MakeFragmentParam {
-        int orb_feature_num;
+        DescriptorType descriptor_type;
+        int feature_num;
         int n_frame_per_fragment;
         float keyframe_ratio;
     };

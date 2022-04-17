@@ -150,7 +150,7 @@ void pmcx_maxclique_basic::branch(
                         print_mc_info(C,sec);
                         if (mc >= param_ub) {
                             not_reached_ub = false;
-                            cout << "[pmc: upper bound reached]  omega = " << mc <<endl;
+                            // cout << "[pmc: upper bound reached]  omega = " << mc <<endl;
                         }
                     }
 
@@ -306,7 +306,7 @@ void pmcx_maxclique_basic::branch_dense(
                         print_mc_info(C,sec);
                         if (mc >= param_ub) {
                             not_reached_ub = false;
-                            cout << "[pmc: upper bound reached]  omega = " << mc <<endl;
+                            // cout << "[pmc: upper bound reached]  omega = " << mc <<endl;
                         }
                     }
 

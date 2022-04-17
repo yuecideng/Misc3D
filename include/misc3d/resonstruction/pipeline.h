@@ -1,16 +1,16 @@
 #pragma once
 
-#include <memory>
 #include <map>
+#include <memory>
 
 #include <misc3d/resonstruction/pipeline_config.h>
 #include <open3d/geometry/PointCloud.h>
 #include <open3d/geometry/RGBDImage.h>
+#include <open3d/geometry/TriangleMesh.h>
 #include <open3d/pipelines/registration/Feature.h>
 #include <open3d/pipelines/registration/PoseGraph.h>
-#include <open3d/geometry/TriangleMesh.h>
-#include <Eigen/Dense>
 #include <opencv2/opencv.hpp>
+
 
 namespace misc3d {
 namespace reconstruction {
@@ -21,8 +21,8 @@ public:
     ~OdometryTrajectory() {}
 
 public:
-    bool WriteToJsonFile(const std::string &file_name);
-    bool ReadFromJsonFile(const std::string &file_name);
+    bool WriteToJsonFile(const std::string& file_name);
+    bool ReadFromJsonFile(const std::string& file_name);
 
 public:
     std::vector<Eigen::Matrix4d> odomtry_list_;
@@ -49,21 +49,67 @@ public:
 
 class ReconstructionPipeline {
 public:
+    /**
+     * @brief Construct a new Reconstruction Pipeline given config.
+     *
+     * @param config
+     */
     explicit ReconstructionPipeline(const PipelineConfig& config);
+
+    /**
+     * @brief Construct a new Reconstruction Pipeline from file.
+     *
+     * @param config_file
+     */
+    ReconstructionPipeline(const std::string& config_file);
+
     virtual ~ReconstructionPipeline() {}
 
+    /**
+     * @brief Make fragments from raw RGBD images.
+     * The output will be the fragment point clouds and fragment pose graph.
+     *
+     */
     void MakeFragments();
 
+    /**
+     * @brief Register fragments and compute global odometry.
+     * The output will be the global odometry trajectory.
+     *
+     */
     void RegisterFragments();
 
+    /**
+     * @brief Integrate RGBD images with global odometry.
+     *  The output will be the integrated triangle mesh of scene.
+     */
     void IntegrateScene();
 
+    /**
+     * @brief Run the whole pipeline.
+     *
+     */
     void RunSystem();
 
+    /**
+     * @brief Get the Data Path 
+     * 
+     * @return std::string 
+     */
+    std::string GetDataPath() const { return config_.data_path_; }
+
 private:
+    void CheckConfig();
+
     bool ReadRGBDData();
 
     bool ReadFragmentData();
+
+    void ReadJsonPipelineConfig(const std::string& file_name);
+
+    void ComputeKeypointsAndDescriptors(const cv::Mat& img,
+                                        std::vector<cv::KeyPoint>& kp,
+                                        cv::Mat& des);
 
     void BuildSingleFragment(int fragment_id);
 
@@ -128,7 +174,6 @@ private:
     std::vector<open3d::geometry::PointCloud> fragment_point_clouds_;
     int n_fragments_;
     int n_keyframes_per_n_frame_;
-    cv::Ptr<cv::ORB> orb_detector_;
 
     // Member variables for register fragments.
     std::vector<open3d::geometry::PointCloud> preprocessed_fragment_lists_;

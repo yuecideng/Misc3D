@@ -23,6 +23,17 @@
 #include <open3d/utility/FileSystem.h>
 #include <opencv2/opencv.hpp>
 
+namespace {
+void CVMatToEigenMat(const cv::Mat& src, Eigen::MatrixXd& dst) {
+    dst.resize(src.cols, src.rows);
+    for (int i = 0; i < src.rows; ++i) {
+        for (int j = 0; j < src.cols; ++j) {
+            dst(j, i) = src.at<double>(i, j);
+        }
+    }
+}
+}  // namespace
+
 namespace misc3d {
 namespace reconstruction {
 
@@ -81,7 +92,7 @@ PipelineConfig::PipelineConfig() {
     max_depth_diff_ = 0.05;
     voxel_size_ = 0.01;
     integration_voxel_size_ = 0.005;
-    make_fragment_param_ = {100, 40, 0.2};
+    make_fragment_param_ = {PipelineConfig::DescriptorType::ORB, 100, 40, 0.2};
     local_refine_method_ = LocalRefineMethod::ColoredICP;
     global_registration_method_ = GlobalRegistrationMethod::TeaserPlusPlus;
     optimization_param_ = {0.1, 5.0};
@@ -89,10 +100,22 @@ PipelineConfig::PipelineConfig() {
 
 ReconstructionPipeline::ReconstructionPipeline(const PipelineConfig& config)
     : config_(config) {
-    // Init ORB detector.
-    orb_detector_ =
-        cv::ORB::create(config_.make_fragment_param_.orb_feature_num);
+    CheckConfig();
+}
 
+ReconstructionPipeline::ReconstructionPipeline(const std::string& file) {
+    if (file.substr(file.find_last_of(".") + 1) != "json") {
+        misc3d::LogError(
+            "Invalid file format, only support json format configuration "
+            "file.");
+    }
+
+    ReadJsonPipelineConfig(file);
+    CheckConfig();
+}
+
+void ReconstructionPipeline::CheckConfig() {
+    // Unify data path.
     if (config_.data_path_[config_.data_path_.size() - 1] != '/') {
         config_.data_path_ += "/";
     }
@@ -101,6 +124,117 @@ ReconstructionPipeline::ReconstructionPipeline(const PipelineConfig& config)
     if (config_.camera_intrinsic_.width_ <= 0 ||
         config_.camera_intrinsic_.height_ <= 0) {
         misc3d::LogError("Camera intrinsics must be valid.");
+    }
+}
+
+void ReconstructionPipeline::ReadJsonPipelineConfig(
+    const std::string& file_name) {
+    try {
+        std::ifstream file(file_name);
+        json j = json::parse(file);
+
+        config_.data_path_ = j["data_path"];
+
+        // Load camera intrinsics.
+        config_.depth_scale_ = j["camera"]["depth_scale"];
+        const int width = j["camera"]["width"];
+        const int height = j["camera"]["height"];
+        const double fx = j["camera"]["fx"];
+        const double fy = j["camera"]["fy"];
+        const double cx = j["camera"]["cx"];
+        const double cy = j["camera"]["cy"];
+        config_.camera_intrinsic_ = open3d::camera::PinholeCameraIntrinsic(
+            width, height, fx, fy, cx, cy);
+
+        if (j.contains("make_fragments")) {
+            if (j["make_fragments"].contains("descriptor_type")) {
+                const std::string descriptor_type =
+                    j["make_fragments"]["descriptor_type"];
+                if (descriptor_type == "orb") {
+                    config_.make_fragment_param_.descriptor_type =
+                        PipelineConfig::DescriptorType::ORB;
+                } else if (descriptor_type == "sift") {
+                    config_.make_fragment_param_.descriptor_type =
+                        PipelineConfig::DescriptorType::SIFT;
+                } else {
+                    misc3d::LogError("Invalid descriptor type: {}",
+                                     descriptor_type.c_str());
+                }
+            }
+
+            if (j["make_fragments"].contains("feature_num")) {
+                config_.make_fragment_param_.feature_num =
+                    j["make_fragments"]["feature_num"];
+            } else if (j["make_fragments"].contains("n_frame_per_fragment")) {
+                config_.make_fragment_param_.n_frame_per_fragment =
+                    j["make_fragments"]["n_frame_per_fragment"];
+            } else if (j["make_fragments"].contains("keyframe_ratio")) {
+                config_.make_fragment_param_.keyframe_ratio =
+                    j["make_fragments"]["keyframe_ratio"];
+            }
+        }
+
+        if (j.contains("local_refine")) {
+            if (j["local_refine"] == "point2point") {
+                config_.local_refine_method_ =
+                    PipelineConfig::LocalRefineMethod::Point2PointICP;
+            } else if (j["local_refine"] == "point2plane") {
+                config_.local_refine_method_ =
+                    PipelineConfig::LocalRefineMethod::Point2PlaneICP;
+            } else if (j["local_refine"] == "color") {
+                config_.local_refine_method_ =
+                    PipelineConfig::LocalRefineMethod::ColoredICP;
+            } else if (j["local_refine"] == "generalized") {
+                config_.local_refine_method_ =
+                    PipelineConfig::LocalRefineMethod::GeneralizedICP;
+            } else {
+                misc3d::LogError("Invalid local refine method.");
+            }
+        }
+
+        if (j.contains("global_registration")) {
+            if (j["global_registration"] == "ransac") {
+                config_.global_registration_method_ =
+                    PipelineConfig::GlobalRegistrationMethod::Ransac;
+            } else if (j["global_registration"] == "teaser") {
+                config_.global_registration_method_ =
+                    PipelineConfig::GlobalRegistrationMethod::TeaserPlusPlus;
+            } else {
+                misc3d::LogError("Invalid global registration method.");
+            }
+        }
+
+        if (j.contains("optimization_param")) {
+            if (j["optimization_param"].contains(
+                    "preference_loop_closure_odometry")) {
+                config_.optimization_param_.preference_loop_closure_odometry =
+                    j["optimization_param"]["preference_loop_closure_odometry"];
+            } else if (j["optimization_param"].contains(
+                           "preference_loop_closure_registration")) {
+                config_.optimization_param_
+                    .preference_loop_closure_registration =
+                    j["optimization_param"]
+                     ["preference_loop_closure_registration"];
+            }
+        }
+
+        if (j.contains("voxel_size")) {
+            config_.voxel_size_ = j["voxel_size"];
+        }
+
+        if (j.contains("max_depth")) {
+            config_.max_depth_ = j["max_depth"];
+        }
+
+        if (j.contains("max_depth_diff")) {
+            config_.max_depth_diff_ = j["max_depth_diff"];
+        }
+
+        if (j.contains("integration_voxel_size")) {
+            config_.integration_voxel_size_ = j["integration_voxel_size"];
+        }
+    } catch (json::other_error& e) {
+        misc3d::LogError("Failed to read json file.");
     }
 }
 
@@ -139,6 +273,10 @@ bool ReconstructionPipeline::ReadRGBDData() {
     kp_des_lists_.resize(color_files.size());
     const int& width = config_.camera_intrinsic_.width_;
     const int& heigth = config_.camera_intrinsic_.height_;
+
+    // TODO: The 2D image keypoints and descriptors can be extended into
+    // multiple methods selection scheme (SIFT, SURF, ORB, etc.).
+
 #pragma omp parallel for schedule(static)
     for (int i = 0; i < color_files.size(); ++i) {
         // Read color image and depth image.
@@ -158,11 +296,28 @@ bool ReconstructionPipeline::ReadRGBDData() {
         cv::cvtColor(cv_img, cv_img, cv::COLOR_RGB2BGR);
         std::vector<cv::KeyPoint> kp;
         cv::Mat des;
-        orb_detector_->detectAndCompute(cv_img, cv::Mat(), kp, des);
+        ComputeKeypointsAndDescriptors(cv_img, kp, des);
         kp_des_lists_[i] = std::make_pair(kp, des);
     }
 
     return true;
+}
+
+void ReconstructionPipeline::ComputeKeypointsAndDescriptors(
+    const cv::Mat& img, std::vector<cv::KeyPoint>& kp, cv::Mat& des) {
+    if (config_.make_fragment_param_.descriptor_type ==
+        PipelineConfig::DescriptorType::ORB) {
+        cv::Ptr<cv::ORB> orb_detector =
+            cv::ORB::create(config_.make_fragment_param_.feature_num);
+        orb_detector->detectAndCompute(img, cv::Mat(), kp, des);
+    } else if (config_.make_fragment_param_.descriptor_type ==
+               PipelineConfig::DescriptorType::SIFT) {
+        cv::Ptr<cv::SIFT> sift_detector =
+            cv::SIFT::create(config_.make_fragment_param_.feature_num);
+        sift_detector->detectAndCompute(img, cv::Mat(), kp, des);
+    } else {
+        misc3d::LogError("Invalid descriptor type.");
+    }
 }
 
 bool ReconstructionPipeline::ReadFragmentData() {
@@ -646,27 +801,47 @@ Eigen::Matrix4d ReconstructionPipeline::PoseEstimation(int s, int t) {
     // Obtain ORB features from stored lists.
     const auto& kp_src = std::get<0>(kp_des_lists_[s]);
     const auto& kp_dst = std::get<0>(kp_des_lists_[t]);
-    const auto& des_src = std::get<1>(kp_des_lists_[s]);
-    const auto& des_dst = std::get<1>(kp_des_lists_[t]);
+    auto& des_src = std::get<1>(kp_des_lists_[s]);
+    auto& des_dst = std::get<1>(kp_des_lists_[t]);
 
     if (kp_src.size() == 0 || kp_dst.size() == 0) {
         return pose;
     }
 
     // Search correspondences.
-    cv::BFMatcher matcher(cv::NORM_HAMMING, true);
-    std::vector<cv::DMatch> matches;
-    matcher.match(des_src, des_dst, matches);
+    std::vector<cv::Point2f> src_pts, dst_pts;
+    if (config_.make_fragment_param_.descriptor_type ==
+        PipelineConfig::DescriptorType::ORB) {
+        cv::BFMatcher matcher(cv::NORM_HAMMING, true);
+        std::vector<cv::DMatch> matches;
+        matcher.match(des_src, des_dst, matches);
 
-    // Number of correspondences must be greater than 3.
-    if (matches.size() < 3) {
-        return pose;
+        for (auto& match : matches) {
+            dst_pts.push_back(kp_dst[match.trainIdx].pt);
+            src_pts.push_back(kp_src[match.queryIdx].pt);
+        }
+    } else if (config_.make_fragment_param_.descriptor_type ==
+               PipelineConfig::DescriptorType::SIFT) {
+        // Convert mat to eigen matrix.
+        Eigen::MatrixXd des_src_eigen, des_dst_eigen;
+        CVMatToEigenMat(des_src, des_src_eigen);
+        CVMatToEigenMat(des_dst, des_dst_eigen);
+
+        misc3d::registration::ANNMatcher matcher(
+            misc3d::registration::MatchMethod::ANNOY);
+
+        const auto matches = matcher.Match(des_src_eigen, des_dst_eigen);
+        const auto& index1 = matches.first;
+        const auto& index2 = matches.second;
+        for (size_t i = 0; i < index1.size(); i++) {
+            src_pts.push_back(kp_src[index1[i]].pt);
+            dst_pts.push_back(kp_dst[index2[i]].pt);
+        }
     }
 
-    std::vector<cv::Point2f> src_pts, dst_pts;
-    for (auto& match : matches) {
-        dst_pts.push_back(kp_dst[match.trainIdx].pt);
-        src_pts.push_back(kp_src[match.queryIdx].pt);
+    // Number of correspondences must be greater than 3.
+    if (dst_pts.size() < 3) {
+        return pose;
     }
 
     const size_t kp_size = src_pts.size();
@@ -910,7 +1085,7 @@ void ReconstructionPipeline::RunSystem() {
         std::string time;
         time = std::to_string(int(item.second / 60)) + ":" +
                std::to_string(int(item.second) % 60);
-        misc3d::LogInfo("{}: {}", item.first.c_str(), item.second);
+        misc3d::LogInfo("{}: {}", item.first.c_str(), time);
     }
 }
 
