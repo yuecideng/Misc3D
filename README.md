@@ -28,7 +28,9 @@ Core modules:
 - `segmentation`: 
     1. Proximity extraction in scalable implementation with different vriants, including distance, and normal angle.
     2. Plane segementation using iterative ransac plane fitting.  
-- `vis`: Helper tools for drawing 6D pose, painted point cloud, triangle mesh and etc.
+
+- `reconstruction`
+    1. RGBD dense reconstruction, an improved version of Open3D [legacy reconstruction system](http://www.open3d.org/docs/release/tutorial/reconstruction_system/index.html). See [toturial](app/reconstruction/README.md) for more details.
 
 ## How to build 
 ### Requirements
@@ -184,13 +186,19 @@ m3d.set_verbosity_level(m3d.VerbosityLevel.Error)
 
 ### C++
 You can run c++ examples after finish build the library, which are inside `/path/to/install/misc3d/bin`. The source code of examples are in `examples/cpp`.
-Some results are as follow:
+## Features Visualization
 <p float="left">
   <img src="images/farthest.png" width="250" height=200/>
   <img src="images/ransac_and_edges.png" width="250" height=200/>
   <img src="images/segmentation.png" width="300" height=200/>
   <img src="images/registration.png" width="400" height=250/>
   <img src="images/ppf.png" width="400" height=250/> 
+</p>
+
+### RGBD Dense Reconstruction
+<p float="left">
+  <img src="images/rgbd.png" width="800" height=210/>
+  <img src="images/integrated.png" width="480" height=300/>
 </p>
 
 ## How to contribute

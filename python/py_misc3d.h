@@ -19,7 +19,6 @@ namespace preprocessing {
 void pybind_preprocessing(py::module &m);
 }
 
-
 namespace segmentation {
 void pybind_segmentation(py::module &m);
 }
@@ -35,6 +34,12 @@ void pybind_registration(py::module &m);
 namespace pose_estimation {
 void pybind_pose_estimation(py::module &m);
 }
+
+#ifdef ENABLE_RECONSTRUCTION
+namespace reconstruction {
+void pybind_reconstruction(py::module &m);
+}
+#endif
 
 namespace vis {
 void pybind_vis(py::module &m);

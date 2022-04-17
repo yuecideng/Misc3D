@@ -39,3 +39,7 @@ output/
 
 __pycache__/
 *.pyc
+
+# App/Reconstruction folder
+fragments/
+scene/

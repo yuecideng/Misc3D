@@ -17,41 +17,47 @@
  ============================================================================
  */
 
-#include "pmc/pmc_graph.h"
 #include <algorithm>
+#include "pmc/pmc_graph.h"
+
 
 using namespace std;
 using namespace pmc;
 
-int pmc_graph::initial_pruning(pmc_graph& G, int* &pruned, int lb) {
+int pmc_graph::initial_pruning(pmc_graph &G, int *&pruned, int lb) {
     int lb_idx = 0;
-    for (int i = G.num_vertices()-1; i >= 0; i--) {
-        if (kcore[kcore_order[i]] == lb)  lb_idx = i;
-        if (kcore[kcore_order[i]] <= lb)  pruned[kcore_order[i]] = 1;
+    for (int i = G.num_vertices() - 1; i >= 0; i--) {
+        if (kcore[kcore_order[i]] == lb)
+            lb_idx = i;
+        if (kcore[kcore_order[i]] <= lb)
+            pruned[kcore_order[i]] = 1;
     }
 
     double sec = get_time();
-    cout << "[pmc: initial k-core pruning]  before pruning: |V| = " << G.num_vertices();
-    cout << ", |E| = " << G.num_edges() <<endl;
+    // cout << "[pmc: initial k-core pruning]  before pruning: |V| = " <<
+    // G.num_vertices(); cout << ", |E| = " << G.num_edges() <<endl;
     G.reduce_graph(pruned);
-    cout << "[pmc: initial k-core pruning]  after pruning:  |V| = " << G.num_vertices() - lb_idx;
-    cout << ", |E| = " << G.num_edges() <<endl;
-    cout << "[pmc]  initial pruning took " << get_time()-sec << " sec" <<endl;
+    // cout << "[pmc: initial k-core pruning]  after pruning:  |V| = " <<
+    // G.num_vertices() - lb_idx; cout << ", |E| = " << G.num_edges() <<endl;
+    // cout << "[pmc]  initial pruning took " << get_time()-sec << " sec"
+    // <<endl;
 
     G.update_degrees();
-    G.degree_bucket_sort(true); // largest to smallest degree
+    G.degree_bucket_sort(true);  // largest to smallest degree
 
     return lb_idx;
 }
 
-
-int pmc_graph::initial_pruning(pmc_graph& G, int* &pruned, int lb, vector<vector<bool>> &adj) {
+int pmc_graph::initial_pruning(pmc_graph &G, int *&pruned, int lb,
+                               vector<vector<bool>> &adj) {
     int lb_idx = 0;
-    for (int i = G.num_vertices()-1; i >= 0; i--) {
-        if (kcore[kcore_order[i]] == lb)  lb_idx = i;
+    for (int i = G.num_vertices() - 1; i >= 0; i--) {
+        if (kcore[kcore_order[i]] == lb)
+            lb_idx = i;
         if (kcore[kcore_order[i]] <= lb) {
             pruned[kcore_order[i]] = 1;
-            for (long long j = vertices[kcore_order[i]]; j < vertices[kcore_order[i] + 1]; j++) {
+            for (long long j = vertices[kcore_order[i]];
+                 j < vertices[kcore_order[i] + 1]; j++) {
                 adj[kcore_order[i]][edges[j]] = false;
                 adj[edges[j]][kcore_order[i]] = false;
             }
@@ -59,10 +65,12 @@ int pmc_graph::initial_pruning(pmc_graph& G, int* &pruned, int lb, vector<vector
     }
 
     double sec = get_time();
-    cout << "[pmc: initial k-core pruning]  before pruning: |V| = " << G.num_vertices() << ", |E| = " << G.num_edges() <<endl;
+    // cout << "[pmc: initial k-core pruning]  before pruning: |V| = " <<
+    // G.num_vertices() << ", |E| = " << G.num_edges() <<endl;
     G.reduce_graph(pruned);
-    cout << "[pmc: initial k-core pruning]  after pruning:  |V| = " << G.num_vertices() - lb_idx << ", |E| = " << G.num_edges() <<endl;
-    cout << "[pmc]  initial pruning took " << get_time()-sec << " sec" <<endl;
+    // cout << "[pmc: initial k-core pruning]  after pruning:  |V| = " <<
+    // G.num_vertices() - lb_idx << ", |E| = " << G.num_edges() <<endl; cout <<
+    // "[pmc]  initial pruning took " << get_time()-sec << " sec" <<endl;
 
     G.update_degrees();
     G.degree_bucket_sort(true);
@@ -70,11 +78,10 @@ int pmc_graph::initial_pruning(pmc_graph& G, int* &pruned, int lb, vector<vector
     return lb_idx;
 }
 
-
-void pmc_graph::order_vertices(vector<Vertex> &V, pmc_graph &G,
-        int &lb_idx, int &lb, string vertex_ordering, bool decr_order) {
-
-    srand (time(NULL));
+void pmc_graph::order_vertices(vector<Vertex> &V, pmc_graph &G, int &lb_idx,
+                               int &lb, string vertex_ordering,
+                               bool decr_order) {
+    srand(time(NULL));
     int u = 0, val = 0;
     for (int k = lb_idx; k < G.num_vertices(); k++) {
         if (degree[kcore_order[k]] >= lb - 1) {
@@ -101,9 +108,9 @@ void pmc_graph::order_vertices(vector<Vertex> &V, pmc_graph &G,
                 for (long long j = vertices[u]; j < vertices[u + 1]; j++) {
                     val = val + kcore[edges[j]];
                 }
-            }
-            else  val = vertices[u + 1] - vertices[u];
-            V.push_back(Vertex(u,val));
+            } else
+                val = vertices[u + 1] - vertices[u];
+            V.push_back(Vertex(u, val));
         }
     }
     if (decr_order)
@@ -112,34 +119,30 @@ void pmc_graph::order_vertices(vector<Vertex> &V, pmc_graph &G,
         std::sort(V.begin(), V.end(), incr_bound);
 }
 
-
 /**
  * Reduce the graph by removing the pruned vertices
- *   + Systematically speeds algorithm up by reducing the neighbors as more vertices are searched
+ *   + Systematically speeds algorithm up by reducing the neighbors as more
+ * vertices are searched
  *
- * The algorithm below is for parallel maximum clique finders and has the following features:
+ * The algorithm below is for parallel maximum clique finders and has the
+ * following features:
  *   + Thread-safe, since local copy of vertices/edges are passed in..
- *   + Pruned is a shared variable, but it is safe, since only reads/writes can occur, no deletion
+ *   + Pruned is a shared variable, but it is safe, since only reads/writes can
+ * occur, no deletion
  */
-void pmc_graph::reduce_graph(
-        vector<long long>& vs,
-        vector<int>& es,
-        int* &pruned,
-        pmc_graph& G,
-        int id,
-        int& mc) {
-
+void pmc_graph::reduce_graph(vector<long long> &vs, vector<int> &es,
+                             int *&pruned, pmc_graph &G, int id, int &mc) {
     int num_vs = vs.size();
 
-    vector<long long> V(num_vs,0);
+    vector<long long> V(num_vs, 0);
     vector<int> E;
     E.reserve(es.size());
 
     int start = 0;
     for (int i = 0; i < num_vs - 1; i++) {
         start = E.size();
-        if (!pruned[i]) { //skip these V_local...
-            for (long long j = vs[i]; j < vs[i + 1]; j++ ) {
+        if (!pruned[i]) {  // skip these V_local...
+            for (long long j = vs[i]; j < vs[i + 1]; j++) {
                 if (!pruned[es[j]])
                     E.push_back(es[j]);
             }
@@ -150,33 +153,35 @@ void pmc_graph::reduce_graph(
     vs = V;
     es = E;
 
-    // compute k-cores and share bounds: ensure operation completed by single process
-    #pragma omp single nowait
+// compute k-cores and share bounds: ensure operation completed by single
+// process
+#pragma omp single nowait
     {
-        cout << ">>> [pmc: thread " << omp_get_thread_num() + 1 << "]" <<endl;
-        G.induced_cores_ordering(vs,es,pruned);
+        // cout << ">>> [pmc: thread " << omp_get_thread_num() + 1 << "]" << endl;
+        G.induced_cores_ordering(vs, es, pruned);
     }
     V.clear();
     E.clear();
 }
 
-
 void pmc_graph::print_info(vector<int> &C_max, double &sec) {
-    cout << "*** [pmc: thread " << omp_get_thread_num() + 1;
-    cout << "]   current max clique = " << C_max.size();
-    cout << ",  time = " << get_time() - sec << " sec" <<endl;
+    // cout << "*** [pmc: thread " << omp_get_thread_num() + 1;
+    // cout << "]   current max clique = " << C_max.size();
+    // cout << ",  time = " << get_time() - sec << " sec" << endl;
 }
-
 
 void pmc_graph::print_break() {
-    cout << "-----------------------------------------------------------------------" <<endl;
+    // cout << "------------------------------------------------------------------"
+    //         "-----"
+        //  << endl;
 }
 
-bool pmc_graph::time_left(vector<int> &C_max, double sec, double time_limit, bool &time_expired_msg) {
+bool pmc_graph::time_left(vector<int> &C_max, double sec, double time_limit,
+                          bool &time_expired_msg) {
     if ((get_time() - sec) > time_limit) {
         if (time_expired_msg) {
-            cout << "\n### Time limit expired, terminating search. ###" <<endl;
-            cout << "Size: " << C_max.size() <<endl;
+            cout << "\n### Time limit expired, terminating search. ###" << endl;
+            cout << "Size: " << C_max.size() << endl;
             print_max_clique(C_max);
             time_expired_msg = false;
         }
@@ -185,17 +190,13 @@ bool pmc_graph::time_left(vector<int> &C_max, double sec, double time_limit, boo
     return true;
 }
 
-void pmc_graph::graph_stats(pmc_graph& G, int& mc, int id, double &sec) {
-    cout << "[pmc: bounds updated - thread " << omp_get_thread_num() + 1 << "]  ";
-    cout << "time = " << get_time() - sec << " sec, ";
-    cout << "|V| = " << (G.num_vertices() - id);
-    cout << " (" << id << " / " << G.num_vertices();
-    cout << "), |E| = " << G.num_edges();
-    cout << ", w = " << mc;
-    cout << ", p = " << G.density();
-    cout << ", d_min = " << G.get_min_degree();
-    cout << ", d_avg = " << G.get_avg_degree();
-    cout << ", d_max = " << G.get_max_degree();
-    cout << ", k_max = " << G.get_max_core();
-    cout <<endl;
+void pmc_graph::graph_stats(pmc_graph &G, int &mc, int id, double &sec) {
+    // cout << "[pmc: bounds updated - thread " << omp_get_thread_num() + 1 <<
+    // "]  "; cout << "time = " << get_time() - sec << " sec, "; cout << "|V| =
+    // " << (G.num_vertices() - id); cout << " (" << id << " / " <<
+    // G.num_vertices(); cout << "), |E| = " << G.num_edges(); cout << ", w = "
+    // << mc; cout << ", p = " << G.density(); cout << ", d_min = " <<
+    // G.get_min_degree(); cout << ", d_avg = " << G.get_avg_degree(); cout <<
+    // ", d_max = " << G.get_max_degree(); cout << ", k_max = " <<
+    // G.get_max_core(); cout <<endl;
 }

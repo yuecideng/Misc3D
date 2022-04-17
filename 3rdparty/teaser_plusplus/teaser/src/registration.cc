@@ -468,10 +468,10 @@ teaser::RobustRegistrationSolver::solve(const Eigen::Matrix<double, 3, Eigen::Dy
     max_clique_ = clique_solver.findMaxClique(inlier_graph_);
     std::sort(max_clique_.begin(), max_clique_.end());
     TEASER_DEBUG_INFO_MSG("Max Clique of scale estimation inliers: ");
-#ifndef NDEBUG
-    std::copy(max_clique_.begin(), max_clique_.end(), std::ostream_iterator<int>(std::cout, " "));
-    std::cout << std::endl;
-#endif
+// #ifndef NDEBUG
+//     std::copy(max_clique_.begin(), max_clique_.end(), std::ostream_iterator<int>(std::cout, " "));
+//     std::cout << std::endl;
+// #endif
     // Abort if max clique size <= 1
     if (max_clique_.size() <= 1) {
       TEASER_DEBUG_INFO_MSG("Clique size too small. Abort.");

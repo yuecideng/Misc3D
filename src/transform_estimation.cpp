@@ -24,31 +24,51 @@ bool CheckValid(const open3d::geometry::PointCloud& src,
     return true;
 }
 
+bool CheckValid(const Eigen::Matrix3Xd& src, const Eigen::Matrix3Xd& dst) {
+    if (src.cols() < 3 || dst.cols() < 3) {
+        misc3d::LogError("The number of points pair is less than 3.");
+        return false;
+    } else if (src.cols() != dst.cols()) {
+        misc3d::LogError("The number of points pair is not equal.");
+        return false;
+    }
+    return true;
+}
+
 Eigen::Matrix4d TransformationSolver::Solve(
     const open3d::geometry::PointCloud& src,
     const open3d::geometry::PointCloud& dst) const {
     return Eigen::Matrix4d::Identity();
 }
 
+Eigen::Matrix4d TransformationSolver::Solve(const Eigen::Matrix3Xd& src,
+                                            const Eigen::Matrix3Xd& dst) const {
+    return Eigen::Matrix4d::Identity();
+}
+
 Eigen::Matrix4d SVDSolver::Solve(
     const open3d::geometry::PointCloud& src,
     const open3d::geometry::PointCloud& dst) const {
-    Eigen::Matrix4d res = Eigen::Matrix4d::Identity();
-
-    if (!CheckValid(src, dst)) {
-        return res;
-    }
-
     Eigen::Matrix3Xd src_mat, dst_mat;
     VectorToEigenMatrix<double>(src.points_, src_mat);
     VectorToEigenMatrix<double>(dst.points_, dst_mat);
 
-    const int num = src_mat.cols();
-    const Eigen::Vector3d src_mean = src_mat.rowwise().mean();
-    const Eigen::Vector3d dst_mean = dst_mat.rowwise().mean();
+    return Solve(src_mat, dst_mat);
+}
 
-    const Eigen::Matrix3Xd centroid_src = src_mat.colwise() - src_mean;
-    const Eigen::Matrix3Xd centroid_dst = dst_mat.colwise() - dst_mean;
+Eigen::Matrix4d SVDSolver::Solve(const Eigen::Matrix3Xd& src,
+                                 const Eigen::Matrix3Xd& dst) const {
+    if (!CheckValid(src, dst)) {
+        return Eigen::Matrix4d::Identity();
+    }
+
+    Eigen::Matrix4d res = Eigen::Matrix4d::Identity();
+    const int num = src.cols();
+    const Eigen::Vector3d src_mean = src.rowwise().mean();
+    const Eigen::Vector3d dst_mean = dst.rowwise().mean();
+
+    const Eigen::Matrix3Xd centroid_src = src.colwise() - src_mean;
+    const Eigen::Matrix3Xd centroid_dst = dst.colwise() - dst_mean;
 
     const Eigen::Matrix3d covariance = centroid_src * centroid_dst.transpose();
     Eigen::JacobiSVD<Eigen::MatrixXd> svd(
@@ -73,17 +93,22 @@ Eigen::Matrix4d SVDSolver::Solve(
 Eigen::Matrix4d TeaserSolver::Solve(
     const open3d::geometry::PointCloud& src,
     const open3d::geometry::PointCloud& dst) const {
-    // larger number of correspondences would cause memory error
-    constexpr int max_num = 5000;
-    Eigen::Matrix4d res = Eigen::Matrix4d::Identity();
-
-    if (!CheckValid(src, dst)) {
-        return res;
-    }
-
     Eigen::Matrix3Xd src_mat, dst_mat;
     VectorToEigenMatrix<double>(src.points_, src_mat);
     VectorToEigenMatrix<double>(dst.points_, dst_mat);
+
+    return Solve(src_mat, dst_mat);
+}
+
+Eigen::Matrix4d TeaserSolver::Solve(const Eigen::Matrix3Xd& src,
+                                    const Eigen::Matrix3Xd& dst) const {
+    if (!CheckValid(src, dst)) {
+        return Eigen::Matrix4d::Identity();
+    }
+
+    // larger number of correspondences would cause memory error
+    constexpr int max_num = 5000;
+    Eigen::Matrix4d res = Eigen::Matrix4d::Identity();
 
     // Prepare solver parameters
     teaser::RobustRegistrationSolver::Params params;
@@ -98,15 +123,14 @@ Eigen::Matrix4d TeaserSolver::Solve(
 
     // Solve with TEASER++
     teaser::RobustRegistrationSolver solver(params);
-    if (src_mat.cols() > max_num) {
+    if (src.cols() > max_num) {
         misc3d::LogWarning(
             "The number of correspondences is too large, use only first "
             "{} correspondences instead.",
             max_num);
-        solver.solve(src_mat.block<3, max_num>(0, 0),
-                     dst_mat.block<3, max_num>(0, 0));
+        solver.solve(src.block<3, max_num>(0, 0), dst.block<3, max_num>(0, 0));
     } else {
-        solver.solve(src_mat, dst_mat);
+        solver.solve(src, dst);
     }
 
     auto solution = solver.getSolution();

@@ -44,9 +44,9 @@ namespace pmc {
     };
 
     inline static void print_mc_info(vector<int> &C_max, double &sec) {
-        cout << "*** [pmc: thread " << omp_get_thread_num() + 1;
-        cout << "]   current max clique = " << C_max.size();
-        cout << ",  time = " << get_time() - sec << " sec" <<endl;
+        // cout << "*** [pmc: thread " << omp_get_thread_num() + 1;
+        // cout << "]   current max clique = " << C_max.size();
+        // cout << ",  time = " << get_time() - sec << " sec" <<endl;
     };
 };
 #endif

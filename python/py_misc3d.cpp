@@ -40,6 +40,11 @@ PYBIND11_MODULE(py_misc3d, m) {
     py::module m_submodule_pose_estimation = m.def_submodule("pose_estimation");
     pose_estimation::pybind_pose_estimation(m_submodule_pose_estimation);
 
+#ifdef ENABLE_RECONSTRUCTION
+    py::module m_submodule_reconstruction = m.def_submodule("reconstruction");
+    reconstruction::pybind_reconstruction(m_submodule_reconstruction);
+#endif
+
     py::module m_submodule_vis = m.def_submodule("vis");
     vis::pybind_vis(m_submodule_vis);
 
