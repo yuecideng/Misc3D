@@ -62,32 +62,7 @@ Eigen::Matrix4d SVDSolver::Solve(const Eigen::Matrix3Xd& src,
         return Eigen::Matrix4d::Identity();
     }
 
-    Eigen::Matrix4d res = Eigen::Matrix4d::Identity();
-    const int num = src.cols();
-    const Eigen::Vector3d src_mean = src.rowwise().mean();
-    const Eigen::Vector3d dst_mean = dst.rowwise().mean();
-
-    const Eigen::Matrix3Xd centroid_src = src.colwise() - src_mean;
-    const Eigen::Matrix3Xd centroid_dst = dst.colwise() - dst_mean;
-
-    const Eigen::Matrix3d covariance = centroid_src * centroid_dst.transpose();
-    Eigen::JacobiSVD<Eigen::MatrixXd> svd(
-        covariance, Eigen::ComputeFullU | Eigen::ComputeFullV);
-    Eigen::Matrix3d u = svd.matrixU();
-    Eigen::Matrix3d v = svd.matrixV();
-    Eigen::Matrix3d rotation = v * u.transpose();
-
-    if (rotation.determinant() < 0) {
-        v.row(2) *= -1;
-        rotation = v * u.transpose();
-    }
-
-    Eigen::Vector3d translation = -1 * (rotation * src_mean) + dst_mean;
-
-    res.block<3, 3>(0, 0) = rotation;
-    res.block<3, 1>(0, 3) = translation;
-
-    return res;
+    return Eigen::umeyama(src, dst, false);
 }
 
 Eigen::Matrix4d TeaserSolver::Solve(
