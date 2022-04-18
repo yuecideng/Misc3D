@@ -37,5 +37,5 @@ cv2.imshow('RGBD', show)
 cv2.waitKey(0)
 
 scene = o3d.io.read_triangle_mesh(
-    '../data/reconstruction/data/scene/integrated.ply')
+    os.path.join(data_path, 'scene/integrated.ply'))
 o3d.visualization.draw_geometries([scene])

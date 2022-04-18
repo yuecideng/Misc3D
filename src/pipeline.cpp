@@ -165,10 +165,12 @@ void ReconstructionPipeline::ReadJsonPipelineConfig(
             if (j["make_fragments"].contains("feature_num")) {
                 config_.make_fragment_param_.feature_num =
                     j["make_fragments"]["feature_num"];
-            } else if (j["make_fragments"].contains("n_frame_per_fragment")) {
+            }
+            if (j["make_fragments"].contains("n_frame_per_fragment")) {
                 config_.make_fragment_param_.n_frame_per_fragment =
                     j["make_fragments"]["n_frame_per_fragment"];
-            } else if (j["make_fragments"].contains("keyframe_ratio")) {
+            }
+            if (j["make_fragments"].contains("keyframe_ratio")) {
                 config_.make_fragment_param_.keyframe_ratio =
                     j["make_fragments"]["keyframe_ratio"];
             }
@@ -209,8 +211,9 @@ void ReconstructionPipeline::ReadJsonPipelineConfig(
                     "preference_loop_closure_odometry")) {
                 config_.optimization_param_.preference_loop_closure_odometry =
                     j["optimization_param"]["preference_loop_closure_odometry"];
-            } else if (j["optimization_param"].contains(
-                           "preference_loop_closure_registration")) {
+            }
+            if (j["optimization_param"].contains(
+                    "preference_loop_closure_registration")) {
                 config_.optimization_param_
                     .preference_loop_closure_registration =
                     j["optimization_param"]
