@@ -39,7 +39,7 @@ Create a `json` file with the following elements:
 "max_depth_diff": 0.05,
 "voxel_size": 0.01,
 "integration_voxel_size": 0.008,
-"enable_slac": true
+"enable_slac": false
 ```
 These are the whole parameters of the reconstruction pipeline that can be tuned. If you do not specify part of these parameters, the default value will be used.
 

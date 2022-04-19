@@ -380,6 +380,13 @@ inline void EigenMat4x4ToArray(const Eigen::Matrix<T, 4, 4> &mat,
     }
 }
 
+/**
+ * @brief Convert 16 array to 4x4 Mat
+ *
+ * @tparam T
+ * @param array
+ * @param mat
+ */
 template <typename T>
 inline void ArrayToEigenMat4x4(const std::array<T, 16> &array,
                                Eigen::Matrix<T, 4, 4> &mat) {
@@ -388,6 +395,25 @@ inline void ArrayToEigenMat4x4(const std::array<T, 16> &array,
             mat(i, j) = array[i * 4 + j];
         }
     }
+}
+
+/**
+ * @brief Get new eigen matrix by indices
+ * 
+ * @param mat 
+ * @param index 
+ * @return Eigen::Matrix3Xd 
+ */
+inline Eigen::Matrix3Xd SelectByIndexEigenMat(const Eigen::Matrix3Xd &mat,
+                                       const std::vector<size_t> &indices) {
+    Eigen::Matrix3Xd new_mat;
+    new_mat.resize(3, indices.size());
+#pragma omp parallel for
+    for (int i = 0; i < indices.size(); i++) {
+        new_mat.col(i) = mat.col(indices[i]);
+    }
+
+    return new_mat;
 }
 
 }  // namespace misc3d

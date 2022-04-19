@@ -25,5 +25,5 @@
     "max_depth_diff": 0.05,
     "voxel_size": 0.02,
     "integration_voxel_size": 0.008,
-    "enable_slac": true
+    "enable_slac": false
 }

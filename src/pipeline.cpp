@@ -93,7 +93,7 @@ PipelineConfig::PipelineConfig() {
     max_depth_diff_ = 0.05;
     voxel_size_ = 0.01;
     integration_voxel_size_ = 0.005;
-    enable_slac_ = true;
+    enable_slac_ = false;
     make_fragment_param_ = {PipelineConfig::DescriptorType::ORB, 100, 40, 0.2};
     local_refine_method_ = LocalRefineMethod::ColoredICP;
     global_registration_method_ = GlobalRegistrationMethod::TeaserPlusPlus;

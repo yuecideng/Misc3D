@@ -100,10 +100,15 @@ Eigen::Matrix4d TeaserSolver::Solve(const Eigen::Matrix3Xd& src,
     teaser::RobustRegistrationSolver solver(params);
     if (src.cols() > max_num) {
         misc3d::LogWarning(
-            "The number of correspondences is too large, use only first "
+            "The number of correspondences is too large, random selecting "
             "{} correspondences instead.",
             max_num);
-        solver.solve(src.block<3, max_num>(0, 0), dst.block<3, max_num>(0, 0));
+        const size_t num = src.cols();
+        RandomSampler<size_t> sampler(num);
+        const std::vector<size_t> indices =
+            sampler.SampleWithoutDuplicate(max_num);
+        solver.solve(SelectByIndexEigenMat(src, indices),
+                     SelectByIndexEigenMat(dst, indices));
     } else {
         solver.solve(src, dst);
     }
