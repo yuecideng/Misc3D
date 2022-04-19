@@ -123,6 +123,8 @@ private:
 
     void RefineRegistration();
 
+    void SLACOptimization();
+
     void IntegrateFragmentTSDF(int fragment_id);
 
     void IntegrateRGBDTSDF();

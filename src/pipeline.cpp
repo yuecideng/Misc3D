@@ -20,6 +20,7 @@
 #include <open3d/pipelines/registration/GlobalOptimization.h>
 #include <open3d/pipelines/registration/PoseGraph.h>
 #include <open3d/pipelines/registration/Registration.h>
+#include <open3d/t/pipelines/slac/SLACOptimizer.h>
 #include <open3d/utility/FileSystem.h>
 #include <opencv2/opencv.hpp>
 
@@ -92,6 +93,7 @@ PipelineConfig::PipelineConfig() {
     max_depth_diff_ = 0.05;
     voxel_size_ = 0.01;
     integration_voxel_size_ = 0.005;
+    enable_slac_ = true;
     make_fragment_param_ = {PipelineConfig::DescriptorType::ORB, 100, 40, 0.2};
     local_refine_method_ = LocalRefineMethod::ColoredICP;
     global_registration_method_ = GlobalRegistrationMethod::TeaserPlusPlus;
@@ -236,6 +238,11 @@ void ReconstructionPipeline::ReadJsonPipelineConfig(
         if (j.contains("integration_voxel_size")) {
             config_.integration_voxel_size_ = j["integration_voxel_size"];
         }
+
+        if (j.contains("enable_slac")) {
+            config_.enable_slac_ = j["enable_slac"];
+        }
+
     } catch (json::other_error& e) {
         misc3d::LogError("Failed to read json file.");
     }
@@ -613,9 +620,41 @@ void ReconstructionPipeline::RefineRegistration() {
         config_.optimization_param_.preference_loop_closure_registration,
         scene_pose_graph_);
 
+    if (config_.enable_slac_) {
+        SLACOptimization();
+    }
+
     time_cost_table_["RefineRegistration"] = timer.Stop();
     misc3d::LogInfo("End Refine Registration: {}",
                     time_cost_table_.at("RefineRegistration"));
+}
+
+void ReconstructionPipeline::SLACOptimization() {
+    misc3d::LogInfo("Start SLAC Optimization.");
+    misc3d::Timer timer;
+    timer.Start();
+
+    // Setup SLAC params.
+    open3d::t::pipelines::slac::SLACOptimizerParams params(
+        5, config_.voxel_size_, 0.07, 0.3, 1.0, open3d::core::Device("CPU:0"));
+    open3d::t::pipelines::slac::SLACDebugOption option(false, 0);
+
+    std::vector<std::string> fragment_names;
+    if (!open3d::utility::filesystem::ListFilesInDirectoryWithExtension(
+            config_.data_path_ + "fragments", "ply", fragment_names)) {
+        misc3d::LogWarning("Failed to read Fragments data.");
+        misc3d::LogInfo("End SLAC Optimization: {}", timer.Stop());
+        return;
+    }
+
+    const auto result =
+        open3d::t::pipelines::slac::RunSLACOptimizerForFragments(
+            fragment_names, scene_pose_graph_, params, option);
+
+    // Update scene pose graph.
+    scene_pose_graph_ = std::get<0>(result);
+
+    misc3d::LogInfo("End SLAC Optimization: {}", timer.Stop());
 }
 
 void ReconstructionPipeline::RefineFragmentPair(

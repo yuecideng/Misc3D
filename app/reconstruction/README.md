@@ -8,7 +8,7 @@ This tutorial provides the explanation of the workflow of Misc3D RGBD dense reco
 
 ## Workflow
 ### Prepare Dataset
-As show in `data` folder, your should create two folders, `color` and `depth`, storing the color and depth images seperately (you can change the name of `data` to other name). The naming of the images is not required to be the same as demonstrated in this tutorial but need to stored with identity order. **Please save your color image in `png` format**.
+As shown in `data` folder, you should create two folders, `color` and `depth`, storing the color and depth images seperately (you can change the name of `data` to other name). The naming of the images is not required to be the same as demonstrated in this tutorial but need to stored with identity order. **Please save your color image in `png` format**.
 
 ### Create Pipeline Configuration
 Create a `json` file with the following elements:
@@ -37,8 +37,9 @@ Create a `json` file with the following elements:
 },
 "max_depth": 3.0,
 "max_depth_diff": 0.05,
-"voxel_size": 0.02,
-"integration_voxel_size": 0.008
+"voxel_size": 0.01,
+"integration_voxel_size": 0.008,
+"enable_slac": true
 ```
 These are the whole parameters of the reconstruction pipeline that can be tuned. If you do not specify part of these parameters, the default value will be used.
 
@@ -64,6 +65,8 @@ These are the whole parameters of the reconstruction pipeline that can be tuned.
 - `voxel_size`: The voxel size used to downsampling the fragments point cloud.
 
 - `integration_voxel_size`: The voxel size used to create TSDF volume.
+
+- `enable_slac`: Whether to enable SLAC for fragments pose graph optimization.
 
 ### Run Reconstruction
 Run the pipeline by serveral lines of code:
