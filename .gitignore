@@ -41,5 +41,6 @@ __pycache__/
 *.pyc
 
 # App/Reconstruction folder
+dataset/
 fragments/
 scene/
