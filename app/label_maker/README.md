@@ -131,3 +131,8 @@ mask_new = np.zeros((mask.shape[0], mask.shape[1]), dtype=np.uint8)
 v = obj_id * 1000 + instance_id
 mask_new[mask == v] = 255
 ``` 
+
+## Reference:
+LabelFusion 
+- [paper](https://ieeexplore.ieee.org/abstract/document/8460950)
+- [code](https://github.com/RobotLocomotion/LabelFusion)
