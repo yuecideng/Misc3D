@@ -1,0 +1,29 @@
+{
+    "data_path": "dataset",
+    "camera": {
+        "width": 640,
+        "height": 480,
+        "fx": 598.7568,
+        "fy": 598.7569,
+        "cx": 326.3443,
+        "cy": 250.2449,
+        "depth_scale": 1000.0
+    },
+    "make_fragments": {
+        "descriptor_type": "orb",
+        "feature_num": 100,
+        "n_frame_per_fragment": 30,
+        "keyframe_ratio": 0.2
+    },
+    "local_refine": "color",
+    "global_registration": "teaser",
+    "optimization_param": {
+        "preference_loop_closure_odometry": 0.1,
+        "preference_loop_closure_registration": 5.0
+    },
+    "max_depth": 3.0,
+    "max_depth_diff": 0.05,
+    "voxel_size": 0.01,
+    "integration_voxel_size": 0.006,
+    "enable_slac": false
+}

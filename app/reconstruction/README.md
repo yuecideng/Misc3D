@@ -44,6 +44,7 @@ Create a `json` file with the following elements:
 These are the whole parameters of the reconstruction pipeline that can be tuned. If you do not specify part of these parameters, the default value will be used.
 
 #### Parameters Description
+- `camera`: Specify the width, height, fx, fy, cx, cy, depth_scale of the RGBD camera.
 - `make_fragments`:
     1. `descriptor_type`: The type of feature descriptor. It can be `orb` or `sift`.
     2. `feature_num`: The number of features extracted from each color image.
