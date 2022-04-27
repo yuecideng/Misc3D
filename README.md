@@ -7,6 +7,10 @@ A unified library for 3D data processing and analysis with both C++&amp;Python A
 
 This library aims at providing some useful 3d processing algorithms which Open3D is not yet provided or not easy to use, and sharing the same data structures used in Open3D.
 
+Misc3D also provides some useful applications:
+- RGBD Dense Reconstruction (`app/reconstruction`) 
+- Instance-level 6D Pose Label Anotation Tool (`app/label_maker`)
+
 Core modules:
 - `common`: 
     1. Normals estimaiton from PointMap 

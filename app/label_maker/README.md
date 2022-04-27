@@ -1,4 +1,4 @@
-# Label Maker for 6D Pose Estimation
+# Instance-level 6D Pose Label Anotation Tool
 This is a simple offline label maker for **instance-level** 6D pose estimation ground truth data generation, forming by several python scripts. The whole pipeline is as follows:
 - Collect RGBD data from sensor.
 - Run RGBD dense reconstruction.
