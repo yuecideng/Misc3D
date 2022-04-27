@@ -57,7 +57,7 @@ Eigen::Matrix4d LeastSquareSolver::Solve(
 }
 
 Eigen::Matrix4d LeastSquareSolver::Solve(const Eigen::Matrix3Xd& src,
-                                 const Eigen::Matrix3Xd& dst) const {
+                                         const Eigen::Matrix3Xd& dst) const {
     if (!CheckValid(src, dst)) {
         return Eigen::Matrix4d::Identity();
     }
