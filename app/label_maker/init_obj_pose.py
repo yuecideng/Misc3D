@@ -40,7 +40,7 @@ def read_model(path):
 def RegistrationBySVD(model, scene, index1, index2, threshold=0.02):
     src = model.select_by_index(index1)
     dst = scene.select_by_index(index2)
-    pose = m3d.registration.compute_transformation_svd(src, dst)
+    pose = m3d.registration.compute_transformation_least_square(src, dst)
 
     # icp refine
     result = o3d.pipelines.registration.registration_icp(

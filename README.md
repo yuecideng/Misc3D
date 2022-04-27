@@ -127,7 +127,7 @@ index1, index2 = m3d.registration.match_correspondence(fpfh_src, fpfh_dst, m3d.r
 # Ransac solver
 pose = m3d.registration.compute_transformation_ransac(pc_src, pc_dst, (index1, index2), 0.03, 100000)
 # SVD solver
-pose = m3d.registration.compute_transformation_svd(pc_src, pc_dst)
+pose = m3d.registration.compute_transformation_least_square(pc_src, pc_dst)
 # Teaser solver
 pose = m3d.registration.compute_transformation_teaser(pc_src, pc_dst, 0.01)
 ```

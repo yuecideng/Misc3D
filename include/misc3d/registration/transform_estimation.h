@@ -42,7 +42,7 @@ public:
                                   const Eigen::Matrix3Xd &dst) const;
 
     enum class SolverType {
-        SVD = 0,
+        LeastSquare = 0,
         TEASER = 1,
         RANSAC = 2,
     };
@@ -62,19 +62,27 @@ private:
 };
 
 /**
- * @brief 3D-3D outlier-free correspondences based least-squares estimation
- * problem using SVD.
+ * @brief 3D-3D outlier-free correspondences based on least-square.
  *
  */
-class SVDSolver : public TransformationSolver {
+class LeastSquareSolver : public TransformationSolver {
 public:
-    SVDSolver() : TransformationSolver(SolverType::SVD) {}
+    /**
+     * @brief Construct a LeastSquareSolver 
+     * 
+     * @param scaling 
+     */
+    explicit LeastSquareSolver(bool scaling)
+        : TransformationSolver(SolverType::LeastSquare), scaling_(scaling) {}
 
     Eigen::Matrix4d Solve(const open3d::geometry::PointCloud &src,
                           const open3d::geometry::PointCloud &dst) const;
 
     Eigen::Matrix4d Solve(const Eigen::Matrix3Xd &src,
                           const Eigen::Matrix3Xd &dst) const;
+
+private:
+    bool scaling_;
 };
 
 /**
@@ -90,7 +98,7 @@ public:
      *
      * @param noise_bound
      */
-    TeaserSolver(double noise_bound = 0.01)
+    explicit TeaserSolver(double noise_bound = 0.01)
         : TransformationSolver(SolverType::TEASER), noise_bound_(noise_bound) {}
 
     Eigen::Matrix4d Solve(const open3d::geometry::PointCloud &src,
@@ -110,8 +118,8 @@ public:
      *
      * @param noise_bound
      */
-    RANSACSolver(double threshold, int max_iter = 100000,
-                 double edge_length_threshold = 0.9)
+    explicit RANSACSolver(double threshold, int max_iter = 100000,
+                          double edge_length_threshold = 0.9)
         : TransformationSolver(SolverType::RANSAC)
         , threshold_(threshold)
         , max_iter_(max_iter)

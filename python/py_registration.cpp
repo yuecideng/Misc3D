@@ -10,24 +10,25 @@ namespace registration {
 
 void pybind_registration(py::module &m) {
     m.def(
-        "compute_transformation_svd",
-        [](const PointCloudPtr &src, const PointCloudPtr &dst) {
-            SVDSolver solver;
+        "compute_transformation_least_square",
+        [](const PointCloudPtr &src, const PointCloudPtr &dst, bool scaling) {
+            LeastSquareSolver solver(scaling);
             return solver.Solve(*src, *dst);
         },
-        "Compute 3D rigid transformation from corresponding point clouds using "
-        "SVD",
-        py::arg("src"), py::arg("dst"));
+        "Compute 3D transformation from corresponding point clouds using "
+        "Least-Square method",
+        py::arg("src"), py::arg("dst"), py::arg("scaling") = false);
 
     m.def(
-        "compute_transformation_svd",
-        [](const Eigen::Matrix3Xd &src, const Eigen::Matrix3Xd &dst) {
-            SVDSolver solver;
+        "compute_transformation_least_square",
+        [](const Eigen::Matrix3Xd &src, const Eigen::Matrix3Xd &dst,
+           bool scaling) {
+            LeastSquareSolver solver(scaling);
             return solver.Solve(src.transpose(), dst.transpose());
         },
         "Compute 3D rigid transformation from corresponding point clouds using "
-        "SVD, with numpy array input with shape (n, 3)",
-        py::arg("src"), py::arg("dst"));
+        "Least-Square method, with numpy array input with shape (n, 3)",
+        py::arg("src"), py::arg("dst"), py::arg("scaling") = false);
 
     m.def(
         "compute_transformation_teaser",

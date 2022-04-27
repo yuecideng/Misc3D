@@ -46,7 +46,7 @@ Eigen::Matrix4d TransformationSolver::Solve(const Eigen::Matrix3Xd& src,
     return Eigen::Matrix4d::Identity();
 }
 
-Eigen::Matrix4d SVDSolver::Solve(
+Eigen::Matrix4d LeastSquareSolver::Solve(
     const open3d::geometry::PointCloud& src,
     const open3d::geometry::PointCloud& dst) const {
     Eigen::Matrix3Xd src_mat, dst_mat;
@@ -56,13 +56,13 @@ Eigen::Matrix4d SVDSolver::Solve(
     return Solve(src_mat, dst_mat);
 }
 
-Eigen::Matrix4d SVDSolver::Solve(const Eigen::Matrix3Xd& src,
+Eigen::Matrix4d LeastSquareSolver::Solve(const Eigen::Matrix3Xd& src,
                                  const Eigen::Matrix3Xd& dst) const {
     if (!CheckValid(src, dst)) {
         return Eigen::Matrix4d::Identity();
     }
 
-    return Eigen::umeyama(src, dst, false);
+    return Eigen::umeyama(src, dst, scaling_);
 }
 
 Eigen::Matrix4d TeaserSolver::Solve(
