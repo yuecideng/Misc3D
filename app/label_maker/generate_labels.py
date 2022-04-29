@@ -117,7 +117,7 @@ def generate_label_and_save_mask(data_path, instance_map, init_poses, pose_list,
             label['bbox'] = bbox
 
             instance_value = int(key) * 1000 + instance
-            instance_map[instance_map == instance] = instance_value
+            instance_mask[instance_map == instance] = instance_value
             instance_mask[instance_map == instance] = 0
             instance += 1
             labels.append(label)
