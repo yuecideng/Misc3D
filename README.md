@@ -24,7 +24,7 @@ Core modules:
     1. Boundary points detection from point clouds.
 - `registration`:
     1. Corresponding matching with descriptors.
-    2. 3D rigid transformation solver including SVD, RANSAC and [TEASERPP](https://github.com/MIT-SPARK/TEASER-plusplus).
+    2. 3D rigid transformation solver including Least Square, RANSAC and [TEASERPP](https://github.com/MIT-SPARK/TEASER-plusplus).
 - `pose_estimation`: 
     1. Point Pair Features (PPF) based 6D pose estimator. (This implementation is evaluated on Linemod, Linemod-Occluded and YCB-Video dataset, the performance can be found in [BOP Leaderboards/PPF-3D-ICP](https://bop.felk.cvut.cz/leaderboards/))
     2. A RayCastRenderer, which is useful for partial view point clouds, depth map and instance map generation.
