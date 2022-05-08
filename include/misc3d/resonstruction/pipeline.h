@@ -11,7 +11,6 @@
 #include <open3d/pipelines/registration/PoseGraph.h>
 #include <opencv2/opencv.hpp>
 
-
 namespace misc3d {
 namespace reconstruction {
 
@@ -92,9 +91,9 @@ public:
     void RunSystem();
 
     /**
-     * @brief Get the Data Path 
-     * 
-     * @return std::string 
+     * @brief Get the Data Path
+     *
+     * @return std::string
      */
     std::string GetDataPath() const { return config_.data_path_; }
 
@@ -125,9 +124,11 @@ private:
 
     void SLACOptimization();
 
-    void IntegrateFragmentTSDF(int fragment_id);
+    void IntegrateFragmentRGBD(int fragment_id);
 
-    void IntegrateRGBDTSDF();
+    void IntegrateSceneRGBDTSDF();
+
+    void IntegrateSceneRGBD();
 
     void SaveFragmentResults();
 
@@ -155,7 +156,7 @@ private:
     std::tuple<bool, Eigen::Matrix4d, Eigen::Matrix6d> ComputeOdometry(
         int s, int t, const Eigen::Matrix4d& init_trans);
 
-    void PreProcessFragments(const open3d::geometry::PointCloud& pcd, int i);
+    void PreProcessFragments(open3d::geometry::PointCloud& pcd, int i);
 
     std::tuple<Eigen::Matrix4d, Eigen::Matrix6d> MultiScaleICP(
         const open3d::geometry::PointCloud& src,

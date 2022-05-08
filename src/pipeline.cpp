@@ -90,9 +90,10 @@ PipelineConfig::PipelineConfig() {
     data_path_ = "";
     depth_scale_ = 1000.0;
     max_depth_ = 3.0;
-    max_depth_diff_ = 0.05;
+    max_depth_diff_ = 0.07;
     voxel_size_ = 0.01;
     integration_voxel_size_ = 0.005;
+    tsdf_integeation_ = false;
     enable_slac_ = false;
     make_fragment_param_ = {PipelineConfig::DescriptorType::ORB, 100, 40, 0.2};
     local_refine_method_ = LocalRefineMethod::ColoredICP;
@@ -239,6 +240,10 @@ void ReconstructionPipeline::ReadJsonPipelineConfig(
             config_.integration_voxel_size_ = j["integration_voxel_size"];
         }
 
+        if (j.contains("tsdf_integeation")) {
+            config_.tsdf_integeation_ = j["tsdf_integeation"];
+        }
+
         if (j.contains("enable_slac")) {
             config_.enable_slac_ = j["enable_slac"];
         }
@@ -372,11 +377,16 @@ bool ReconstructionPipeline::ReadFragmentData() {
 }
 
 void ReconstructionPipeline::PreProcessFragments(
-    const open3d::geometry::PointCloud& pcd, int i) {
-    const auto pcd_down = pcd.VoxelDownSample(config_.voxel_size_);
+    open3d::geometry::PointCloud& pcd, int i) {
+    if (!pcd.HasNormals()) {
+        pcd.EstimateNormals(open3d::geometry::KDTreeSearchParamHybrid(
+            config_.voxel_size_ * 2, 30));
+    }
+    pcd.OrientNormalsTowardsCameraLocation();
+
     const auto fpfh = open3d::pipelines::registration::ComputeFPFHFeature(
-        *pcd_down, open3d::geometry::KDTreeSearchParamHybrid(
-                       config_.voxel_size_ * 5, 100));
+        pcd, open3d::geometry::KDTreeSearchParamHybrid(config_.voxel_size_ * 5,
+                                                       100));
     if (fragment_features_.size() != n_fragments_ ||
         preprocessed_fragment_lists_.size() != n_fragments_) {
         misc3d::LogError(
@@ -387,7 +397,7 @@ void ReconstructionPipeline::PreProcessFragments(
         return;
     }
     fragment_features_[i] = *fpfh;
-    preprocessed_fragment_lists_[i] = *pcd_down;
+    preprocessed_fragment_lists_[i] = pcd;
 }
 
 void ReconstructionPipeline::BuildSingleFragment(int fragment_id) {
@@ -401,7 +411,7 @@ void ReconstructionPipeline::BuildSingleFragment(int fragment_id) {
         config_.max_depth_diff_,
         config_.optimization_param_.preference_loop_closure_odometry,
         fragment_pose_graphs_[fragment_id]);
-    IntegrateFragmentTSDF(fragment_id);
+    IntegrateFragmentRGBD(fragment_id);
 }
 
 void ReconstructionPipeline::BuildPoseGraphForScene() {
@@ -514,13 +524,12 @@ void ReconstructionPipeline::OptimizePoseGraph(
         option);
 }
 
-void ReconstructionPipeline::IntegrateFragmentTSDF(int fragment_id) {
-    open3d::pipelines::integration::ScalableTSDFVolume volume(
-        config_.integration_voxel_size_, 0.04,
-        open3d::pipelines::integration::TSDFVolumeColorType::RGB8);
+void ReconstructionPipeline::IntegrateFragmentRGBD(int fragment_id) {
+    open3d::geometry::PointCloud fragment;
     const auto& pose_graph = fragment_pose_graphs_[fragment_id];
     const size_t graph_num = pose_graph.nodes_.size();
-    for (size_t i = 0; i < graph_num; ++i) {
+#pragma omp parallel for
+    for (int i = 0; i < int(graph_num); ++i) {
         const int i_abs =
             fragment_id * config_.make_fragment_param_.n_frame_per_fragment + i;
         misc3d::LogInfo(
@@ -529,21 +538,18 @@ void ReconstructionPipeline::IntegrateFragmentTSDF(int fragment_id) {
             "{:d}).",
             fragment_id, n_fragments_ - 1, i_abs, i + 1, graph_num);
         const open3d::geometry::RGBDImage& rgbd = rgbd_lists_[i_abs];
-        volume.Integrate(rgbd, config_.camera_intrinsic_,
-                         pose_graph.nodes_[i].pose_.inverse());
+        auto pcd = open3d::geometry::PointCloud::CreateFromRGBDImage(
+            rgbd, config_.camera_intrinsic_, Eigen::Matrix4d::Identity(), true);
+        pcd->Transform(pose_graph.nodes_[i].pose_);
+#pragma omp critical
+        { fragment += *pcd; }
     }
-    auto mesh = volume.ExtractTriangleMesh();
-    mesh->ComputeVertexNormals();
 
-    // Create fragment point clouds.
-    open3d::geometry::PointCloud pcd;
-    pcd.points_ = mesh->vertices_;
-    pcd.colors_ = mesh->vertex_colors_;
-    pcd.normals_ = mesh->vertex_normals_;
-    fragment_point_clouds_[fragment_id] = pcd;
+    fragment_point_clouds_[fragment_id] =
+        *fragment.VoxelDownSample(config_.voxel_size_);
 }
 
-void ReconstructionPipeline::IntegrateRGBDTSDF() {
+void ReconstructionPipeline::IntegrateSceneRGBDTSDF() {
     open3d::pipelines::integration::ScalableTSDFVolume volume(
         config_.integration_voxel_size_, 0.04,
         open3d::pipelines::integration::TSDFVolumeColorType::RGB8);
@@ -559,6 +565,26 @@ void ReconstructionPipeline::IntegrateRGBDTSDF() {
 
     open3d::io::WriteTriangleMesh(config_.data_path_ + "scene/integrated.ply",
                                   *mesh);
+}
+
+void ReconstructionPipeline::IntegrateSceneRGBD() {
+    open3d::geometry::PointCloud scene;
+    const size_t num = rgbd_lists_.size();
+#pragma omp parallel for
+    for (int i = 0; i < int(num); i++) {
+        misc3d::LogInfo("Scene :: Integrate rgbd frame {} | {}", i, num);
+        const open3d::geometry::RGBDImage& rgbd = rgbd_lists_[i];
+        auto pcd = open3d::geometry::PointCloud::CreateFromRGBDImage(
+            rgbd, config_.camera_intrinsic_, Eigen::Matrix4d::Identity(), true);
+        pcd->Transform(scene_odometry_trajectory_.odomtry_list_[i]);
+#pragma omp critical
+        { scene += *pcd; }
+    }
+
+    const auto scene_down =
+        scene.VoxelDownSample(config_.integration_voxel_size_);
+    open3d::io::WritePointCloud(config_.data_path_ + "scene/integrated.ply",
+                                *scene_down);
 }
 
 void ReconstructionPipeline::RefineRegistration() {
@@ -757,9 +783,9 @@ void ReconstructionPipeline::RegisterFragmentPair(
     matched_result.information_ = info;
 }
 
-// TODO: Correspondence matching can also be done by using 2d features like ORB,
-// SIFT and SURF. Just store these features in 'Make Fragment' stage for each
-// RGBD and integrate them into the fragment point clouds.
+// TODO: Correspondence matching can also be done by using 2d features like
+// ORB, SIFT and SURF. Just store these features in 'Make Fragment' stage
+// for each RGBD and integrate them into the fragment point clouds.
 std::tuple<bool, Eigen::Matrix4d, Eigen::Matrix6d>
 ReconstructionPipeline::GlobalRegistration(int s, int t) {
     const auto& pcd_s = preprocessed_fragment_lists_[s];
@@ -805,23 +831,6 @@ ReconstructionPipeline::ComputeOdometry(int s, int t,
                                         const Eigen::Matrix4d& init_trans) {
     open3d::geometry::RGBDImage& rgbd_s = rgbd_lists_[s];
     open3d::geometry::RGBDImage& rgbd_t = rgbd_lists_[t];
-
-    const auto& cam = config_.camera_intrinsic_;
-    const double max_dis = config_.max_depth_diff_;
-    const auto pcd_s = open3d::geometry::PointCloud::CreateFromRGBDImage(
-        rgbd_s, cam, Eigen::Matrix4d::Identity(), true);
-    const auto pcd_t = open3d::geometry::PointCloud::CreateFromRGBDImage(
-        rgbd_t, cam, Eigen::Matrix4d::Identity(), true);
-
-    const auto pcd_down_s = pcd_s->RandomDownSample(0.2);
-    const auto pcd_down_t = pcd_t->RandomDownSample(0.2);
-
-    if (!init_trans.isIdentity(1e-8)) {
-        const Eigen::Matrix6d info = open3d::pipelines::registration::
-            GetInformationMatrixFromPointClouds(
-                *pcd_down_s, *pcd_down_t, config_.voxel_size_, init_trans);
-        return std::make_tuple(true, init_trans, info);
-    }
 
     open3d::geometry::RGBDImage new_rgbd_s(intensity_img_lists_[s],
                                            rgbd_s.depth_);
@@ -1108,7 +1117,11 @@ void ReconstructionPipeline::IntegrateScene() {
         }
     }
 
-    IntegrateRGBDTSDF();
+    if (config_.tsdf_integeation_) {
+        IntegrateSceneRGBDTSDF();
+    } else {
+        IntegrateSceneRGBD();
+    }
 
     time_cost_table_["IntegrateScene"] = timer.Stop();
     misc3d::LogInfo("End Integrate Scene: {}",
