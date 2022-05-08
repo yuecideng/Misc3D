@@ -11,11 +11,8 @@ public:
     virtual ~PipelineConfig() {}
 
 public:
-    enum class DescriptorType {
-        ORB = 0,
-        SIFT = 1
-    };
-    
+    enum class DescriptorType { ORB = 0, SIFT = 1 };
+
     struct MakeFragmentParam {
         DescriptorType descriptor_type;
         int feature_num;

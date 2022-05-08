@@ -60,7 +60,8 @@ void pybind_reconstruction(py::module &m) {
     config.def_readwrite("max_depth", &PipelineConfig::max_depth_);
     config.def_readwrite("max_depth_diff", &PipelineConfig::max_depth_diff_);
     config.def_readwrite("voxel_size", &PipelineConfig::voxel_size_);
-    config.def_readwrite("tsdf_integeation", &PipelineConfig::tsdf_integeation_);
+    config.def_readwrite("tsdf_integeation",
+                         &PipelineConfig::tsdf_integeation_);
     config.def_readwrite("enable_slac", &PipelineConfig::enable_slac_);
     config.def_readwrite("integration_voxel_size",
                          &PipelineConfig::integration_voxel_size_);

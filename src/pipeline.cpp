@@ -385,8 +385,8 @@ void ReconstructionPipeline::PreProcessFragments(
     pcd.OrientNormalsTowardsCameraLocation();
 
     const auto fpfh = open3d::pipelines::registration::ComputeFPFHFeature(
-        pcd, open3d::geometry::KDTreeSearchParamHybrid(
-                       config_.voxel_size_ * 5, 100));
+        pcd, open3d::geometry::KDTreeSearchParamHybrid(config_.voxel_size_ * 5,
+                                                       100));
     if (fragment_features_.size() != n_fragments_ ||
         preprocessed_fragment_lists_.size() != n_fragments_) {
         misc3d::LogError(

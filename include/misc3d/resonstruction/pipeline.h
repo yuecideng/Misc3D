@@ -11,7 +11,6 @@
 #include <open3d/pipelines/registration/PoseGraph.h>
 #include <opencv2/opencv.hpp>
 
-
 namespace misc3d {
 namespace reconstruction {
 
@@ -92,9 +91,9 @@ public:
     void RunSystem();
 
     /**
-     * @brief Get the Data Path 
-     * 
-     * @return std::string 
+     * @brief Get the Data Path
+     *
+     * @return std::string
      */
     std::string GetDataPath() const { return config_.data_path_; }
 
