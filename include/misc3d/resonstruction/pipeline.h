@@ -125,9 +125,11 @@ private:
 
     void SLACOptimization();
 
-    void IntegrateFragmentTSDF(int fragment_id);
+    void IntegrateFragmentRGBD(int fragment_id);
 
-    void IntegrateRGBDTSDF();
+    void IntegrateSceneRGBDTSDF();
+
+    void IntegrateSceneRGBD();
 
     void SaveFragmentResults();
 
@@ -155,7 +157,7 @@ private:
     std::tuple<bool, Eigen::Matrix4d, Eigen::Matrix6d> ComputeOdometry(
         int s, int t, const Eigen::Matrix4d& init_trans);
 
-    void PreProcessFragments(const open3d::geometry::PointCloud& pcd, int i);
+    void PreProcessFragments(open3d::geometry::PointCloud& pcd, int i);
 
     std::tuple<Eigen::Matrix4d, Eigen::Matrix6d> MultiScaleICP(
         const open3d::geometry::PointCloud& src,

@@ -39,6 +39,7 @@ Create a `json` file with the following elements:
 "max_depth_diff": 0.05,
 "voxel_size": 0.01,
 "integration_voxel_size": 0.008,
+"tsdf_integration": false
 "enable_slac": false
 ```
 These are the whole parameters of the reconstruction pipeline that can be tuned. If you do not specify part of these parameters, the default value will be used.
@@ -66,6 +67,8 @@ These are the whole parameters of the reconstruction pipeline that can be tuned.
 - `voxel_size`: The voxel size used to downsampling the fragments point cloud.
 
 - `integration_voxel_size`: The voxel size used to create TSDF volume.
+
+- `tsdf_integration`: Enable TSDF integration will create triangle mesh for the scene, otherwise only point clouds will be integrated.
 
 - `enable_slac`: Whether to enable SLAC for fragments pose graph optimization.
 
