@@ -1,6 +1,6 @@
 #include <py_misc3d.h>
 
-#include <misc3d/resonstruction/pipeline.h>
+#include <misc3d/reconstruction/pipeline.h>
 #include <misc3d/utils.h>
 
 namespace misc3d {

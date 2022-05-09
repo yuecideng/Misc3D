@@ -3,7 +3,7 @@
 #include <map>
 #include <memory>
 
-#include <misc3d/resonstruction/pipeline_config.h>
+#include <misc3d/reconstruction/pipeline_config.h>
 #include <open3d/geometry/PointCloud.h>
 #include <open3d/geometry/RGBDImage.h>
 #include <open3d/geometry/TriangleMesh.h>
