@@ -4,9 +4,9 @@
 #include "json.hpp"
 
 #include <misc3d/logging.h>
+#include <misc3d/reconstruction/pipeline.h>
 #include <misc3d/registration/correspondence_matching.h>
 #include <misc3d/registration/transform_estimation.h>
-#include <misc3d/reconstruction/pipeline.h>
 #include <misc3d/utils.h>
 #include <open3d/geometry/TriangleMesh.h>
 #include <open3d/io/ImageIO.h>
