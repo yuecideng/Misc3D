@@ -9,7 +9,7 @@ This library aims at providing some useful 3d processing algorithms which Open3D
 
 Misc3D also provides some useful applications:
 - RGBD Dense Reconstruction (`app/reconstruction`) 
-- Instance-level 6D Pose Label Anotation Tool (`app/label_maker`)
+- Instance-level 6D Pose Label Anotation Tool (`app/label_maker`), which supports both real and mixed-reality data generation.
 
 Core modules:
 - `common`: 
