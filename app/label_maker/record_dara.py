@@ -9,8 +9,6 @@ import time
 import json
 import cv2
 
-import sys
-sys.path.append('../')
 from camera_manager import RealSenseManager, RealSenseFPS, RealSenseResolution
 
 

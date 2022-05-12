@@ -10,8 +10,7 @@ import numpy as np
 import open3d as o3d
 import misc3d as m3d
 import json
-import sys
-sys.path.append('../')
+
 from utils import Colors
 from utils import mask_to_bbox, rgbd_to_pointcloud
 

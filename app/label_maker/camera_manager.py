@@ -6,6 +6,7 @@ import numpy as np
 import pyrealsense2 as rs
 from enum import IntEnum
 
+
 class RealSenseResolution(IntEnum):
     Low = 0  # 480X270
     Medium = 1  # 640X480

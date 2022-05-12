@@ -105,6 +105,12 @@ if(BUILD_EXAMPLES)
     )
 endif()
 
+# Install Application scripts
+install(DIRECTORY app
+    DESTINATION "${CMAKE_INSTALL_PREFIX}/misc3d/app"
+    USE_SOURCE_PERMISSIONS
+    )
+
 # Build Python binding
 if(BUILD_PYTHON)
     add_subdirectory(python)
