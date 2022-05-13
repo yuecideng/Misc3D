@@ -7,6 +7,11 @@ This is a simple offline label making tools for **instance-level** 6D pose estim
 - Pose initialization.
 - Rendering mask and generate labels.
 
+The idea is same as the pipeline mentioned in the LabelFusion:
+<p float="left">
+  <img src="../../images/real_data.png" width="800" height=350/>
+</p>
+
 **Mixed-Reality Data Pipeline**
 - Collect RGBD data (background only) from sensor.
 - Placement Generation.
@@ -154,9 +159,27 @@ LabelFusion
 Same as the real data pipeline, but you only need to collect the scene data with background only (desk or table).
 
 ### Step 2: Placement Generation & Rendering color and depth labels
+First, prepare your model file with the following structure:
+```
+model/
+    - 0.ply
+    - name_of_obj_1_uv_map.png
+    - 1.ply
+    - name_of_obj_2_uv_map.png
+    - 2.ply
+    - name_of_obj_3_uv_map.png
+    - ...
+```
+**Note: You should not change your uv map file name since the ply usually stores the file name of it**
+
 Run `python3 mixed/generate_placement.py --model_path <your/model/path> --data_path <your/data/path>`. (add `--vis` to visualize the rendering color and depth image). You can also check the source file `mixed/generate_placement.py` to see more arguments you can set.
 
 After generation, the data format is the same as the real data pipeline.
+
+The generation results can be seen as the following example:
+<p float="left">
+  <img src="../../images/mr_data.png" width="640" height=240/>
+</p>
 
 ### Reference:
 NOCS
