@@ -35,9 +35,9 @@ class PlacementAgent:
         pcd = rgbd_to_pointcloud(color, depth, intrin, depth_trunc=1.5,
                                  project_valid_depth=True)
         pcd = pcd.voxel_down_sample(self.plane_segment_threshold)
-        plane_pcd = self.__segment_plane(pcd)
+        plane_pcd = self._segment_plane(pcd)
 
-        centers = self.__build_proposal_positions(plane_pcd)
+        centers = self._build_proposal_positions(plane_pcd)
         print('Generated {} proposals'.format(len(centers)))
 
         if max_num is not None:
@@ -65,7 +65,7 @@ class PlacementAgent:
 
         return placement_pose
 
-    def __segment_plane(self, pcd):
+    def _segment_plane(self, pcd):
         w, indices = pcd.segment_plane(self.plane_segment_threshold, 3, 1000)
         pcd_plane = pcd.select_by_index(indices)
         pcd_plane_projected = m3d.preprocessing.project_into_plane(pcd_plane)
@@ -77,7 +77,7 @@ class PlacementAgent:
 
         return pcd_plane
 
-    def __build_proposal_positions(self, pcd):
+    def _build_proposal_positions(self, pcd):
         bbox = pcd.get_oriented_bounding_box()
         box_points = bbox.get_box_points()
         R = np.identity(3)

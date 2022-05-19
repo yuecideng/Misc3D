@@ -49,16 +49,16 @@ class ModelSampler:
     def __init__(self, path, unit='m'):
         self.path = path
         self.model_name = {}
-        self.__load_model_file()
+        self._load_model_file()
         self.unit = unit
 
-    def __load_model_file(self):
+    def _load_model_file(self):
         for file_name in os.listdir(self.path):
             if file_name.endswith('.ply'):
                 name = os.path.splitext(file_name)[0]
                 self.model_name[name] = os.path.join(self.path, file_name)
 
-    def __load_single_model(self, name):
+    def _load_single_model(self, name):
         mesh_model = o3d.io.read_triangle_model(name)
         mesh = o3d.io.read_triangle_mesh(name)
         if self.unit == 'mm':
@@ -74,7 +74,7 @@ class ModelSampler:
         if name not in self.model_name:
             print('Model {} not found.'.format(name))
             return None
-        return self.__load_single_model(self.model_name[name])
+        return self._load_single_model(self.model_name[name])
 
 
 # TODO: 1. Add noise for the rendered model
@@ -136,7 +136,7 @@ class OffScreenRenderer:
 
         # rendering rgb image
         img = self.renderer.render_to_image()
-        self.__remove_geometries()
+        self._remove_geometries()
 
         # ray casting depth and instance map
         ret = self.ray_caster.cast_rays(mesh_list, mesh_pose)
@@ -146,18 +146,18 @@ class OffScreenRenderer:
 
         img = o3d_image_to_numpy(img)
 
-        color_merged = self.__merge_image(color, img, depth_render)
-        depth_merged = self.__merge_depth(depth, depth_render, img)
-        instance_mask = self.__modify_instance_map(instance_map, pose_dict)
+        color_merged = self._merge_image(color, img, depth_render)
+        depth_merged = self._merge_depth(depth, depth_render, img)
+        instance_mask = self._modify_instance_map(instance_map, pose_dict)
 
         return (color_merged, depth_merged, instance_mask)
 
-    def __remove_geometries(self):
+    def _remove_geometries(self):
         for name in self.name_list:
             self.renderer.scene.remove_geometry(name)
         self.name_list = []
 
-    def __merge_image(self, color, img, depth_render):
+    def _merge_image(self, color, img, depth_render):
         if color is None:
             return img
 
@@ -168,14 +168,14 @@ class OffScreenRenderer:
         color_bk[index] = cv2.addWeighted(color_bk, 0, img, 1.0, 0)[index]
         return color_bk
 
-    def __merge_depth(self, depth, depth_render, img):
+    def _merge_depth(self, depth, depth_render, img):
         if depth is None:
             return depth_render
 
         depth[depth_render != 0] = 0
         return depth_render + depth
 
-    def __modify_instance_map(self, instance_map, pose_dict):
+    def _modify_instance_map(self, instance_map, pose_dict):
         instance_mask = np.zeros(instance_map.shape, dtype=np.uint16)
         instance = 0
         for key, value in pose_dict.items():
