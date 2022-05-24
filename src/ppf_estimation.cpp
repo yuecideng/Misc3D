@@ -1084,57 +1084,60 @@ void PPFEstimator::Impl::CalcModelNormalAndSampling(
     const PointXYZ pt_2_view(view_pt(0) - nearest(0), view_pt(1) - nearest(1),
                              view_pt(2) - nearest(2));
 
-    // modify normal based on orientation
-    if (pt_2_view.transpose() * pc->normals_[nearest_idx] < 0)
-        FlipNormal(pc->normals_[nearest_idx]);
+    if (!config_.training_param_.use_external_normal) {
+        // modify normal based on orientation
+        if (pt_2_view.transpose() * pc->normals_[nearest_idx] < 0)
+            FlipNormal(pc->normals_[nearest_idx]);
 
-    if (invert_normal_)
-        FlipNormal(pc->normals_[nearest_idx]);
+        if (invert_normal_)
+            FlipNormal(pc->normals_[nearest_idx]);
 
-    // normal consistent
-    std::vector<bool> calc_flags(n_pt, false);
-    auto cmp = [](std::pair<size_t, double> &q0,
-                  std::pair<size_t, double> &q1) {
-        return q0.second > q1.second;
-    };
+        // normal consistent
+        std::vector<bool> calc_flags(n_pt, false);
+        auto cmp = [](std::pair<size_t, double> &q0,
+                      std::pair<size_t, double> &q1) {
+            return q0.second > q1.second;
+        };
 
-    std::priority_queue<std::pair<size_t, double>,
-                        std::vector<std::pair<size_t, double>>, decltype(cmp)>
-        pq(cmp);
+        std::priority_queue<std::pair<size_t, double>,
+                            std::vector<std::pair<size_t, double>>,
+                            decltype(cmp)>
+            pq(cmp);
 
-    int cur_i = nearest_idx, near_i, n_searched;
-    std::pair<size_t, double> cur_pair(nearest_idx, 0);
-    pq.push(cur_pair);
-    std::vector<int> ret_indices2;
-    std::vector<double> out_dists_sqr2;
-    while (!pq.empty()) {
-        cur_pair = pq.top();
-        cur_i = cur_pair.first;
-        pq.pop();
-        if (calc_flags[cur_i])
-            continue;
-        const PointXYZ &temp = pc->points_[cur_i];
-        n_searched =
-            kdtree->SearchRadius(temp, normal_r, ret_indices2, out_dists_sqr2);
+        int cur_i = nearest_idx, near_i, n_searched;
+        std::pair<size_t, double> cur_pair(nearest_idx, 0);
+        pq.push(cur_pair);
+        std::vector<int> ret_indices2;
+        std::vector<double> out_dists_sqr2;
+        while (!pq.empty()) {
+            cur_pair = pq.top();
+            cur_i = cur_pair.first;
+            pq.pop();
+            if (calc_flags[cur_i])
+                continue;
+            const PointXYZ &temp = pc->points_[cur_i];
+            n_searched = kdtree->SearchRadius(temp, normal_r, ret_indices2,
+                                              out_dists_sqr2);
 
-        for (size_t i = 0; i < n_searched; i++) {
-            near_i = ret_indices2[i];
-            if (!calc_flags[near_i]) {
-                pq.push(std::make_pair(size_t(ret_indices2[i]),
-                                       sqrt(out_dists_sqr2[i])));
+            for (size_t i = 0; i < n_searched; i++) {
+                near_i = ret_indices2[i];
+                if (!calc_flags[near_i]) {
+                    pq.push(std::make_pair(size_t(ret_indices2[i]),
+                                           sqrt(out_dists_sqr2[i])));
+                }
             }
-        }
-        for (size_t i = 0; i < n_searched; i++) {
-            near_i = ret_indices2[i];
-            if (calc_flags[near_i]) {
-                auto &cur_n = pc->normals_[cur_i];
-                auto &near_n = pc->normals_[near_i];
-                if (cur_n.dot(near_n) < 0)
-                    cur_n *= -1;
-                break;
+            for (size_t i = 0; i < n_searched; i++) {
+                near_i = ret_indices2[i];
+                if (calc_flags[near_i]) {
+                    auto &cur_n = pc->normals_[cur_i];
+                    auto &near_n = pc->normals_[near_i];
+                    if (cur_n.dot(near_n) < 0)
+                        cur_n *= -1;
+                    break;
+                }
             }
+            calc_flags[cur_i] = true;
         }
-        calc_flags[cur_i] = true;
     }
 
     DownSamplePCNormal(*pc, kdtree, step, nearest_idx, pc_sample);
@@ -1380,7 +1383,7 @@ open3d::geometry::PointCloud PPFEstimator::GetSceneEdges() {
 
 // set default parameters
 PPFEstimatorConfig::PPFEstimatorConfig() {
-    training_param_ = {false, 0.05, 0.025, 0.01};
+    training_param_ = {false, false, 0.05, 0.025, 0.01};
     ref_param_ = {ReferencePointSelection::Random, 0.6};
     voting_param_ = {VotingMode::SampledPoints, true, Deg2Rad<double>(12),
                      1.0 / 3, Deg2Rad<double>(30)};
