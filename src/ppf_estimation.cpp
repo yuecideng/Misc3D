@@ -1066,33 +1066,40 @@ void PPFEstimator::Impl::CalcModelNormalAndSampling(
     open3d::geometry::PointCloud &pc_sample) {
     pc_sample.Clear();
     const size_t n_pt = pc->points_.size();
+    const bool has_normals = pc->HasNormals();
 
-    // calc normals
-    if (!pc->HasNormals()) {
+    // Calc normals.
+    if (!has_normals) {
+        if (config_.training_param_.use_external_normal) {
+            misc3d::LogWarning("The model has no pre-computed normals.");
+        }
+
         pc->EstimateNormals(
             open3d::geometry::KDTreeSearchParamHybrid(normal_r, NORMAL_CALC_NN),
             false);
     }
     pc->NormalizeNormals();
 
-    // calc nearest point respect to view point
+    // Calc nearest point respect to view point.
     std::vector<int> ret_indices(1);
     std::vector<double> out_dists_sqr(1);
     const int n = kdtree->SearchKNN(view_pt, 1, ret_indices, out_dists_sqr);
     const PointXYZ nearest = pc->points_[ret_indices[0]];
     const int nearest_idx = ret_indices[0];
-    const PointXYZ pt_2_view(view_pt(0) - nearest(0), view_pt(1) - nearest(1),
-                             view_pt(2) - nearest(2));
 
-    if (!config_.training_param_.use_external_normal) {
+    if (!config_.training_param_.use_external_normal || !has_normals) {
         // modify normal based on orientation
+        const PointXYZ pt_2_view(view_pt(0) - nearest(0),
+                                 view_pt(1) - nearest(1),
+                                 view_pt(2) - nearest(2));
+
         if (pt_2_view.transpose() * pc->normals_[nearest_idx] < 0)
             FlipNormal(pc->normals_[nearest_idx]);
 
         if (invert_normal_)
             FlipNormal(pc->normals_[nearest_idx]);
 
-        // normal consistent
+        // Normal consistent.
         std::vector<bool> calc_flags(n_pt, false);
         auto cmp = [](std::pair<size_t, double> &q0,
                       std::pair<size_t, double> &q1) {
