@@ -93,7 +93,7 @@ PipelineConfig::PipelineConfig() {
     max_depth_diff_ = 0.07;
     voxel_size_ = 0.01;
     integration_voxel_size_ = 0.005;
-    tsdf_integeation_ = false;
+    tsdf_integration_ = false;
     enable_slac_ = false;
     make_fragment_param_ = {PipelineConfig::DescriptorType::ORB, 100, 40, 0.2};
     local_refine_method_ = LocalRefineMethod::ColoredICP;
@@ -240,8 +240,8 @@ void ReconstructionPipeline::ReadJsonPipelineConfig(
             config_.integration_voxel_size_ = j["integration_voxel_size"];
         }
 
-        if (j.contains("tsdf_integeation")) {
-            config_.tsdf_integeation_ = j["tsdf_integeation"];
+        if (j.contains("tsdf_integration")) {
+            config_.tsdf_integration_ = j["tsdf_integration"];
         }
 
         if (j.contains("enable_slac")) {
@@ -1117,7 +1117,7 @@ void ReconstructionPipeline::IntegrateScene() {
         }
     }
 
-    if (config_.tsdf_integeation_) {
+    if (config_.tsdf_integration_) {
         IntegrateSceneRGBDTSDF();
     } else {
         IntegrateSceneRGBD();

@@ -42,7 +42,7 @@ public:
     float max_depth_diff_;
     float voxel_size_;
     float integration_voxel_size_;
-    bool tsdf_integeation_;
+    bool tsdf_integration_;
     bool enable_slac_;
     MakeFragmentParam make_fragment_param_;
     LocalRefineMethod local_refine_method_;
