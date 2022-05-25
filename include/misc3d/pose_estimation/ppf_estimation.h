@@ -51,6 +51,10 @@ public:
         // point clouds are not in camera coordinate (RGBD camera), or set to false
         // as default.
         bool invert_model_normal;
+
+        // whether use external pre-computed normals for training.
+        bool use_external_normal;
+
         // relative variable of point cloud sample distance
         double rel_sample_dist;
         // relative variable of normal search radius, usually is set as half of

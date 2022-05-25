@@ -44,6 +44,8 @@ void pybind_pose_estimation(py::module &m) {
         .def(py::init<>())
         .def_readwrite("invert_model_normal",
                        &PPFEstimatorConfig::TrainingParam::invert_model_normal)
+        .def_readwrite("use_external_normal",
+                       &PPFEstimatorConfig::TrainingParam::use_external_normal)              
         .def_readwrite("rel_sample_dist",
                        &PPFEstimatorConfig::TrainingParam::rel_sample_dist)
         .def_readwrite("calc_normal_relative",
