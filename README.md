@@ -209,6 +209,6 @@ You can run c++ examples after finish build the library, which are inside `/path
 Misc3D is very open minded and welcomes any contribution. If you have any question or idea, please feel free to create issue or pull request to make Misc3D better.
 Please see this [WIKI](https://github.com/yuecideng/Misc3D/wiki/How-to-contribute) for contribution method.
 
-You can access the [Discord channel](https://discord.com/channels/979218422267260968/979219384105074688) to discuss and collaborate with the developer in Misc3D.
+You can access the [Discord channel](https://discord.com/invite/S2yGVdbF) to discuss and collaborate with the developer in Misc3D.
 
 
