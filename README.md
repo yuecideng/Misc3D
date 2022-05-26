@@ -11,7 +11,7 @@ Misc3D also provides some useful applications:
 - RGBD Dense Reconstruction (`app/reconstruction`) [tutorial](app/reconstruction/README.md) 
 - Instance-level 6D Pose Label Anotation Tool (`app/label_maker`), which supports both real and mixed-reality data generation. [tutorial](app/label_maker/README.md) 
 
-Core modules:
+**Core modules**:
 - `common`: 
     1. Normals estimaiton from PointMap 
     2. Ransac for primitives fitting, including plane, sphere and cylinder, with parallel computing supported.
@@ -208,5 +208,7 @@ You can run c++ examples after finish build the library, which are inside `/path
 ## How to contribute
 Misc3D is very open minded and welcomes any contribution. If you have any question or idea, please feel free to create issue or pull request to make Misc3D better.
 Please see this [WIKI](https://github.com/yuecideng/Misc3D/wiki/How-to-contribute) for contribution method.
+
+You can access the [Discord channel](https://discord.com/channels/979218422267260968/979219384105074688) to discuss and collaborate with the developer in Misc3D.
 
 
