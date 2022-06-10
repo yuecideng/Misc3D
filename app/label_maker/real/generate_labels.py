@@ -11,10 +11,7 @@ import open3d as o3d
 import misc3d as m3d
 import json
 
-from utils import Colors
-from utils import mask_to_bbox, rgbd_to_pointcloud
-
-from IPython import embed
+from utils import Colors, mask_to_bbox, rgbd_to_pointcloud
 
 
 def remove_and_create_dir(dir_path):
@@ -22,6 +19,11 @@ def remove_and_create_dir(dir_path):
     if os.path.exists(mask_path):
         shutil.rmtree(mask_path)
     os.makedirs(mask_path)
+
+    mask_vis_path = os.path.join(dir_path, 'mask_vis')
+    if os.path.exists(mask_vis_path):
+        shutil.rmtree(mask_vis_path)
+    os.makedirs(mask_vis_path)
 
 
 def read_model_and_init_poses(model_path, data_path):
@@ -97,7 +99,7 @@ def refine_local_pose(model, color, depth, camera, init_pose, threshold=0.005):
     return pose
 
 
-def generate_label_and_save_mask(data_path, instance_map, init_poses, pose_list, name):
+def generate_label_and_save_mask(data_path, instance_map, init_poses, pose_list, name, minimum_obj_pixel):
     # create new instance map and save it
     instance_mask = np.zeros(instance_map.shape, dtype=np.uint16)
     labels = []
@@ -105,16 +107,19 @@ def generate_label_and_save_mask(data_path, instance_map, init_poses, pose_list,
     instance = 0
     for key, value in init_poses.items():
         for i in range(len(value)):
+            mask_255 = np.zeros(instance_map.shape, dtype=np.uint8)
+            if len(mask_255[instance_map == instance]) < minimum_obj_pixel:
+                continue
+            
             label = {}
             label['obj_id'] = int(key)
             label['instance_id'] = instance
             label['cam_R_m2c'] = pose_list[instance][:3, :3].tolist()
             label['cam_t_m2c'] = pose_list[instance][:3, 3].tolist()
-            mask_255 = np.zeros(instance_map.shape, dtype=np.uint8)
             mask_255[instance_map == instance] = 255
             bbox = mask_to_bbox(mask_255)
             label['bbox'] = bbox
-
+        
             instance_value = int(key) * 1000 + instance
             instance_mask[instance_map == instance] = instance_value
             instance += 1
@@ -131,6 +136,8 @@ if __name__ == '__main__':
                         help="path to RGBD data set")
     parser.add_argument("--local_refine", action='store_true',
                         help="use icp the refine model to the scene")
+    parser.add_argument("--minimum_obj_pixel", default=500, type=int,
+                        help="the minimum number of pixel of an object in the rgb image")
     parser.add_argument("--vis", action='store_true',
                         help="visualize the rendering results")
     args = parser.parse_args()
@@ -170,26 +177,28 @@ if __name__ == '__main__':
         instance_map = render.get_instance_map().numpy()
 
         label = generate_label_and_save_mask(
-            args.data_path, instance_map, init_poses, mesh_pose, file_names[i])
+            args.data_path, instance_map, init_poses, mesh_pose, file_names[i], args.minimum_obj_pixel)
         data_labels[file_names[i]] = label
+
+        # create visible instance mask image
+        mask = np.zeros(
+            (instance_map.shape[0], instance_map.shape[1], 3), dtype=np.uint8)
+        index = np.zeros(
+            (instance_map.shape[0], instance_map.shape[1]), dtype=np.bool_)
+        color = rgbds[i][0]
+
+        for j in range(len(render_mesh)):
+            mask[instance_map == j] = Colors()(j, True)
+            index[instance_map == j] = True
+            color[index] = cv2.addWeighted(color, 0.6, mask, 0.3, 0)[index]
+
+        cv2.imwrite(os.path.join(args.data_path, 'mask_vis',
+                    file_names[i] + '_vis.png'), color)
 
         # visualization
         if args.vis:
-            mask = np.zeros(
-                (instance_map.shape[0], instance_map.shape[1], 3), dtype=np.uint8)
-            index = np.zeros(
-                (instance_map.shape[0], instance_map.shape[1]), dtype=np.bool_)
-            color = rgbds[i][0]
-
-            for j in range(len(render_mesh)):
-                mask[instance_map == j] = Colors()(j, True)
-                index[instance_map == j] = True
-                color[index] = cv2.addWeighted(color, 0.5, mask, 0.5, 0)[index]
-
             cv2.namedWindow('Instance Mask Rendering', cv2.WINDOW_AUTOSIZE)
             cv2.imshow('Instance Mask Rendering', color)
-            cv2.imwrite(os.path.join(args.data_path, 'mask',
-                        file_names[i] + '_vis.png'), color)
             key = cv2.waitKey(0)
 
     print('Time:', time.time() - t0)

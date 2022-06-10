@@ -2,7 +2,9 @@
 # -*- coding: utf-8 -*-
 
 import argparse
+import numpy as np
 import open3d as o3d
+from scipy.spatial.transform import Rotation
 
 
 if __name__ == '__main__':
@@ -24,5 +26,9 @@ if __name__ == '__main__':
     axis = o3d.geometry.TriangleMesh.create_coordinate_frame(
         size=0.2, origin=[0, 0, 0])
 
-    geometries = [scene, axis]
+    T = np.identity(4)
+    R = Rotation.from_euler('xyz', [0, 180, 180], degrees=True).as_matrix()
+    T[:3, :3] = R
+
+    geometries = [scene.transform(T), axis]
     o3d.visualization.draw_geometries(geometries)

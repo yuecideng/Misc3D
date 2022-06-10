@@ -65,6 +65,7 @@ You can use `real/draw_geometry.py` to visualize the reconstructed scene triangl
 2. Run `python3 real/init_obj_pose.py --model_path <your/model/path> --data_path <your/data/path>`, and follow the instruction printed in the terminal.
 
     After finish the process, you will find the `init_poses.json` in your data path.
+    You can also add `--enable_ppf` to use `PPFEstimator` to initialize the object pose.
 
 ### Step 4: Rendering mask and generate labels
 Run `python3 real/generate_labels.py --model_path <your/model/path> --data_path <your/data/path>`. (add `--vis` to visualize the rendering instance mask)
