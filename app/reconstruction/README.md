@@ -35,8 +35,8 @@ Create a `json` file with the following elements:
     "preference_loop_closure_odometry": 0.1,
     "preference_loop_closure_registration": 5.0
 },
-"max_depth": 3.0,
-"max_depth_diff": 0.05,
+"depth_max": 3.0,
+"depth_diff_max": 0.05,
 "voxel_size": 0.01,
 "integration_voxel_size": 0.008,
 "tsdf_integration": false
@@ -60,9 +60,9 @@ These are the whole parameters of the reconstruction pipeline that can be tuned.
     1. `preference_loop_closure_odometry`: The preference of loop closure odometry.
     2. `preference_loop_closure_registration`: The preference of loop closure registration.
 
-- `max_depth`: The maximum depth value to limit the depth range.
+- `depth_max`: The maximum depth value to limit the depth range.
 
-- `max_depth_diff`: The maximum depth difference between two consecutive frames.
+- `depth_diff_max`: The maximum depth difference between two consecutive frames.
 
 - `voxel_size`: The voxel size used to downsampling the fragments point cloud.
 

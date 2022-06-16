@@ -57,8 +57,8 @@ void pybind_reconstruction(py::module &m) {
     config.def_readwrite("camera_intrinsic",
                          &PipelineConfig::camera_intrinsic_);
     config.def_readwrite("depth_scale", &PipelineConfig::depth_scale_);
-    config.def_readwrite("max_depth", &PipelineConfig::max_depth_);
-    config.def_readwrite("max_depth_diff", &PipelineConfig::max_depth_diff_);
+    config.def_readwrite("depth_max", &PipelineConfig::depth_max_);
+    config.def_readwrite("depth_diff_max", &PipelineConfig::depth_diff_max_);
     config.def_readwrite("voxel_size", &PipelineConfig::voxel_size_);
     config.def_readwrite("tsdf_integration",
                          &PipelineConfig::tsdf_integration_);
