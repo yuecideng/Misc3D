@@ -38,8 +38,8 @@ public:
     std::string data_path_;
     open3d::camera::PinholeCameraIntrinsic camera_intrinsic_;
     float depth_scale_;
-    float max_depth_;
-    float max_depth_diff_;
+    float depth_max_;
+    float depth_diff_max_;
     float voxel_size_;
     float integration_voxel_size_;
     bool tsdf_integration_;

@@ -89,8 +89,8 @@ bool OdometryTrajectory::ReadFromJsonFile(const std::string& file_name) {
 PipelineConfig::PipelineConfig() {
     data_path_ = "";
     depth_scale_ = 1000.0;
-    max_depth_ = 3.0;
-    max_depth_diff_ = 0.07;
+    depth_max_ = 3.0;
+    depth_diff_max_ = 0.07;
     voxel_size_ = 0.01;
     integration_voxel_size_ = 0.005;
     tsdf_integration_ = false;
@@ -228,12 +228,12 @@ void ReconstructionPipeline::ReadJsonPipelineConfig(
             config_.voxel_size_ = j["voxel_size"];
         }
 
-        if (j.contains("max_depth")) {
-            config_.max_depth_ = j["max_depth"];
+        if (j.contains("depth_max")) {
+            config_.depth_max_ = j["depth_max"];
         }
 
-        if (j.contains("max_depth_diff")) {
-            config_.max_depth_diff_ = j["max_depth_diff"];
+        if (j.contains("depth_diff_max")) {
+            config_.depth_diff_max_ = j["depth_diff_max"];
         }
 
         if (j.contains("integration_voxel_size")) {
@@ -301,7 +301,7 @@ bool ReconstructionPipeline::ReadRGBDData() {
 
         // Create RGBD image.
         const auto rgbd = open3d::geometry::RGBDImage::CreateFromColorAndDepth(
-            color, depth, config_.depth_scale_, config_.max_depth_, false);
+            color, depth, config_.depth_scale_, config_.depth_max_, false);
         rgbd_lists_[i] = *rgbd;
         const auto intensity_img = color.CreateFloatImage();
         intensity_img_lists_[i] = *intensity_img;
@@ -408,7 +408,7 @@ void ReconstructionPipeline::BuildSingleFragment(int fragment_id) {
                  static_cast<int>(rgbd_lists_.size()));
     BuildPoseGraphForFragment(fragment_id, sid, eid);
     OptimizePoseGraph(
-        config_.max_depth_diff_,
+        config_.depth_diff_max_,
         config_.optimization_param_.preference_loop_closure_odometry,
         fragment_pose_graphs_[fragment_id]);
     IntegrateFragmentRGBD(fragment_id);
@@ -838,7 +838,7 @@ ReconstructionPipeline::ComputeOdometry(int s, int t,
                                            rgbd_t.depth_);
 
     open3d::pipelines::odometry::OdometryOption option;
-    option.max_depth_diff_ = config_.max_depth_diff_;
+    option.depth_diff_max_ = config_.depth_diff_max_;
 
     return open3d::pipelines::odometry::ComputeRGBDOdometry(
         new_rgbd_s, new_rgbd_t, config_.camera_intrinsic_, init_trans,
@@ -917,7 +917,7 @@ Eigen::Matrix4d ReconstructionPipeline::PoseEstimation(int s, int t) {
             GetXYZFromUVD(dst_pts[i], dst.depth_, pp.x, pp.y, focal_input);
     }
 
-    misc3d::registration::TeaserSolver teaser_solver(config_.max_depth_diff_);
+    misc3d::registration::TeaserSolver teaser_solver(config_.depth_diff_max_);
     pose = teaser_solver.Solve(src_pts_eigen, dst_pts_eigen);
     return pose;
 }
