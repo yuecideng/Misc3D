@@ -772,6 +772,7 @@ void ReconstructionPipeline::RegisterFragmentPair(
             matched_result.success_ = false;
             matched_result.transformation_ = Eigen::Matrix4d::Identity();
             matched_result.information_ = Eigen::Matrix6d::Identity();
+            return;
         } else {
             pose = std::get<1>(result);
             info = std::get<2>(result);
