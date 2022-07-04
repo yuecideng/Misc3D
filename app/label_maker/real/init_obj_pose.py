@@ -4,8 +4,8 @@
 import argparse
 import os
 import json
-import open3d as o3d
 import misc3d as m3d
+import open3d as o3d
 
 
 def crop_geometry(geometry):
