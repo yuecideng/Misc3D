@@ -41,7 +41,7 @@ Misc3D also provides some useful applications:
 - `cmake` >= 3.10
 - `python` >= 3.6
 - `eigen` >= 3.3
-- `open3d` >= 0.14.1 
+- `open3d` (**use master branch**)
 - `pybind11` >= 2.6.2
 
 ### Build
@@ -65,7 +65,7 @@ Build `pybind11` in your system as well. If you only use C++ API, you can skip t
     ```
     Run `source ~/.bashrc` to save changes.
 ##### Windows
-**Note: In windows, you can download the pre-build Open3D c++ Release and install python package via `pip3 install open3d`.**
+**Note: In windows, you can download the latest pre-build Open3D c++ Release and python package wheel from this [link](http://www.open3d.org/docs/latest/getting_started.html).**
 
 2. Git clone and run: `mkdir build && cd build`. You can use Cmake GUI to configure your build options. Then run `cmake --build . --config Release --target INSTALL` to install `Misc3D`.
 
