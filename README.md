@@ -2,6 +2,7 @@
 
 [![Ubuntu CI](https://github.com/yuecideng/Misc3D/actions/workflows/ubuntu.yml/badge.svg)](https://github.com/yuecideng/Misc3D/actions/workflows/ubuntu.yml)
 
+**Note**: Currently, the project is under the modification to meet the latest Open3D features (tensor based geometry). If you have error during building, please refer to previous tags for experiments.
 
 A unified library for 3D data processing and analysis with both C++&amp;Python API based on [Open3D](https://github.com/isl-org/Open3D).
 
