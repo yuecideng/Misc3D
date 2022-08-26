@@ -21,10 +21,8 @@ endif()
 
 if(WIN32)
     message(STATUS "Windows Build System.")
-    message(STATUS "Teaserpp is not supported on Windows currently.")
     SET(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
     if(MSVC)
-
         add_compile_options("$<$<COMPILE_LANGUAGE:CXX>:/bigobj;/Ob2>")
     endif()
     if (STATIC_WINDOWS_RUNTIME)
